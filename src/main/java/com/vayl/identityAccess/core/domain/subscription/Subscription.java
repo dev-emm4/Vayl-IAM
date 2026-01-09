@@ -2,6 +2,9 @@ package com.vayl.identityAccess.core.domain.subscription;
 
 import com.vayl.identityAccess.core.domain.common.DomainErrors.InvalidValueException;
 import com.vayl.identityAccess.core.domain.permission.PermissionId;
+import com.vayl.identityAccess.core.domain.role.DefaultRole;
+import com.vayl.identityAccess.core.domain.role.RoleId;
+import com.vayl.identityAccess.core.domain.role.SubscriptionAssignment;
 import java.util.List;
 
 public class Subscription {
@@ -69,6 +72,24 @@ public class Subscription {
   private void removePermissionIdFromGrantedPermissions(PermissionId permissionId) {
     if (this.grantedPermissions.remove(permissionId)) {
       // TODO: Publish domain event removedSubscriptionPermission
+    }
+  }
+
+  public DefaultRole createDefaultRole(
+      RoleId roleId, String name, List<PermissionId> selectedPermissions) {
+
+    this.throwErrorIfPermissionNotGranted(selectedPermissions);
+
+    SubscriptionAssignment subscriptionAssignment = new SubscriptionAssignment(this.id());
+
+    return new DefaultRole(roleId, name, subscriptionAssignment, selectedPermissions);
+  }
+
+  private void throwErrorIfPermissionNotGranted(List<PermissionId> selectedPermissions) {
+    for (PermissionId permissionId : selectedPermissions) {
+      if (!this.grantedPermissions.contains(permissionId)) {
+        throw new InvalidValueException("DEFAULT_ROLE_CREATION", permissionId.toString());
+      }
     }
   }
 }
