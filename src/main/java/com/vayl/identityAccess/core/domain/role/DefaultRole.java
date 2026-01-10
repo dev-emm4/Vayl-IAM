@@ -2,14 +2,16 @@ package com.vayl.identityAccess.core.domain.role;
 
 import com.vayl.identityAccess.core.domain.common.DomainErrors.InvalidValueException;
 import com.vayl.identityAccess.core.domain.permission.PermissionId;
+import com.vayl.identityAccess.core.domain.subscription.Subscription;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class DefaultRole implements Role {
   RoleId id;
   String name;
-  SubscriptionAssignment assignedPackage;
-  List<PermissionId> grantedPermissions;
+  SubscriptionAssignment assignedSubscription;
+  List<PermissionId> grantedPermissions = new ArrayList<>();
 
   public DefaultRole(
       RoleId id,
@@ -18,7 +20,7 @@ public class DefaultRole implements Role {
       List<PermissionId> grantedPermissions) {
     this.setId(id);
     this.setName(name);
-    this.setAssignedPackage(subscriptionAssignment);
+    this.setAssignedSubscription(subscriptionAssignment);
     this.setGrantedPermissions(grantedPermissions);
   }
 
@@ -30,9 +32,9 @@ public class DefaultRole implements Role {
     this.name = name;
   }
 
-  private void setAssignedPackage(SubscriptionAssignment assignedPackage) {
-    this.throwErrorIfSubscriptionAssignmentHaveContract(assignedPackage);
-    this.assignedPackage = assignedPackage;
+  private void setAssignedSubscription(SubscriptionAssignment assignedSubscription) {
+    this.throwErrorIfSubscriptionAssignmentHaveContract(assignedSubscription);
+    this.assignedSubscription = assignedSubscription;
   }
 
   // Ensure that the SubscriptionAssignment does not have an associated contract
@@ -40,15 +42,6 @@ public class DefaultRole implements Role {
       SubscriptionAssignment subscriptionAssignment) {
     if (subscriptionAssignment.subscriptionContract() != null) {
       throw new InvalidValueException("DEFAULT_ROLE_CREATION", subscriptionAssignment.toString());
-    }
-  }
-
-  private void setGrantedPermissions(List<PermissionId> grantedPermissions) {
-    this.grantedPermissions = new ArrayList<>();
-    for (PermissionId permissionId : grantedPermissions) {
-      if (!this.grantedPermissions.contains(permissionId)) {
-        this.grantedPermissions.add(permissionId);
-      }
     }
   }
 
@@ -61,10 +54,50 @@ public class DefaultRole implements Role {
   }
 
   public SubscriptionAssignment assignedSubscription() {
-    return this.assignedPackage;
+    return this.assignedSubscription;
   }
 
   public List<PermissionId> grantedPermissions() {
     return this.grantedPermissions;
+  }
+
+  public void modifyGrantedPermissions(
+      Subscription subscription,
+      List<PermissionId> addPermissions,
+      List<PermissionId> removePermissions) {
+    this.throwErrorIfSubscriptionIsNotAssigned(subscription);
+    this.throwErrorIfPermissionNotGrantedBySubscription(subscription, addPermissions);
+
+    this.setGrantedPermissions(addPermissions);
+    this.removeGrantedPermissions(removePermissions);
+  }
+
+  private void throwErrorIfPermissionNotGrantedBySubscription(
+      Subscription subscription, List<PermissionId> selectedPermissions) {
+    if (!subscription.containsPermission(selectedPermissions)) {
+      throw new InvalidValueException(
+          "MODIFY_DEFAULT_ROLE_PERMISSION", selectedPermissions.toString());
+    }
+  }
+
+  private void throwErrorIfSubscriptionIsNotAssigned(Subscription subscription) {
+    if (!this.assignedSubscription.subscriptionId().equals(subscription.id())) {
+      throw new InvalidValueException(
+          "MODIFY_DEFAULT_ROLE_PERMISSION", subscription.id().toString());
+    }
+  }
+
+  private void setGrantedPermissions(List<PermissionId> grantedPermissions) {
+    for (PermissionId permissionId : grantedPermissions) {
+      if (!this.grantedPermissions.contains(permissionId)) {
+        this.grantedPermissions.add(permissionId);
+      }
+    }
+  }
+
+  private void removeGrantedPermissions(List<PermissionId> grantedPermissions) {
+    for (PermissionId permissionId : grantedPermissions) {
+      this.grantedPermissions.remove(permissionId);
+    }
   }
 }

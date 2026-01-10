@@ -120,6 +120,36 @@ public class SubscriptionTest {
             + selectedPermissions.size();
   }
 
+  @Test
+  void containsPermission_withMixedPermissions_returnsCorrectFalse() {
+    SubscriptionId subscriptionId = new SubscriptionId(UUID.randomUUID().toString());
+    Subscription subscription = new Subscription(subscriptionId, "Enterprise Plan");
+    List<PermissionId> grantedPermissions = this.initializePermissionidList(4);
+    subscription.modifyGrantedPermissions(grantedPermissions, List.of());
+
+    // Create a list with some granted and some ungranted permissions
+    List<PermissionId> testPermissions = List.of(
+        grantedPermissions.getFirst(),
+        new PermissionId(new ApiId("example.com"), "UNGRANTED_PERMISSION")
+    );
+
+    boolean contains = subscription.containsPermission(testPermissions);
+
+    assert !contains : "containsPermission should return false for mixed permissions";
+  }
+
+  @Test
+  void containsPermission_withAllGrantedPermissions_returnsTrue() {
+    SubscriptionId subscriptionId = new SubscriptionId(UUID.randomUUID().toString());
+    Subscription subscription = new Subscription(subscriptionId, "Startup Plan");
+    List<PermissionId> grantedPermissions = this.initializePermissionidList(4);
+    subscription.modifyGrantedPermissions(grantedPermissions, List.of());
+
+    boolean contains = subscription.containsPermission(grantedPermissions);
+
+    assert contains : "containsPermission should return true for all granted permissions";
+  }
+
   private List<PermissionId> initializePermissionidList(int amount) {
     List<PermissionId> permissionIds = new java.util.ArrayList<>();
     ApiId apiId = new ApiId("example.com");
@@ -130,4 +160,5 @@ public class SubscriptionTest {
 
     return permissionIds;
   }
+
 }

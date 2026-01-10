@@ -92,4 +92,13 @@ public class Subscription {
       }
     }
   }
+
+  public boolean containsPermission(List<PermissionId> permissionId) {
+    for (PermissionId pid : permissionId) {
+      if (!this.grantedPermissions.contains(pid)) {
+        return false;
+      }
+    }
+    return true;
+  }
 }

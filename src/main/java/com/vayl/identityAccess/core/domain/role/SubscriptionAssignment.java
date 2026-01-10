@@ -4,6 +4,7 @@ import com.vayl.identityAccess.core.domain.subscription.SubscriptionId;
 
 public class SubscriptionAssignment {
   private SubscriptionId subscriptionId;
+  // TODO: Replace String with a more specific Contract
   private String subscriptionContract;
 
   public SubscriptionAssignment(SubscriptionId subscriptionId) {
