@@ -1,9 +1,11 @@
 package com.vayl.identityAccess.core.domain.role;
 
+import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionEvent;
+import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionLevel;
+import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.InvalidValueException;
 import com.vayl.identityAccess.core.domain.permission.PermissionId;
 import com.vayl.identityAccess.core.domain.subscription.Subscription;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,7 +43,11 @@ public class DefaultRole implements Role {
   private void throwErrorIfSubscriptionAssignmentHaveContract(
       SubscriptionAssignment subscriptionAssignment) {
     if (subscriptionAssignment.subscriptionContract() != null) {
-      throw new InvalidValueException("DEFAULT_ROLE_CREATION", subscriptionAssignment.toString());
+      throw new InvalidValueException(
+          ExceptionEvent.DEFAULT_ROLE_CREATION,
+          ExceptionReason.SUBSCRIPTION_ASSIGNMENT_HAS_CONTRACT,
+          subscriptionAssignment.toString(),
+          ExceptionLevel.ERROR);
     }
   }
 
@@ -76,14 +82,20 @@ public class DefaultRole implements Role {
       Subscription subscription, List<PermissionId> selectedPermissions) {
     if (!subscription.containsPermission(selectedPermissions)) {
       throw new InvalidValueException(
-          "MODIFY_DEFAULT_ROLE_PERMISSION", selectedPermissions.toString());
+          ExceptionEvent.DEFAULT_ROLE_PERMISSION_MODIFICATION,
+          ExceptionReason.SELECTED_PERMISSION_NOT_GRANTED_BY_SUBSCRIPTION,
+          selectedPermissions.toString(),
+          ExceptionLevel.INFO);
     }
   }
 
   private void throwErrorIfSubscriptionIsNotAssigned(Subscription subscription) {
     if (!this.assignedSubscription.subscriptionId().equals(subscription.id())) {
       throw new InvalidValueException(
-          "MODIFY_DEFAULT_ROLE_PERMISSION", subscription.id().toString());
+          ExceptionEvent.DEFAULT_ROLE_PERMISSION_MODIFICATION,
+          ExceptionReason.SUBSCRIPTION_NOT_ASSIGNED,
+          subscription.id().toString(),
+          ExceptionLevel.ERROR);
     }
   }
 

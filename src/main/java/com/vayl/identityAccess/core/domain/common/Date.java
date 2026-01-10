@@ -1,26 +1,34 @@
 package com.vayl.identityAccess.core.domain.common;
 
+import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionEvent;
+import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionLevel;
+import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
+import com.vayl.identityAccess.core.domain.common.DomainErrors.InvalidValueException;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
 public class Date {
   private String date;
 
-  public Date(String aDate) {
-    this.setDate(aDate);
+  public Date(String date) {
+    this.setDate(date);
   }
 
-  private void setDate(String aDate) {
-    this.throwErrorOnInvalidDate(aDate);
-    this.date = aDate;
+  private void setDate(String date) {
+    this.throwErrorOnInvalidDate(date);
+    this.date = date;
   }
 
-  private void throwErrorOnInvalidDate(String aDate) {
+  private void throwErrorOnInvalidDate(String date) {
     try {
       // This specifically looks for the YYYY-MM-DDTHH:mm:ssZ format
-      DateTimeFormatter.ISO_INSTANT.parse(aDate);
+      DateTimeFormatter.ISO_INSTANT.parse(date);
     } catch (DateTimeParseException e) {
-      throw new IllegalArgumentException("invalid date");
+      throw new InvalidValueException(
+          ExceptionEvent.DATE_CREATION,
+          ExceptionReason.INVALID_DATE_FORMAT,
+          date,
+          ExceptionLevel.INFO);
     }
   }
 
@@ -39,5 +47,10 @@ public class Date {
     }
 
     return isEqual;
+  }
+
+  @Override
+  public int hashCode() {
+    return this.date.hashCode();
   }
 }

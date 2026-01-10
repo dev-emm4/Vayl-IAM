@@ -1,5 +1,8 @@
 package com.vayl.identityAccess.core.domain.subscription;
 
+import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionEvent;
+import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionLevel;
+import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.InvalidValueException;
 import com.vayl.identityAccess.core.domain.permission.PermissionId;
 import com.vayl.identityAccess.core.domain.role.DefaultRole;
@@ -45,7 +48,6 @@ public class Subscription {
 
   public void modifyGrantedPermissions(
       List<PermissionId> addPermissionIds, List<PermissionId> removePermissionIds) {
-    this.throwErrorOnEmptyAddAndRemovePermissions(addPermissionIds, removePermissionIds);
 
     for (PermissionId permissionId : addPermissionIds) {
       this.addPermissionIdToGrantedPermissions(permissionId);
@@ -53,13 +55,6 @@ public class Subscription {
 
     for (PermissionId permissionId : removePermissionIds) {
       this.removePermissionIdFromGrantedPermissions(permissionId);
-    }
-  }
-
-  private void throwErrorOnEmptyAddAndRemovePermissions(
-      List<PermissionId> addPermissions, List<PermissionId> removePermissions) {
-    if (addPermissions.isEmpty() && removePermissions.isEmpty()) {
-      throw new InvalidValueException("SUBSCRIPTION_MODIFY_PERMISSIONS", "");
     }
   }
 
@@ -88,7 +83,11 @@ public class Subscription {
   private void throwErrorIfPermissionNotGranted(List<PermissionId> selectedPermissions) {
     for (PermissionId permissionId : selectedPermissions) {
       if (!this.grantedPermissions.contains(permissionId)) {
-        throw new InvalidValueException("DEFAULT_ROLE_CREATION", permissionId.toString());
+        throw new InvalidValueException(
+            ExceptionEvent.DEFAULT_ROLE_CREATION,
+            ExceptionReason.SELECTED_PERMISSION_NOT_GRANTED_BY_SUBSCRIPTION,
+            permissionId.toString(),
+            ExceptionLevel.INFO);
       }
     }
   }

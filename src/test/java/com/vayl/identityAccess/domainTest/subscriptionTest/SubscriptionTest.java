@@ -1,6 +1,9 @@
 package com.vayl.identityAccess.domainTest.subscriptionTest;
 
 import com.vayl.identityAccess.core.domain.api.ApiId;
+import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionEvent;
+import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionLevel;
+import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.InvalidValueException;
 import com.vayl.identityAccess.core.domain.permission.PermissionId;
 import com.vayl.identityAccess.core.domain.role.DefaultRole;
@@ -27,21 +30,6 @@ public class SubscriptionTest {
             + subscriptionId.toString();
     assert subscription.name().equals(subscriptionName)
         : "Subscription name mismatch got " + subscription.name() + " expected " + subscriptionName;
-  }
-
-  @Test
-  void modifyGrantedPermissions_withEmptyAddAndRemoveLists_throwsInvalidValueException() {
-    SubscriptionId subscriptionId = new SubscriptionId(UUID.randomUUID().toString());
-    String subscriptionName = "Basic Plan";
-    Subscription subscription = new Subscription(subscriptionId, subscriptionName);
-
-    try {
-      subscription.modifyGrantedPermissions(List.of(), List.of());
-      assert false : "Expected exception was not thrown for empty add and remove lists";
-    } catch (InvalidValueException e) {
-      assert e.invalidValue().isEmpty()
-          : "Exception message mismatch got " + e.invalidValue() + " expected empty string";
-    }
   }
 
   @Test
@@ -80,6 +68,24 @@ public class SubscriptionTest {
       subscription.createDefaultRole(roleId, roleName, selectedPermissions);
       assert false : "Expected InvalidValueException was not thrown for ungranted permissions";
     } catch (InvalidValueException e) {
+      assert e.event().equals(ExceptionEvent.DEFAULT_ROLE_CREATION)
+              : "InvalidValueError event mismatch got: "
+              + e.event()
+              + " expected: "
+              + ExceptionEvent.DEFAULT_ROLE_CREATION;
+
+      assert e.reason().equals(ExceptionReason.SELECTED_PERMISSION_NOT_GRANTED_BY_SUBSCRIPTION)
+              : "InvalidValueError reason mismatch got: "
+              + e.reason()
+              + " expected: "
+              + ExceptionReason.SELECTED_PERMISSION_NOT_GRANTED_BY_SUBSCRIPTION;
+
+      assert e.level().equals(ExceptionLevel.INFO)
+              : "InvalidValueError level mismatch got: "
+              + e.level()
+              + " expected: "
+              + ExceptionLevel.INFO;
+
       assert e.invalidValue().equals(selectedPermissions.getFirst().toString())
           : "Exception message mismatch got "
               + e.invalidValue()

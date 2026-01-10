@@ -1,5 +1,8 @@
 package com.vayl.identityAccess.domainTest.subscriptionTest;
 
+import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionEvent;
+import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionLevel;
+import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.InvalidValueException;
 import com.vayl.identityAccess.core.domain.subscription.SubscriptionId;
 import org.junit.jupiter.api.Test;
@@ -14,13 +17,29 @@ public class SubscriptionIdTest {
       assert false
           : "Expected InvalidValueException was not thrown for invalid UUIDv4 id" + invalidId;
     } catch (InvalidValueException e) {
+      assert e.event().equals(ExceptionEvent.SUBSCRIPTION_ID_CREATION)
+          : "InvalidValueError event mismatch got: "
+              + e.event()
+              + " expected: "
+              + ExceptionEvent.SUBSCRIPTION_ID_CREATION;
+
+      assert e.reason().equals(ExceptionReason.INVALID_ID)
+          : "InvalidValueError reason mismatch got: "
+              + e.reason()
+              + " expected: "
+              + ExceptionReason.INVALID_ID;
+
+      assert e.level().equals(ExceptionLevel.ERROR)
+          : "InvalidValueError level mismatch got: "
+              + e.level()
+              + " expected: "
+              + ExceptionLevel.ERROR;
+
       assert e.invalidValue().equals(invalidId)
           : "InvalidValueError invalidValue mismatch got: "
               + e.invalidValue()
               + " expected: "
               + invalidId;
-    } catch (Exception e) {
-      assert false : "Expected InvalidValueException but got: " + e.getClass().getSimpleName();
     }
   }
 
@@ -64,12 +83,12 @@ public class SubscriptionIdTest {
   }
 
   @Test
-    void hashCode_withSameId_returnsSameHashCode() {
-        String validId = java.util.UUID.randomUUID().toString();
-        SubscriptionId id1 = new SubscriptionId(validId);
-        SubscriptionId id2 = new SubscriptionId(validId);
+  void hashCode_withSameId_returnsSameHashCode() {
+    String validId = java.util.UUID.randomUUID().toString();
+    SubscriptionId id1 = new SubscriptionId(validId);
+    SubscriptionId id2 = new SubscriptionId(validId);
 
-        assert id1.hashCode() == id2.hashCode()
-            : "SubscriptionIds with same ids should have the same hash code";
-    }
+    assert id1.hashCode() == id2.hashCode()
+        : "SubscriptionIds with same ids should have the same hash code";
+  }
 }

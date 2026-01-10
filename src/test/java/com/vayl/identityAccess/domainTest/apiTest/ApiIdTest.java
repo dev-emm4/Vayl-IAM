@@ -1,11 +1,13 @@
 package com.vayl.identityAccess.domainTest.apiTest;
 
 import com.vayl.identityAccess.core.domain.api.ApiId;
+import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionEvent;
+import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionLevel;
+import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.InvalidValueException;
 import org.junit.jupiter.api.Test;
 
 public class ApiIdTest {
-
   @Test
   void constructor_withInvalidDomain_throwsInvalidErrorException() {
     String invalidDomain = "invalid_domain!";
@@ -14,11 +16,29 @@ public class ApiIdTest {
       assert false
           : "Expected InvalidValueException was not thrown for invalid domain: " + invalidDomain;
     } catch (InvalidValueException e) {
-      assert e.invalidValue().equals(invalidDomain)
-          : "InvalidValueError invalidValue mismatch got: "
-              + e.invalidValue()
+      assert e.event().equals(ExceptionEvent.API_ID_CREATION)
+          : "InvalidValueError event mismatch got: "
+              + e.event()
               + " expected: "
-              + invalidDomain;
+              + ExceptionEvent.API_ID_CREATION;
+
+      assert e.reason().equals(ExceptionReason.INVALID_ID)
+          : "InvalidValueError reason mismatch got: "
+              + e.reason()
+              + " expected: "
+              + ExceptionReason.INVALID_ID;
+
+        assert e.invalidValue().equals(invalidDomain)
+            : "InvalidValueError invalidValue mismatch got: "
+                + e.invalidValue()
+                + " expected: "
+                + invalidDomain;
+
+        assert e.level().equals(ExceptionLevel.INFO)
+            : "InvalidValueError level mismatch got: "
+                + e.level()
+                + " expected: "
+                + ExceptionLevel.INFO;
     }
   }
 

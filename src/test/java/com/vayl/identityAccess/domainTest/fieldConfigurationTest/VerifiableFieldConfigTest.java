@@ -1,6 +1,9 @@
 package com.vayl.identityAccess.domainTest.fieldConfigurationTest;
 
 import com.vayl.identityAccess.core.domain.common.Date;
+import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionEvent;
+import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionLevel;
+import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.InvalidValueException;
 import com.vayl.identityAccess.core.domain.fieldConfiguration.FieldConfigId;
 import com.vayl.identityAccess.core.domain.fieldConfiguration.FieldType;
@@ -26,6 +29,24 @@ public class VerifiableFieldConfigTest {
         assert false
             : "Expected InvalidValueError was not thrown for invalid field type: " + fieldType;
       } catch (InvalidValueException e) {
+        assert e.event().equals(ExceptionEvent.VERIFIABLEFIELDCONFIG_CREATION)
+                : "InvalidValueError event mismatch got: "
+                + e.event()
+                + " expected: "
+                + ExceptionEvent.UNVERIFIABLEFIELDCONFIG_CREATION;
+
+        assert e.reason().equals(ExceptionReason.INVALID_FIELD_TYPE)
+                : "InvalidValueError reason mismatch got: "
+                + e.reason()
+                + " expected: "
+                + ExceptionReason.INVALID_FIELD_TYPE;
+
+        assert e.level().equals(ExceptionLevel.INFO)
+                : "InvalidValueError level mismatch got: "
+                + e.level()
+                + " expected: "
+                + ExceptionLevel.INFO;
+
         assert e.invalidValue().equals(fieldType.toString())
             : "InvalidValueException invalidValue mismatch got: "
                 + e.invalidValue()
@@ -81,6 +102,24 @@ public class VerifiableFieldConfigTest {
       assert false
           : "VerifiableFieldConfig with fieldType = PRIMARY_EMAIL had enforcementDate modified.";
     } catch (InvalidValueException e) {
+      assert e.event().equals(ExceptionEvent.VERIFIABLEFIELDCONFIG_MODIFICATION)
+              : "InvalidValueError event mismatch got: "
+              + e.event()
+              + " expected: "
+              + ExceptionEvent.VERIFIABLEFIELDCONFIG_MODIFICATION;
+
+      assert e.reason().equals(ExceptionReason.PRIMARY_EMAIL_ENFORCEMENT_DATE_CANNOT_BE_CHANGED)
+              : "InvalidValueError reason mismatch got: "
+              + e.reason()
+              + " expected: "
+              + ExceptionReason.INVALID_FIELD_TYPE;
+
+      assert e.level().equals(ExceptionLevel.INFO)
+              : "InvalidValueError level mismatch got: "
+              + e.level()
+              + " expected: "
+              + ExceptionLevel.INFO;
+
       assert e.invalidValue().equals(newEnforcementDate.toString())
           : "InvalidValueException invalidValue mismatch got: "
               + e.invalidValue()

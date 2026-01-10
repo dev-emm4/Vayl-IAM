@@ -7,22 +7,22 @@ public class Api {
   private ApiId id;
   private String name;
 
-  public Api(ApiId anId, String aName) {
-    this.setId(anId);
-    this.setName(aName);
+  public Api(ApiId id, String name) {
+    this.setId(id);
+    this.setName(name);
   }
 
-  private void setId(ApiId anId) {
-    this.id = anId;
+  private void setId(ApiId id) {
+    this.id = id;
   }
 
-  private void setName(String aName) {
-    this.name = aName;
+  private void setName(String name) {
+    this.name = name;
   }
 
-  public Permission createPermission(String aName, String aDescription) {
-    PermissionId permissionId = new PermissionId(this.id, aName);
-    return new Permission(permissionId, aName, this.id, aDescription);
+  public Permission createPermission(String name, String description) {
+    PermissionId permissionId = new PermissionId(this.id, name);
+    return new Permission(permissionId, name, this.id, description);
   }
 
   public ApiId id() {

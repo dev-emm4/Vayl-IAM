@@ -1,6 +1,9 @@
 package com.vayl.identityAccess.domainTest.permissionTest;
 
 import com.vayl.identityAccess.core.domain.api.ApiId;
+import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionEvent;
+import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionLevel;
+import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.InvalidValueException;
 import com.vayl.identityAccess.core.domain.permission.PermissionId;
 import org.junit.jupiter.api.Test;
@@ -18,6 +21,23 @@ public class PermissionIdTest {
           : "Expected InvalidValueError was not thrown for invalid permission name: "
               + invalidPermissionName;
     } catch (InvalidValueException e) {
+      assert e.event().equals(ExceptionEvent.PERMISSION_ID_CREATION)
+              : "InvalidValueError event mismatch got: "
+              + e.event()
+              + " expected: "
+              + ExceptionEvent.PERMISSION_ID_CREATION;
+
+      assert e.reason().equals(ExceptionReason.EMPTY_PERMISSION_NAME_PROVIDED)
+              : "InvalidValueError reason mismatch got: "
+              + e.reason()
+              + " expected: "
+              + ExceptionReason.EMPTY_PERMISSION_NAME_PROVIDED;
+
+      assert e.level().equals(ExceptionLevel.INFO)
+              : "InvalidValueError level mismatch got: "
+              + e.level()
+              + " expected: "
+              + ExceptionLevel.INFO;
       assert e.invalidValue().equals(invalidPermissionName)
           : "InvalidValueException invalidValue mismatch got: "
               + e.invalidValue()

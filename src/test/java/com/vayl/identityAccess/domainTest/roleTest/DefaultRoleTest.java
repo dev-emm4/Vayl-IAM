@@ -1,6 +1,9 @@
 package com.vayl.identityAccess.domainTest.roleTest;
 
 import com.vayl.identityAccess.core.domain.api.ApiId;
+import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionEvent;
+import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionLevel;
+import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.InvalidValueException;
 import com.vayl.identityAccess.core.domain.permission.PermissionId;
 import com.vayl.identityAccess.core.domain.role.DefaultRole;
@@ -8,10 +11,9 @@ import com.vayl.identityAccess.core.domain.role.RoleId;
 import com.vayl.identityAccess.core.domain.role.SubscriptionAssignment;
 import com.vayl.identityAccess.core.domain.subscription.Subscription;
 import com.vayl.identityAccess.core.domain.subscription.SubscriptionId;
-import org.junit.jupiter.api.Test;
-
 import java.util.List;
 import java.util.UUID;
+import org.junit.jupiter.api.Test;
 
 public class DefaultRoleTest {
   // TODO: TODO: Replace String with a more specific Contract
@@ -31,6 +33,23 @@ public class DefaultRoleTest {
           new DefaultRole(roleId, roleName, subscriptionAssignmentWithContract, grantedPermissions);
       assert false : "Expected exception was not thrown for SubscriptionAssignment with contract";
     } catch (InvalidValueException e) {
+      assert e.event().equals(ExceptionEvent.DEFAULT_ROLE_CREATION)
+          : "InvalidValueError event mismatch got: "
+              + e.event()
+              + " expected: "
+              + ExceptionEvent.DEFAULT_ROLE_CREATION;
+
+      assert e.reason().equals(ExceptionReason.SUBSCRIPTION_ASSIGNMENT_HAS_CONTRACT)
+          : "InvalidValueError reason mismatch got: "
+              + e.reason()
+              + " expected: "
+              + ExceptionReason.SUBSCRIPTION_ASSIGNMENT_HAS_CONTRACT;
+
+      assert e.level().equals(ExceptionLevel.ERROR)
+          : "InvalidValueError level mismatch got: "
+              + e.level()
+              + " expected: "
+              + ExceptionLevel.ERROR;
       assert e.invalidValue().equals(subscriptionAssignmentWithContract.toString())
           : "Exception message mismatch got "
               + e.invalidValue()
@@ -109,7 +128,6 @@ public class DefaultRoleTest {
     Subscription subscription = new Subscription(subscriptionId, "Basic Plan");
     subscription.modifyGrantedPermissions(subscriptionPermission, List.of());
 
-
     DefaultRole defaultRole =
         subscription.createDefaultRole(roleId, roleName, subscriptionPermission);
 
@@ -118,6 +136,23 @@ public class DefaultRoleTest {
       assert false
           : "Expected InvalidValueException was not thrown for permissions not in subscription";
     } catch (InvalidValueException e) {
+      assert e.event().equals(ExceptionEvent.DEFAULT_ROLE_PERMISSION_MODIFICATION)
+          : "InvalidValueError event mismatch got: "
+              + e.event()
+              + " expected: "
+              + ExceptionEvent.DEFAULT_ROLE_PERMISSION_MODIFICATION;
+
+      assert e.reason().equals(ExceptionReason.SELECTED_PERMISSION_NOT_GRANTED_BY_SUBSCRIPTION)
+          : "InvalidValueError reason mismatch got: "
+              + e.reason()
+              + " expected: "
+              + ExceptionReason.SELECTED_PERMISSION_NOT_GRANTED_BY_SUBSCRIPTION;
+
+      assert e.level().equals(ExceptionLevel.INFO)
+          : "InvalidValueError level mismatch got: "
+              + e.level()
+              + " expected: "
+              + ExceptionLevel.INFO;
       assert e.invalidValue().equals(invalidPermissions.toString())
           : "Exception message mismatch got "
               + e.invalidValue()
@@ -127,35 +162,53 @@ public class DefaultRoleTest {
   }
 
   @Test
-    void modifyGrantedPermissions_withDifferentSubscription_throwsInvalidValueException() {
-        RoleId roleId = new RoleId(UUID.randomUUID().toString());
-        String roleName = "Contributor Role";
-        SubscriptionId assignedSubscriptionId = new SubscriptionId(UUID.randomUUID().toString());
-        SubscriptionId differentSubscriptionId = new SubscriptionId(UUID.randomUUID().toString());
+  void modifyGrantedPermissions_withDifferentSubscription_throwsInvalidValueException() {
+    RoleId roleId = new RoleId(UUID.randomUUID().toString());
+    String roleName = "Contributor Role";
+    SubscriptionId assignedSubscriptionId = new SubscriptionId(UUID.randomUUID().toString());
+    SubscriptionId differentSubscriptionId = new SubscriptionId(UUID.randomUUID().toString());
 
-        List<PermissionId> subscriptionPermission = this.initializePermissionidList(7);
+    List<PermissionId> subscriptionPermission = this.initializePermissionidList(7);
 
-        Subscription assignedSubscription = new Subscription(assignedSubscriptionId, "Pro Plan");
-        assignedSubscription.modifyGrantedPermissions(subscriptionPermission, List.of());
+    Subscription assignedSubscription = new Subscription(assignedSubscriptionId, "Pro Plan");
+    assignedSubscription.modifyGrantedPermissions(subscriptionPermission, List.of());
 
-        Subscription differentSubscription = new Subscription(differentSubscriptionId, "Free Plan");
-        differentSubscription.modifyGrantedPermissions(subscriptionPermission, List.of());
+    Subscription differentSubscription = new Subscription(differentSubscriptionId, "Free Plan");
+    differentSubscription.modifyGrantedPermissions(subscriptionPermission, List.of());
 
-        DefaultRole defaultRole =
-            assignedSubscription.createDefaultRole(roleId, roleName, subscriptionPermission);
+    DefaultRole defaultRole =
+        assignedSubscription.createDefaultRole(roleId, roleName, subscriptionPermission);
 
-        try {
-        defaultRole.modifyGrantedPermissions(differentSubscription, List.of(), List.of());
-        assert false
-            : "Expected InvalidValueException was not thrown for different assigned subscription";
-        } catch (InvalidValueException e) {
-        assert e.invalidValue().equals(differentSubscription.id().toString())
-            : "Exception message mismatch got "
-                + e.invalidValue()
-                + " expected "
-                + differentSubscription.id().toString();
-        }
+    try {
+      defaultRole.modifyGrantedPermissions(differentSubscription, List.of(), List.of());
+      assert false
+          : "Expected InvalidValueException was not thrown for different assigned subscription";
+    } catch (InvalidValueException e) {
+      assert e.event().equals(ExceptionEvent.DEFAULT_ROLE_PERMISSION_MODIFICATION)
+          : "InvalidValueError event mismatch got: "
+              + e.event()
+              + " expected: "
+              + ExceptionEvent.DEFAULT_ROLE_PERMISSION_MODIFICATION;
+
+      assert e.reason().equals(ExceptionReason.SUBSCRIPTION_NOT_ASSIGNED)
+          : "InvalidValueError reason mismatch got: "
+              + e.reason()
+              + " expected: "
+              + ExceptionReason.SUBSCRIPTION_NOT_ASSIGNED;
+
+      assert e.level().equals(ExceptionLevel.ERROR)
+          : "InvalidValueError level mismatch got: "
+              + e.level()
+              + " expected: "
+              + ExceptionLevel.ERROR;
+
+      assert e.invalidValue().equals(differentSubscription.id().toString())
+          : "Exception message mismatch got "
+              + e.invalidValue()
+              + " expected "
+              + differentSubscription.id().toString();
     }
+  }
 
   private List<PermissionId> initializePermissionidList(int amount) {
     List<PermissionId> permissionIds = new java.util.ArrayList<>();

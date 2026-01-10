@@ -1,29 +1,36 @@
 package com.vayl.identityAccess.core.domain.permission;
 
 import com.vayl.identityAccess.core.domain.api.ApiId;
+import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionEvent;
+import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionLevel;
+import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.InvalidValueException;
 
 public class PermissionId {
   private ApiId permissionLocation;
   private String name;
 
-  public PermissionId(ApiId anApiId, String aName) {
-    this.setPermissionLocation(anApiId);
-    this.setName(aName);
+  public PermissionId(ApiId id, String name) {
+    this.setPermissionLocation(id);
+    this.setName(name);
   }
 
   private void setPermissionLocation(ApiId permissionLocation) {
     this.permissionLocation = permissionLocation;
   }
 
-  private void setName(String aName) {
-    this.throwErrorOnEmptyString(aName);
-    this.name = aName;
+  private void setName(String string) {
+    this.throwErrorOnEmptyString(string);
+    this.name = string;
   }
 
-  private void throwErrorOnEmptyString(String aString) {
-    if (aString.isEmpty()) {
-      throw new InvalidValueException("PERMISSION_ID_CREATION", aString);
+  private void throwErrorOnEmptyString(String string) {
+    if (string.isEmpty()) {
+      throw new InvalidValueException(
+          ExceptionEvent.PERMISSION_ID_CREATION,
+          ExceptionReason.EMPTY_PERMISSION_NAME_PROVIDED,
+          string,
+          ExceptionLevel.INFO);
     }
   }
 
@@ -33,11 +40,11 @@ public class PermissionId {
   }
 
   @Override
-  public boolean equals(Object anObject) {
+  public boolean equals(Object object) {
 
     boolean isEqual = false;
-    if (anObject != null && this.getClass() == anObject.getClass()) {
-      PermissionId typedObject = (PermissionId) anObject;
+    if (object != null && this.getClass() == object.getClass()) {
+      PermissionId typedObject = (PermissionId) object;
       isEqual = typedObject.toString().equals(this.toString());
     }
 

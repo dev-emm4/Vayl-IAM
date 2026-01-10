@@ -1,4 +1,4 @@
-package com.vayl.identityAccess.core.domain.role;
+package com.vayl.identityAccess.core.domain.organization;
 
 import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionEvent;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionLevel;
@@ -6,22 +6,22 @@ import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.InvalidValueException;
 import com.vayl.identityAccess.core.domain.common.IdValidator;
 
-public class RoleId {
-  String id;
+public class OrgId {
+  private String id;
 
-  public RoleId(String anId) {
-    this.setId(anId);
+  public OrgId(String id) {
+    this.setId(id);
   }
 
-  private void setId(String anId) {
-    this.throwErrorOnInvalidId(anId);
-    this.id = anId;
+  private void setId(String id) {
+    this.throwErrorOnInvalidId(id);
+    this.id = id;
   }
 
   private void throwErrorOnInvalidId(String anId) {
     if (!IdValidator.isValid(anId)) {
       throw new InvalidValueException(
-          ExceptionEvent.ROLE_ID_CREATION, ExceptionReason.INVALID_ID, anId, ExceptionLevel.ERROR);
+          ExceptionEvent.ORG_ID_CREATION, ExceptionReason.INVALID_ID, anId, ExceptionLevel.ERROR);
     }
   }
 
@@ -31,19 +31,15 @@ public class RoleId {
   }
 
   @Override
-  public boolean equals(Object anObject) {
-
-    boolean isEqual = false;
-    if (anObject != null && this.getClass() == anObject.getClass()) {
-      RoleId typedObject = (RoleId) anObject;
-      isEqual = typedObject.toString().equals(this.toString());
-    }
-
-    return isEqual;
+  public boolean equals(Object obj) {
+    if (this == obj) return true;
+    if (obj == null || getClass() != obj.getClass()) return false;
+    OrgId orgId = (OrgId) obj;
+    return id.equals(orgId.id);
   }
 
   @Override
   public int hashCode() {
-    return this.id.hashCode();
+    return id.hashCode();
   }
 }

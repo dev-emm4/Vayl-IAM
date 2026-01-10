@@ -1,23 +1,30 @@
 package com.vayl.identityAccess.core.domain.fieldConfiguration;
 
+import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionEvent;
+import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionLevel;
+import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.InvalidValueException;
 import com.vayl.identityAccess.core.domain.common.IdValidator;
 
 public class FieldConfigId {
   private String id;
 
-  public FieldConfigId(String anId) {
-    this.setId(anId);
+  public FieldConfigId(String id) {
+    this.setId(id);
   }
 
-  public void setId(String anId) {
-    this.throwErrorOnInvalidId(anId);
-    this.id = anId;
+  public void setId(String id) {
+    this.throwErrorOnInvalidId(id);
+    this.id = id;
   }
 
-  private void throwErrorOnInvalidId(String anId) {
-    if (!IdValidator.isValid(anId)) {
-      throw new InvalidValueException("FIELDCONFIG_ID_CREATION", anId);
+  private void throwErrorOnInvalidId(String id) {
+    if (!IdValidator.isValid(id)) {
+      throw new InvalidValueException(
+          ExceptionEvent.FIELDCONFIG_ID_CREATION,
+          ExceptionReason.INVALID_ID,
+          id,
+          ExceptionLevel.ERROR);
     }
   }
 
@@ -39,7 +46,7 @@ public class FieldConfigId {
   }
 
   @Override
-    public int hashCode() {
-        return this.id.hashCode();
-    }
+  public int hashCode() {
+    return this.id.hashCode();
+  }
 }

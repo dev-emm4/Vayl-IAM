@@ -1,6 +1,9 @@
 package com.vayl.identityAccess.core.domain.fieldConfiguration;
 
 import com.vayl.identityAccess.core.domain.common.Date;
+import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionEvent;
+import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionLevel;
+import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.InvalidValueException;
 
 public class VerifiableFieldConfig implements FieldConfiguration {
@@ -10,55 +13,61 @@ public class VerifiableFieldConfig implements FieldConfiguration {
   private Date enforcementDate;
 
   public VerifiableFieldConfig(
-      FieldConfigId anId,
-      FieldType aFieldType,
-      boolean aVerificationRequirement,
-      Date anEnforcementDate) {
-    this.setId(anId);
-    this.setFieldType(aFieldType);
-    this.setVerificationRequirement(aVerificationRequirement);
-    this.setEnforcementDate(anEnforcementDate);
+      FieldConfigId id,
+      FieldType fieldType,
+      boolean verificationRequirement,
+      Date enforcementDate) {
+    this.setId(id);
+    this.setFieldType(fieldType);
+    this.setVerificationRequirement(verificationRequirement);
+    this.setEnforcementDate(enforcementDate);
   }
 
-  private void setId(FieldConfigId anId) {
-    this.id = anId;
+  private void setId(FieldConfigId id) {
+    this.id = id;
   }
 
-  private void setFieldType(FieldType aFieldType) {
-    if (!isFieldTypeAllowed(aFieldType)) {
-      throw new InvalidValueException("FIELDCONFIG_ID_CREATION", aFieldType.toString());
-    }
-    this.fieldType = aFieldType;
-  }
-
-  private boolean isFieldTypeAllowed(FieldType aFieldType) {
-    return aFieldType == FieldType.EMAIL
-        || aFieldType == FieldType.PHONE
-        || aFieldType == FieldType.PASSCODE
-        || aFieldType == FieldType.PRIMARY_EMAIL;
-  }
-
-  public void modify(Date anEnforcementDate, boolean aVerificationRequirement) {
-    this.throwErrorOnPrimaryEmailViolation(anEnforcementDate);
-    setEnforcementDate(anEnforcementDate);
-    setVerificationRequirement(aVerificationRequirement);
-  }
-
-  private void throwErrorOnPrimaryEmailViolation(Date anEnforcementDate) {
-    if (this.fieldType == FieldType.PRIMARY_EMAIL
-        && !this.enforcementDate.equals(anEnforcementDate)) {
+  private void setFieldType(FieldType fieldType) {
+    if (!isFieldTypeAllowed(fieldType)) {
       throw new InvalidValueException(
-          "FIELDCONFIG_OF_TYPE_PRIMARY_EMAIL_ENFORCEMENT_MODIFICATION",
-          anEnforcementDate.toString());
+          ExceptionEvent.VERIFIABLEFIELDCONFIG_CREATION,
+          ExceptionReason.INVALID_FIELD_TYPE,
+          fieldType.toString(),
+          ExceptionLevel.INFO);
+    }
+    this.fieldType = fieldType;
+  }
+
+  private boolean isFieldTypeAllowed(FieldType fieldType) {
+    return fieldType == FieldType.EMAIL
+        || fieldType == FieldType.PHONE
+        || fieldType == FieldType.PASSCODE
+        || fieldType == FieldType.PRIMARY_EMAIL;
+  }
+
+  public void modify(Date enforcementDate, boolean verificationRequirement) {
+    this.throwErrorOnPrimaryEmailViolation(enforcementDate);
+    setEnforcementDate(enforcementDate);
+    setVerificationRequirement(verificationRequirement);
+  }
+
+  private void throwErrorOnPrimaryEmailViolation(Date enforcementDate) {
+    if (this.fieldType == FieldType.PRIMARY_EMAIL
+        && !this.enforcementDate.equals(enforcementDate)) {
+      throw new InvalidValueException(
+          ExceptionEvent.VERIFIABLEFIELDCONFIG_MODIFICATION,
+          ExceptionReason.PRIMARY_EMAIL_ENFORCEMENT_DATE_CANNOT_BE_CHANGED,
+          enforcementDate.toString(),
+          ExceptionLevel.INFO);
     }
   }
 
-  private void setEnforcementDate(Date anEnforcementDate) {
-    this.enforcementDate = anEnforcementDate;
+  private void setEnforcementDate(Date enforcementDate) {
+    this.enforcementDate = enforcementDate;
   }
 
-  private void setVerificationRequirement(boolean aVerificationRequirement) {
-    this.verificationRequirement = aVerificationRequirement;
+  private void setVerificationRequirement(boolean verificationRequirement) {
+    this.verificationRequirement = verificationRequirement;
   }
 
   public FieldConfigId id() {
