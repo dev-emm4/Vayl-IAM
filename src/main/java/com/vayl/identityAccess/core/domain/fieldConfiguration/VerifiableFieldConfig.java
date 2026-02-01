@@ -41,8 +41,7 @@ public class VerifiableFieldConfig implements FieldConfiguration {
   private boolean isFieldTypeAllowed(FieldType fieldType) {
     return fieldType == FieldType.EMAIL
         || fieldType == FieldType.PHONE
-        || fieldType == FieldType.PASSCODE
-        || fieldType == FieldType.PRIMARY_EMAIL;
+        || fieldType == FieldType.PASSCODE;
   }
 
   public void modify(Date enforcementDate, boolean verificationRequirement) {
@@ -52,8 +51,7 @@ public class VerifiableFieldConfig implements FieldConfiguration {
   }
 
   private void throwErrorOnPrimaryEmailViolation(Date enforcementDate) {
-    if (this.fieldType == FieldType.PRIMARY_EMAIL
-        && !this.enforcementDate.equals(enforcementDate)) {
+    if (this.fieldName().equalsIgnoreCase("PRIMARY_EMAIL") && !this.enforcementDate.equals(enforcementDate)) {
       throw new InvalidValueException(
           ExceptionEvent.VERIFIABLEFIELDCONFIG_MODIFICATION,
           ExceptionReason.PRIMARY_EMAIL_ENFORCEMENT_DATE_CANNOT_BE_CHANGED,
@@ -72,6 +70,10 @@ public class VerifiableFieldConfig implements FieldConfiguration {
 
   public FieldConfigId id() {
     return this.id;
+  }
+
+  public String fieldName() {
+    return this.id.toString();
   }
 
   public Date enforcementDate() {

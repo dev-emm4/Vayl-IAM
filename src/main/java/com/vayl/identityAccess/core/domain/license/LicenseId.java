@@ -1,36 +1,36 @@
-package com.vayl.identityAccess.core.domain.fieldConfiguration;
+package com.vayl.identityAccess.core.domain.license;
 
 import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionEvent;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionLevel;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.InvalidValueException;
-import org.jspecify.annotations.NonNull;
+import com.vayl.identityAccess.core.domain.common.IdValidator;
 
-public class FieldConfigId {
-  private String name;
+public class LicenseId {
+  private String id;
 
-  public FieldConfigId(String name) {
-    this.setName(name);
+  public LicenseId(String anId) {
+    this.setId(anId);
   }
 
-  public void setName(String name) {
-    this.throwErrorOnInvalidId(name);
-    this.name = name;
+  public void setId(String anId) {
+    this.throwErrorOnInvalidId(anId);
+    this.id = anId;
   }
 
-  private void throwErrorOnInvalidId(@NonNull String name) {
-    if (name.isBlank()) {
+  private void throwErrorOnInvalidId(String anId) {
+    if (!IdValidator.isValid(anId)) {
       throw new InvalidValueException(
-          ExceptionEvent.FIELDCONFIG_ID_CREATION,
+          ExceptionEvent.SUBSCRIPTION_ID_CREATION,
           ExceptionReason.INVALID_ID,
-          name,
-          ExceptionLevel.INFO);
+          anId,
+          ExceptionLevel.ERROR);
     }
   }
 
   @Override
   public String toString() {
-    return this.name;
+    return this.id;
   }
 
   @Override
@@ -38,7 +38,7 @@ public class FieldConfigId {
 
     boolean isEqual = false;
     if (anObject != null && this.getClass() == anObject.getClass()) {
-      FieldConfigId typedObject = (FieldConfigId) anObject;
+      LicenseId typedObject = (LicenseId) anObject;
       isEqual = typedObject.toString().equals(this.toString());
     }
 
@@ -47,6 +47,6 @@ public class FieldConfigId {
 
   @Override
   public int hashCode() {
-    return this.name.hashCode();
+    return this.id.hashCode();
   }
 }

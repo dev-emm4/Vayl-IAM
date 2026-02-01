@@ -4,7 +4,6 @@ public enum FieldType {
     STRING,
     ADDRESS,
     DATE,
-    PRIMARY_EMAIL,
     USERNAME,
     PHONE,
     EMAIL,

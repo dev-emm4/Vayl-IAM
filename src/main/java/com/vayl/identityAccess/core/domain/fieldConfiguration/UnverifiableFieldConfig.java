@@ -11,7 +11,8 @@ public class UnverifiableFieldConfig implements FieldConfiguration {
   private FieldType fieldType;
   private Date enforcementDate;
 
-  public UnverifiableFieldConfig(FieldConfigId id, FieldType fieldType, Date enforcementDate) {
+  public UnverifiableFieldConfig(
+      FieldConfigId id, FieldType fieldType, Date enforcementDate) {
     this.setId(id);
     this.setFieldType(fieldType);
     this.setEnforcementDate(enforcementDate);
@@ -54,6 +55,10 @@ public class UnverifiableFieldConfig implements FieldConfiguration {
 
   public FieldType fieldType() {
     return this.fieldType;
+  }
+
+  public String fieldName() {
+    return this.id().toString();
   }
 
   public FieldConfigId id() {

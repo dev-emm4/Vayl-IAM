@@ -1,29 +1,35 @@
 package com.vayl.identityAccess.core.domain.role;
 
+import com.vayl.identityAccess.core.domain.api.ApiId;
+import com.vayl.identityAccess.core.domain.api.permission.PermissionId;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionEvent;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionLevel;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.InvalidValueException;
-import com.vayl.identityAccess.core.domain.permission.PermissionId;
-import com.vayl.identityAccess.core.domain.subscription.Subscription;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class DefaultRole implements Role {
   RoleId id;
   String name;
-  SubscriptionAssignment assignedSubscription;
+  ApiId assignedApi;
   List<PermissionId> grantedPermissions = new ArrayList<>();
 
   public DefaultRole(
-      RoleId id,
-      String name,
-      SubscriptionAssignment subscriptionAssignment,
-      List<PermissionId> grantedPermissions) {
+      RoleId id, String name, ApiId assignApi, List<PermissionId> grantedPermissions) {
+    if (!this.checkIfPermissionIsLocatedInApi(grantedPermissions, assignApi)) {
+      throw new InvalidValueException(
+          ExceptionEvent.DEFAULT_ROLE_CREATION,
+          ExceptionReason.GRANTED_PERMISSION_NOT_LOCATED_IN_API,
+          null,
+          ExceptionLevel.INFO);
+    }
     this.setId(id);
     this.setName(name);
-    this.setAssignedSubscription(subscriptionAssignment);
-    this.setGrantedPermissions(grantedPermissions);
+    this.assignApi(assignApi);
+    this.assignPermission(grantedPermissions);
   }
 
   private void setId(RoleId id) {
@@ -34,21 +40,49 @@ public class DefaultRole implements Role {
     this.name = name;
   }
 
-  private void setAssignedSubscription(SubscriptionAssignment assignedSubscription) {
-    this.throwErrorIfSubscriptionAssignmentHaveContract(assignedSubscription);
-    this.assignedSubscription = assignedSubscription;
+  private void assignApi(ApiId assignApi) {
+    this.assignedApi = assignApi;
   }
 
-  // Ensure that the SubscriptionAssignment does not have an associated contract
-  private void throwErrorIfSubscriptionAssignmentHaveContract(
-      SubscriptionAssignment subscriptionAssignment) {
-    if (subscriptionAssignment.subscriptionContract() != null) {
+  public void modifyGrantedPermissions(
+      List<PermissionId> addPermissions, List<PermissionId> removePermissions) {
+    if (!this.checkIfPermissionIsLocatedInApi(addPermissions, this.assignedApi())) {
       throw new InvalidValueException(
-          ExceptionEvent.DEFAULT_ROLE_CREATION,
-          ExceptionReason.SUBSCRIPTION_ASSIGNMENT_HAS_CONTRACT,
-          subscriptionAssignment.toString(),
-          ExceptionLevel.ERROR);
+          ExceptionEvent.DEFAULT_ROLE_PERMISSION_MODIFICATION,
+          ExceptionReason.GRANTED_PERMISSION_NOT_LOCATED_IN_API,
+          null,
+          ExceptionLevel.INFO);
     }
+
+    this.assignPermission(addPermissions);
+    this.removeGrantedPermissions(removePermissions);
+  }
+
+  private boolean checkIfPermissionIsLocatedInApi(
+      List<PermissionId> permissionsToCheck, ApiId assignedApi) {
+    for (PermissionId permissionId : permissionsToCheck) {
+      if (permissionId.permissionLocation() != assignedApi) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private void assignPermission(List<PermissionId> addPermission) {
+    Set<PermissionId> grantedPermissionMap = new HashSet<>(this.grantedPermissions());
+
+    for (PermissionId permissionId : addPermission) {
+      if (!grantedPermissionMap.contains(permissionId)) {
+        this.grantedPermissions.add(permissionId);
+        grantedPermissionMap.add(permissionId);
+      }
+    }
+  }
+
+  private void removeGrantedPermissions(List<PermissionId> removePermissions) {
+    Set<PermissionId> removePermissionMap = new HashSet<>(removePermissions);
+
+    this.grantedPermissions.removeIf(removePermissionMap::contains);
   }
 
   public RoleId id() {
@@ -59,57 +93,11 @@ public class DefaultRole implements Role {
     return this.name;
   }
 
-  public SubscriptionAssignment assignedSubscription() {
-    return this.assignedSubscription;
+  public ApiId assignedApi() {
+    return this.assignedApi;
   }
 
   public List<PermissionId> grantedPermissions() {
     return this.grantedPermissions;
-  }
-
-  public void modifyGrantedPermissions(
-      Subscription subscription,
-      List<PermissionId> addPermissions,
-      List<PermissionId> removePermissions) {
-    this.throwErrorIfSubscriptionIsNotAssigned(subscription);
-    this.throwErrorIfPermissionNotGrantedBySubscription(subscription, addPermissions);
-
-    this.setGrantedPermissions(addPermissions);
-    this.removeGrantedPermissions(removePermissions);
-  }
-
-  private void throwErrorIfPermissionNotGrantedBySubscription(
-      Subscription subscription, List<PermissionId> selectedPermissions) {
-    if (!subscription.containsPermission(selectedPermissions)) {
-      throw new InvalidValueException(
-          ExceptionEvent.DEFAULT_ROLE_PERMISSION_MODIFICATION,
-          ExceptionReason.SELECTED_PERMISSION_NOT_GRANTED_BY_SUBSCRIPTION,
-          selectedPermissions.toString(),
-          ExceptionLevel.INFO);
-    }
-  }
-
-  private void throwErrorIfSubscriptionIsNotAssigned(Subscription subscription) {
-    if (!this.assignedSubscription.subscriptionId().equals(subscription.id())) {
-      throw new InvalidValueException(
-          ExceptionEvent.DEFAULT_ROLE_PERMISSION_MODIFICATION,
-          ExceptionReason.SUBSCRIPTION_NOT_ASSIGNED,
-          subscription.id().toString(),
-          ExceptionLevel.ERROR);
-    }
-  }
-
-  private void setGrantedPermissions(List<PermissionId> grantedPermissions) {
-    for (PermissionId permissionId : grantedPermissions) {
-      if (!this.grantedPermissions.contains(permissionId)) {
-        this.grantedPermissions.add(permissionId);
-      }
-    }
-  }
-
-  private void removeGrantedPermissions(List<PermissionId> grantedPermissions) {
-    for (PermissionId permissionId : grantedPermissions) {
-      this.grantedPermissions.remove(permissionId);
-    }
   }
 }
