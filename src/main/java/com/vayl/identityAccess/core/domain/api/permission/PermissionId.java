@@ -1,12 +1,13 @@
 package com.vayl.identityAccess.core.domain.api.permission;
 
 import com.vayl.identityAccess.core.domain.api.ApiId;
+import com.vayl.identityAccess.core.domain.api.LicenseRestrictable;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionEvent;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionLevel;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.InvalidValueException;
 
-public class PermissionId {
+public class PermissionId implements LicenseRestrictable {
   private ApiId permissionLocation;
   private String name;
 

@@ -1,3 +1,7 @@
 package com.vayl.identityAccess.core.domain.common;
 
-public enum MfaType {}
+public enum MfaType {
+    EMAIL,
+    SMS,
+    AUTHENTICATOR_APP
+}

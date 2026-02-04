@@ -5,7 +5,7 @@ import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionLevel;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.InvalidValueException;
 
-public class ApiId {
+public class ApiId implements LicenseRestrictable{
   private String id;
 
   public ApiId(String id) {
