@@ -30,7 +30,7 @@ public class VerifiableFieldConfig implements FieldConfiguration {
   private void setFieldType(FieldType fieldType) {
     if (!isFieldTypeAllowed(fieldType)) {
       throw new InvalidValueException(
-          ExceptionEvent.VERIFIABLEFIELDCONFIG_CREATION,
+          ExceptionEvent.VERIFIABLE_FIELD_CONFIG_CREATION,
           ExceptionReason.INVALID_FIELD_TYPE,
           fieldType.toString(),
           ExceptionLevel.INFO);
@@ -53,7 +53,7 @@ public class VerifiableFieldConfig implements FieldConfiguration {
   private void throwErrorOnPrimaryEmailViolation(Date enforcementDate) {
     if (this.fieldName().equalsIgnoreCase("PRIMARY_EMAIL") && !this.enforcementDate.equals(enforcementDate)) {
       throw new InvalidValueException(
-          ExceptionEvent.VERIFIABLEFIELDCONFIG_MODIFICATION,
+          ExceptionEvent.VERIFIABLE_FIELD_CONFIG_MODIFICATION,
           ExceptionReason.PRIMARY_EMAIL_ENFORCEMENT_DATE_CANNOT_BE_CHANGED,
           enforcementDate.toString(),
           ExceptionLevel.INFO);

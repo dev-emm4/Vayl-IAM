@@ -30,11 +30,11 @@ public class VerifiableFieldConfigTest {
         assert false
             : "Expected InvalidValueError was not thrown for invalid field type: " + fieldType;
       } catch (InvalidValueException e) {
-        assert e.event().equals(ExceptionEvent.VERIFIABLEFIELDCONFIG_CREATION)
+        assert e.event().equals(ExceptionEvent.VERIFIABLE_FIELD_CONFIG_CREATION)
             : "InvalidValueError event mismatch got: "
                 + e.event()
                 + " expected: "
-                + ExceptionEvent.UNVERIFIABLEFIELDCONFIG_CREATION;
+                + ExceptionEvent.UNVERIFIABLE_FIELD_CONFIG_CREATION;
 
         assert e.reason().equals(ExceptionReason.INVALID_FIELD_TYPE)
             : "InvalidValueError reason mismatch got: "
@@ -109,11 +109,11 @@ public class VerifiableFieldConfigTest {
       assert false
           : "VerifiableFieldConfig with fieldName = PRIMARY_EMAIL had enforcementDate modified.";
     } catch (InvalidValueException e) {
-      assert e.event().equals(ExceptionEvent.VERIFIABLEFIELDCONFIG_MODIFICATION)
+      assert e.event().equals(ExceptionEvent.VERIFIABLE_FIELD_CONFIG_MODIFICATION)
           : "InvalidValueError event mismatch got: "
               + e.event()
               + " expected: "
-              + ExceptionEvent.VERIFIABLEFIELDCONFIG_MODIFICATION;
+              + ExceptionEvent.VERIFIABLE_FIELD_CONFIG_MODIFICATION;
 
       assert e.reason().equals(ExceptionReason.PRIMARY_EMAIL_ENFORCEMENT_DATE_CANNOT_BE_CHANGED)
           : "InvalidValueError reason mismatch got: "

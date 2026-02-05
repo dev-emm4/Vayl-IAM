@@ -25,7 +25,7 @@ public class UnverifiableFieldConfig implements FieldConfiguration {
   private void setFieldType(FieldType fieldType) {
     if (!isFieldTypeAllowed(fieldType)) {
       throw new InvalidValueException(
-          ExceptionEvent.UNVERIFIABLEFIELDCONFIG_CREATION,
+          ExceptionEvent.UNVERIFIABLE_FIELD_CONFIG_CREATION,
           ExceptionReason.INVALID_FIELD_TYPE,
           fieldType.toString(),
           ExceptionLevel.INFO);

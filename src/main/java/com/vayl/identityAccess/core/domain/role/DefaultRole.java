@@ -6,6 +6,7 @@ import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionEvent;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionLevel;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.InvalidValueException;
+import com.vayl.identityAccess.core.domain.organization.OrgId;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -95,6 +96,10 @@ public class DefaultRole implements Role {
 
   public ApiId assignedApi() {
     return this.assignedApi;
+  }
+
+  public boolean belongsTo(OrgId orgId) {
+    return true;
   }
 
   public List<PermissionId> grantedPermissions() {

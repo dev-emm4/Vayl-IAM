@@ -1,5 +1,7 @@
 package com.vayl.identityAccess.core.domain.organization.ou.authenticationPolicy;
 
+
+
 public class AuthenticationPolicy {
   private RecoveryPolicy recoveryPolicy;
   private MfaPolicy mfaPolicy;
@@ -36,8 +38,12 @@ public class AuthenticationPolicy {
     return isInherited;
   }
 
-  public AuthenticationPolicy copyWith(boolean isInherited) {
-    return new AuthenticationPolicy(this.recoveryPolicy(), this.mfaPolicy(), isInherited);
+  public AuthenticationPolicy copyWith(
+      MfaPolicy mfaPolicy, RecoveryPolicy recoveryPolicy, boolean isInherited) {
+    MfaPolicy newMfaPolicy = mfaPolicy != null ? mfaPolicy : this.mfaPolicy();
+    RecoveryPolicy newRecoveryPolicy =
+        recoveryPolicy != null ? recoveryPolicy : this.recoveryPolicy();
+    return new AuthenticationPolicy(newRecoveryPolicy, newMfaPolicy, isInherited);
   }
 
   @Override

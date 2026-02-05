@@ -1,5 +1,10 @@
 package com.vayl.identityAccess.core.domain.license;
 
+import com.vayl.identityAccess.core.domain.common.Date;
+import com.vayl.identityAccess.core.domain.organization.OrgId;
+import com.vayl.identityAccess.core.domain.organization.licenseContract.LicenseContract;
+import com.vayl.identityAccess.core.domain.organization.licenseContract.LicenseContractId;
+
 public class License {
   private LicenseId id;
   private String name;
@@ -25,5 +30,8 @@ public class License {
     return this.name;
   }
 
-
+  public LicenseContract createLicenseContract(OrgId orgId, int amountAllocated, Date expireAt) {
+    LicenseContractId licenseContractId = new LicenseContractId(orgId, this.id);
+    return new LicenseContract(licenseContractId, amountAllocated, amountAllocated, expireAt);
+  }
 }

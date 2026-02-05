@@ -5,7 +5,6 @@ import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionLevel;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.InvalidValueException;
 import com.vayl.identityAccess.core.domain.fieldConfiguration.FieldConfigId;
-import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 public class FieldConfigIdTest {
@@ -19,11 +18,11 @@ public class FieldConfigIdTest {
       assert false
           : "Expected InvalidValueException was not thrown for blank string" + invalidFieldName;
     } catch (InvalidValueException e) {
-      assert e.event().equals(ExceptionEvent.FIELDCONFIG_ID_CREATION)
+      assert e.event().equals(ExceptionEvent.FIELD_CONFIG_ID_CREATION)
           : "InvalidValueError event mismatch got: "
               + e.event()
               + " expected: "
-              + ExceptionEvent.FIELDCONFIG_ID_CREATION;
+              + ExceptionEvent.FIELD_CONFIG_ID_CREATION;
 
       assert e.reason().equals(ExceptionReason.INVALID_ID)
           : "InvalidValueError reason mismatch got: "

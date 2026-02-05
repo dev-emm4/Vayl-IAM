@@ -29,11 +29,11 @@ public class UnverifiableFieldConfigTest {
         assert false
             : "Expected InvalidValueException was not thrown for invalid field type: " + fieldType;
       } catch (InvalidValueException e) {
-        assert e.event().equals(ExceptionEvent.UNVERIFIABLEFIELDCONFIG_CREATION)
+        assert e.event().equals(ExceptionEvent.UNVERIFIABLE_FIELD_CONFIG_CREATION)
             : "InvalidValueError event mismatch got: "
                 + e.event()
                 + " expected: "
-                + ExceptionEvent.UNVERIFIABLEFIELDCONFIG_CREATION;
+                + ExceptionEvent.UNVERIFIABLE_FIELD_CONFIG_CREATION;
 
         assert e.reason().equals(ExceptionReason.INVALID_FIELD_TYPE)
             : "InvalidValueError reason mismatch got: "

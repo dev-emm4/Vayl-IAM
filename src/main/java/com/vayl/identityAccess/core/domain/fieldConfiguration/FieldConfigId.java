@@ -21,7 +21,7 @@ public class FieldConfigId {
   private void throwErrorOnInvalidId(@NonNull String name) {
     if (name.isBlank()) {
       throw new InvalidValueException(
-          ExceptionEvent.FIELDCONFIG_ID_CREATION,
+          ExceptionEvent.FIELD_CONFIG_ID_CREATION,
           ExceptionReason.INVALID_ID,
           name,
           ExceptionLevel.INFO);
