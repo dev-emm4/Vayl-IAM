@@ -39,23 +39,49 @@ public class LicenseRestrictionRegistryTest {
   }
 
   @Test
-  public void
-      updateLicenseRestriction_withRestrictionsWithoutBlockingLicenses_removesRestrictionFromRegistry() {
+  public void removeLicenseRestrictions_withExistingRestriction_removesRestrictionFromRegistry() {
     LicenseRestriction licenseRestriction = this.createLicenseRestriction();
     LicenseRestrictionRegistry registry =
         createRegistryWithRestrictions(List.of(licenseRestriction));
 
-    // create an updated restriction with no blocking licenses
-    LicenseRestriction updatedRestriction =
-        new LicenseRestriction(licenseRestriction.licenseRestrictable(), new HashSet<>());
-
-    List<LicenseRestriction> updatedRestrictions = List.of(updatedRestriction);
-
-    registry.updateLicenseRestriction(updatedRestrictions);
+    registry.removeLicenseRestrictions(List.of(licenseRestriction.licenseRestrictable()));
 
     assert registry.getLicenseRestriction(licenseRestriction.licenseRestrictable()) == null
         : "LicenseRestrictionRegistry did not remove the license restriction correctly.";
+
   }
+
+  @Test
+    public void removeLicenseRestrictions_withNonExistingRestriction_throwsInvalidValueException() {
+        LicenseRestrictionRegistry registry = createRegistryWithRestrictions(List.of());
+
+        LicenseRestrictable nonExistingRestrictable = new ApiId("non-existing.com");
+
+        try {
+        registry.removeLicenseRestrictions(List.of(nonExistingRestrictable));
+        assert false
+            : "Expected an exception to be thrown when trying to remove a non-existing license restriction.";
+        } catch (InvalidValueException e) {
+        assert e.event() == ExceptionEvent.REMOVING_LICENSE_RESTRICTION
+            : "InvalidValueException event mismatch got: "
+                + e.event()
+                + " expected: "
+                + ExceptionEvent.REMOVING_LICENSE_RESTRICTION;
+
+        assert e.reason() == ExceptionReason.INVALID_LICENSE_RESTRICTION_KEY
+            : "InvalidValueException reason mismatch got: "
+                + e.reason()
+                + " expected: "
+                + ExceptionReason.INVALID_LICENSE_RESTRICTION_KEY;
+
+        assert e.level() == ExceptionLevel.INFO
+            : "InvalidValueException level mismatch got: "
+                + e.level()
+                + " expected: "
+                + ExceptionLevel.INFO;
+        }
+    }
+
 
   @Test
   public void updateLicenseRestriction_withNewRestriction_addsRestrictionToRegistry() {

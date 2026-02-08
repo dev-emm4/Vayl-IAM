@@ -1,10 +1,10 @@
 package com.vayl.identityAccess.core.domain.organization.ou.authorizationPolicy;
 
 import com.vayl.identityAccess.core.domain.organization.licenseContract.LicenseContractId;
-import com.vayl.identityAccess.core.domain.role.Role;
 import com.vayl.identityAccess.core.domain.role.RoleId;
 import java.util.ArrayList;
 import java.util.List;
+import org.jspecify.annotations.NonNull;
 
 public class AuthorizationPolicy {
   private List<LicenseContractId> assignedLicenseContracts = new ArrayList<>();
@@ -12,20 +12,20 @@ public class AuthorizationPolicy {
   private boolean isInherited;
 
   public AuthorizationPolicy(
-      List<LicenseContractId> assignLicenseContracts,
-      List<RoleId> assignRoles,
+      @NonNull List<LicenseContractId> assignLicenseContracts,
+      @NonNull List<RoleId> assignRoles,
       boolean isInherited) {
     this.setAssignedLicenseContracts(assignLicenseContracts);
     this.setAssignedRoles(assignRoles);
     this.setIsInherited(isInherited);
   }
 
-  private void setAssignedLicenseContracts(List<LicenseContractId> assignLicenseContracts) {
-    this.assignedLicenseContracts = assignLicenseContracts;
+  private void setAssignedLicenseContracts(List<LicenseContractId> licenseContractIds) {
+    this.assignedLicenseContracts = licenseContractIds;
   }
 
-  private void setAssignedRoles(List<RoleId> assignRoles) {
-    this.assignedRoles = assignRoles;
+  private void setAssignedRoles(List<RoleId> roleIds) {
+    this.assignedRoles = roleIds;
   }
 
   private void setIsInherited(boolean isInherited) {
@@ -45,20 +45,20 @@ public class AuthorizationPolicy {
   }
 
   public AuthorizationPolicy copyWith(
-      List<LicenseContractId> assignLicenseContracts,
-      List<RoleId> assignRoles,
+      @NonNull List<LicenseContractId> licenseContractIds,
+      @NonNull List<RoleId> roleIds,
       boolean isInherited) {
-    List<LicenseContractId> newLicenseContracts =
-        assignLicenseContracts == null ? this.assignedLicenseContracts() : assignLicenseContracts;
-    List<RoleId> newAssignedRoles = assignRoles == null ? this.assignedRoles() : assignRoles;
-    return new AuthorizationPolicy(newLicenseContracts, newAssignedRoles, isInherited);
+    List<LicenseContractId> newLicenseContractIds =
+        licenseContractIds.isEmpty() ? this.assignedLicenseContracts() : licenseContractIds;
+    List<RoleId> newAssignedRoleIds = roleIds.isEmpty() ? this.assignedRoles() : roleIds;
+    return new AuthorizationPolicy(newLicenseContractIds, newAssignedRoleIds, isInherited);
   }
 
-  public boolean isLicenseContractsDifferent(List<LicenseContractId> licenseContractIds) {
+  public boolean isLicenseContractsEquals(List<LicenseContractId> licenseContractIds) {
     return this.assignedLicenseContracts().equals(licenseContractIds);
   }
-  
-  public boolean isRolesDifferent(List<RoleId> roleIds){
+
+  public boolean isRoleIdsEquals(List<RoleId> roleIds) {
     return this.assignedRoles().equals(roleIds);
   }
 

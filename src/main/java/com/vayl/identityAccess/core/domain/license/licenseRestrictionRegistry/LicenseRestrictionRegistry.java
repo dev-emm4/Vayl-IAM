@@ -9,9 +9,10 @@ import com.vayl.identityAccess.core.domain.license.LicenseId;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.jspecify.annotations.NonNull;
 
 public class LicenseRestrictionRegistry {
-  private List<LicenseId> assignedLicenses;
+  private List<LicenseId> assignedLicenses = null;
   private Map<LicenseRestrictable, LicenseRestriction> licenseRestrictionMap = new HashMap<>();
 
   public LicenseRestrictionRegistry() {}
@@ -26,25 +27,34 @@ public class LicenseRestrictionRegistry {
     }
   }
 
-  public void initializeAssignedLicense(List<LicenseId> assignedLicenses) {
-    this.assignedLicenses = assignedLicenses;
+  public void initializeAssignedLicense(List<LicenseId> licenseIds) {
+    this.assignedLicenses = licenseIds;
   }
 
-  public void updateLicenseRestriction(List<LicenseRestriction> updatedLicenseRestrictions) {
-    if (updatedLicenseRestrictions.isEmpty()) {
-      return;
-    }
-
+  public void updateLicenseRestriction(
+      @NonNull List<LicenseRestriction> updatedLicenseRestrictions) {
     for (LicenseRestriction licenseRestriction : updatedLicenseRestrictions) {
-      if (licenseRestriction.blockingLicenses().isEmpty()) {
-        this.licenseRestrictionMap.remove(licenseRestriction.licenseRestrictable());
-      } else {
-        this.licenseRestrictionMap.put(
-            licenseRestriction.licenseRestrictable(), licenseRestriction);
-      }
+      this.licenseRestrictionMap.put(licenseRestriction.licenseRestrictable(), licenseRestriction);
     }
 
     return;
+  }
+
+  public void removeLicenseRestrictions(@NonNull List<LicenseRestrictable> licenseRestrictable) {
+    for (LicenseRestrictable restrictable : licenseRestrictable) {
+      this.throwErrorIfLicenseRestrictionNotFound(restrictable);
+      this.licenseRestrictionMap.remove(restrictable);
+    }
+  }
+
+  private void throwErrorIfLicenseRestrictionNotFound(LicenseRestrictable licenseRestrictable) {
+    if (!this.licenseRestrictionMap.containsKey(licenseRestrictable)) {
+      throw new InvalidValueException(
+          ExceptionEvent.REMOVING_LICENSE_RESTRICTION,
+          ExceptionReason.INVALID_LICENSE_RESTRICTION_KEY,
+          licenseRestrictable.toString(),
+          ExceptionLevel.INFO);
+    }
   }
 
   public boolean canAccessLicenseRestrictable(LicenseRestrictable licenseRestrictable) {
@@ -59,7 +69,7 @@ public class LicenseRestrictionRegistry {
   }
 
   private void throwErrorIfNotInitialized() {
-    if (this.assignedLicenses == null || this.assignedLicenses.isEmpty()) {
+    if (this.assignedLicenses == null) {
       throw new InvalidValueException(
           ExceptionEvent.CHECKING_ACCESS_TO_LICENSE_RESTRICTABLE,
           ExceptionReason.LICENSE_RESTRICTION_REGISTRY_NOT_INITIALIZED,

@@ -6,12 +6,13 @@ import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionEvent;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionLevel;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.InvalidValueException;
+import org.jspecify.annotations.NonNull;
 
 public class PermissionId implements LicenseRestrictable {
   private ApiId permissionLocation;
   private String name;
 
-  public PermissionId(ApiId id, String name) {
+  public PermissionId(ApiId id, @NonNull String name) {
     this.setPermissionLocation(id);
     this.setName(name);
   }
@@ -20,17 +21,17 @@ public class PermissionId implements LicenseRestrictable {
     this.permissionLocation = permissionLocation;
   }
 
-  private void setName(String string) {
-    this.throwErrorOnBlankString(string);
-    this.name = string;
+  private void setName(@NonNull String name) {
+    this.throwErrorOnBlankName(name);
+    this.name = name;
   }
 
-  private void throwErrorOnBlankString(String string) {
-    if (string.isBlank()) {
+  private void throwErrorOnBlankName(@NonNull String name) {
+    if (name.isBlank()) {
       throw new InvalidValueException(
           ExceptionEvent.PERMISSION_ID_CREATION,
           ExceptionReason.BLANK_PERMISSION_NAME_PROVIDED,
-          string,
+          name,
           ExceptionLevel.INFO);
     }
   }

@@ -1,6 +1,7 @@
 package com.vayl.identityAccess.core.domain.organization.ou.authenticationPolicy;
 
 
+import org.jspecify.annotations.NonNull;
 
 public class AuthenticationPolicy {
   private RecoveryPolicy recoveryPolicy;
@@ -8,7 +9,7 @@ public class AuthenticationPolicy {
   private boolean isInherited;
 
   public AuthenticationPolicy(
-      RecoveryPolicy recoveryPolicy, MfaPolicy mfaPolicy, boolean isInherited) {
+          @NonNull RecoveryPolicy recoveryPolicy, @NonNull MfaPolicy mfaPolicy, boolean isInherited) {
     this.setRecoveryPolicy(recoveryPolicy);
     this.setMfaPolicy(mfaPolicy);
     this.setIsInherited(isInherited);

@@ -2,6 +2,8 @@ package com.vayl.identityAccess.core.domain.license.licenseRestrictionRegistry;
 
 import com.vayl.identityAccess.core.domain.api.LicenseRestrictable;
 import com.vayl.identityAccess.core.domain.license.LicenseId;
+import org.jspecify.annotations.NonNull;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -10,17 +12,17 @@ public class LicenseRestriction {
   private Set<LicenseId> blockingLicense = new HashSet<LicenseId>();
 
   public LicenseRestriction(
-      LicenseRestrictable licenseRestrictable, Set<LicenseId> blockingLicense) {
+      @NonNull LicenseRestrictable licenseRestrictable, @NonNull Set<LicenseId> licenseIds) {
     setLicenseRestrictable(licenseRestrictable);
-    setBlockingLicense(blockingLicense);
+    setBlockingLicense(licenseIds);
   }
 
   private void setLicenseRestrictable(LicenseRestrictable licenseRestrictable) {
     this.licenseRestrictable = licenseRestrictable;
   }
 
-  private void setBlockingLicense(Set<LicenseId> blockingLicense) {
-    this.blockingLicense = blockingLicense;
+  private void setBlockingLicense(@NonNull Set<LicenseId> licenseIds) {
+    this.blockingLicense = licenseIds;
   }
 
   public LicenseRestrictable licenseRestrictable() {

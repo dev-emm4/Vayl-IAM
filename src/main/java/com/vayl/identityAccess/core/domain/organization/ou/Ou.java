@@ -17,10 +17,12 @@ import com.vayl.identityAccess.core.domain.role.RoleId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import org.jspecify.annotations.NonNull;
 
 public class Ou {
   private OrgId orgId;
   private OuId id;
+  private String name;
   private boolean isTopLevel;
   private OuId parent;
   private AuthorizationPolicy authorizationPolicy;
@@ -29,12 +31,14 @@ public class Ou {
   public Ou(
       OrgId orgId,
       OuId id,
+      String name,
       boolean isTopLevel,
       OuId parent,
       AuthorizationPolicy authorizationPolicy,
       AuthenticationPolicy authenticationPolicy) {
     this.setOrgId(orgId);
     this.setId(id);
+    this.setName(name);
     this.setIsTopLevel(isTopLevel);
     this.setParent(parent);
     this.setAuthorizationPolicy(authorizationPolicy);
@@ -47,6 +51,10 @@ public class Ou {
 
   private void setId(OuId id) {
     this.id = id;
+  }
+
+  private void setName(String name) {
+    this.name = name;
   }
 
   private void setIsTopLevel(boolean isTopLevel) {
@@ -73,6 +81,10 @@ public class Ou {
     return this.id;
   }
 
+  public String name() {
+    return this.name;
+  }
+
   public boolean isTopLevel() {
     return this.isTopLevel;
   }
@@ -89,67 +101,74 @@ public class Ou {
     return this.authenticationPolicy;
   }
 
-  public void assignAuthorizationPolicy(AuthorizationPolicy authorizationPolicy) {
+  private void assignAuthorizationPolicy(AuthorizationPolicy authorizationPolicy) {
     this.setAuthorizationPolicy(authorizationPolicy);
   }
 
-  public void assignAuthenticationPolicy(AuthenticationPolicy authenticationPolicy) {
+  private void assignAuthenticationPolicy(AuthenticationPolicy authenticationPolicy) {
     this.setAuthenticationPolicy(authenticationPolicy);
   }
 
-  public void updateParent(OuId parentId) {
+  private void updateParent(OuId parentId) {
     this.setParent(parentId);
   }
 
   public Ou createOu(String name) {
     OuId newOuId = new OuId(UUID.randomUUID().toString());
     AuthorizationPolicy newAuthorizationPolicy =
-        this.authorizationPolicy().copyWith(null, null, true);
+        this.authorizationPolicy().copyWith(List.of(), List.of(), true);
     AuthenticationPolicy newAuthenticationPolicy =
         this.authenticationPolicy().copyWith(null, null, true);
 
     return new Ou(
-        this.orgId(), newOuId, false, this.id(), newAuthorizationPolicy, newAuthenticationPolicy);
+        this.orgId(),
+        newOuId,
+        name,
+        false,
+        this.id(),
+        newAuthorizationPolicy,
+        newAuthenticationPolicy);
   }
 
-  public void updateAuthenticationPolicy(MfaPolicy mfaPolicy, RecoveryPolicy recoveryPolicy) {
+  public void updateAuthenticationPolicy(
+      @NonNull MfaPolicy mfaPolicy, @NonNull RecoveryPolicy recoveryPolicy) {
     boolean shouldPublishEvent = false;
     shouldPublishEvent = !(this.authenticationPolicy().mfaPolicy().equals(mfaPolicy));
     shouldPublishEvent =
         this.authenticationPolicy().recoveryPolicy().equals(recoveryPolicy) || shouldPublishEvent;
 
+    this.setAuthenticationPolicy(new AuthenticationPolicy(recoveryPolicy, mfaPolicy, false));
     this.publishUpdateOuAuthenticationPolicyEvent(shouldPublishEvent);
   }
 
   public void updateAuthorizationPolicy(
-      List<LicenseContractId> licenseContractIds,
-      List<Role> roles,
-      LicenseRestrictionRegistry registry) {
+      @NonNull List<LicenseContractId> licenseContractIds,
+      @NonNull List<Role> roles,
+      @NonNull LicenseRestrictionRegistry registry) {
     this.throwErrorIfLicenseRegistryIsNull(registry);
+    this.throwErrorIfLicenseContractsInDifferentOrg(licenseContractIds);
+    this.throwErrorIfRolesInDifferentOrg(roles);
 
     boolean isOuAnAudience = false;
     boolean isUaAnAudience = false;
-    List<RoleId> accessibleRoleIds;
-    List<LicenseContractId> accessibleContractIds;
+    List<RoleId> accessibleRoleIds = new ArrayList<RoleId>();
+    List<LicenseContractId> accessibleContractIds = new ArrayList<LicenseContractId>();
 
-    if (!(licenseContractIds == null)) {
-      accessibleContractIds = this.filterOrgLicenseContractIds(licenseContractIds);
+    if (!(licenseContractIds.isEmpty())) {
+      accessibleContractIds = licenseContractIds;
       isUaAnAudience =
-          this.authorizationPolicy().isLicenseContractsDifferent(accessibleContractIds);
+          !(this.authorizationPolicy().isLicenseContractsEquals(accessibleContractIds));
       isOuAnAudience =
-          this.authorizationPolicy().isLicenseContractsDifferent(accessibleContractIds);
-    } else {
-      accessibleContractIds = this.authorizationPolicy().assignedLicenseContracts();
+          !(this.authorizationPolicy().isLicenseContractsEquals(accessibleContractIds));
     }
 
     registry.initializeAssignedLicense(getLicenseIdsFromContractsId(accessibleContractIds));
+    this.throwErrorIfRolesIsNotAllowedByRegistry(roles, registry);
 
-    if (!(roles == null)) {
-      accessibleRoleIds = filterOrgRoleIds(rolesAllowedByRegistry(roles, registry));
+    if (!(roles.isEmpty())) {
+      accessibleRoleIds = this.getRoleIds(roles);
       isOuAnAudience =
-          this.authorizationPolicy().isRolesDifferent(accessibleRoleIds) || isOuAnAudience;
-    } else {
-      accessibleRoleIds = this.authorizationPolicy().assignedRoles();
+          !(this.authorizationPolicy().isRoleIdsEquals(accessibleRoleIds)) || isOuAnAudience;
     }
 
     this.setAuthorizationPolicy(
@@ -168,17 +187,31 @@ public class Ou {
     }
   }
 
-  private List<LicenseContractId> filterOrgLicenseContractIds(
-      List<LicenseContractId> licenseContractIds) {
-    List<LicenseContractId> orgLicenseContractIds = new ArrayList<LicenseContractId>();
+  private void throwErrorIfLicenseContractsInDifferentOrg(
+      @NonNull List<LicenseContractId> licenseContractIds) {
 
     for (LicenseContractId licenseContractId : licenseContractIds) {
-      if (licenseContractId.orgId() == this.orgId()) {
-        orgLicenseContractIds.add(licenseContractId);
+      if (!(licenseContractId.orgId() == this.orgId())) {
+        throw new InvalidValueException(
+            ExceptionEvent.UPDATING_AUTHORIZATION_POLICY,
+            ExceptionReason.LICENSE_AND_OU_ORG_CONFLICT,
+            licenseContractId.orgId().toString(),
+            ExceptionLevel.INFO);
       }
     }
+  }
 
-    return orgLicenseContractIds;
+  private void throwErrorIfRolesInDifferentOrg(@NonNull List<Role> roles) {
+
+    for (Role role : roles) {
+      if (!(role.belongsTo(this.orgId()))) {
+        throw new InvalidValueException(
+            ExceptionEvent.UPDATING_AUTHORIZATION_POLICY,
+            ExceptionReason.ROLES_AND_OU_ORG_CONFLICT,
+            "role orgId: " + role.id().toString() + ", OU orgId: " + this.orgId().toString(),
+            ExceptionLevel.INFO);
+      }
+    }
   }
 
   private List<LicenseId> getLicenseIdsFromContractsId(List<LicenseContractId> licenseContractIds) {
@@ -191,28 +224,30 @@ public class Ou {
     return licenseIds;
   }
 
-  private List<Role> rolesAllowedByRegistry(List<Role> roles, LicenseRestrictionRegistry registry) {
-    List<Role> accessibleRoles = new ArrayList<Role>();
+  private void throwErrorIfRolesIsNotAllowedByRegistry(
+      List<Role> roles, LicenseRestrictionRegistry registry) {
 
     for (Role role : roles) {
-      if (registry.canAccessLicenseRestrictable(role.assignedApi())) {
-        accessibleRoles.add(role);
+      if (!(registry.canAccessLicenseRestrictable(role.assignedApi()))) {
+        throw new InvalidValueException(
+            ExceptionEvent.UPDATING_AUTHORIZATION_POLICY,
+            ExceptionReason.ACCESS_DENIED_TO_RESTRICTABLE_BY_LICENSE_RESTRICTION_REGISTRY,
+            role.assignedApi().toString(),
+            ExceptionLevel.INFO);
       }
     }
-
-    return accessibleRoles;
   }
 
-  private List<RoleId> filterOrgRoleIds(List<Role> roles) {
-    List<RoleId> accessibleRoles = new ArrayList<RoleId>();
+  private List<RoleId> getRoleIds(List<Role> roles) {
+    List<RoleId> roleIds = new ArrayList<RoleId>();
 
     for (Role role : roles) {
       if (role.belongsTo(this.orgId())) {
-        accessibleRoles.add(role.id());
+        roleIds.add(role.id());
       }
     }
 
-    return accessibleRoles;
+    return roleIds;
   }
 
   public void assignOu(
@@ -222,8 +257,10 @@ public class Ou {
     if (childOu.parent() == this.id()) {
       return;
     }
-    throwExceptionIfNotSameOrgWith(childOu);
-    throwExceptionIfChildIsTopLevel(childOu);
+    this.throwExceptionIfAssigningChildInDifferentOrg(childOu);
+    this.throwExceptionIfAssigningSelf(childOu);
+    this.throwExceptionIfAssigningParent(childOu);
+    this.throwExceptionIfChildIsTopLevel(childOu);
 
     childOu.updateParent(this.id());
 
@@ -232,7 +269,7 @@ public class Ou {
     } else {
       AuthorizationPolicy childAuthorizationPolicy = childOu.authorizationPolicy();
       AuthorizationPolicy newChildAuthorizationPolicy =
-          childAuthorizationPolicy.copyWith(null, null, false);
+          childAuthorizationPolicy.copyWith(List.of(), List.of(), false);
       childOu.assignAuthorizationPolicy(newChildAuthorizationPolicy);
     }
 
@@ -244,8 +281,36 @@ public class Ou {
           childAuthenticationPolicy.copyWith(null, null, false);
       childOu.assignAuthenticationPolicy(newChildAuthenticationPolicy);
     }
+  }
 
-    return;
+  private void throwExceptionIfAssigningChildInDifferentOrg(Ou ou) {
+    if (!this.orgId().equals(ou.orgId())) {
+      throw new InvalidValueException(
+          ExceptionEvent.OU_ASSIGNMENT,
+          ExceptionReason.PARENT_AND_CHILD_ORG_CONFLICT,
+          ou.orgId().toString(),
+          ExceptionLevel.INFO);
+    }
+  }
+
+  private void throwExceptionIfAssigningSelf(Ou childOu) {
+    if (childOu.id() == this.id()) {
+      throw new InvalidValueException(
+          ExceptionEvent.OU_ASSIGNMENT,
+          ExceptionReason.ASSIGNING_SELF,
+          childOu.id().toString(),
+          ExceptionLevel.INFO);
+    }
+  }
+
+  private void throwExceptionIfAssigningParent(@NonNull Ou childOu) {
+    if (this.parent().equals(childOu.id())) {
+      throw new InvalidValueException(
+          ExceptionEvent.OU_ASSIGNMENT,
+          ExceptionReason.ASSIGNING_PARENT_TO_CHILD,
+          childOu.id().toString(),
+          ExceptionLevel.INFO);
+    }
   }
 
   private void throwExceptionIfChildIsTopLevel(Ou childOu) {
@@ -259,7 +324,6 @@ public class Ou {
   }
 
   public void synchronizeAuthorizationPolicyWith(Ou parentOu) {
-    this.throwExceptionIfNotSameOrgWith(parentOu);
     this.throwExceptionIfNotChildOf(parentOu);
 
     boolean isOuAnAudience = false;
@@ -277,12 +341,11 @@ public class Ou {
       isOuAnAudience = true;
     }
 
-    this.setAuthorizationPolicy(parentAuthorizationPolicy.copyWith(null, null, true));
+    this.setAuthorizationPolicy(parentAuthorizationPolicy.copyWith(List.of(), List.of(), true));
     this.publishUpdateOuAuthorizationPolicyEvent(isOuAnAudience, isUserAnAudience);
   }
 
   public void synchronizeAuthenticationPolicyWith(Ou parentOu) {
-    this.throwExceptionIfNotSameOrgWith(parentOu);
     this.throwExceptionIfNotChildOf(parentOu);
 
     boolean shouldPublishEvent = false;
@@ -299,29 +362,13 @@ public class Ou {
     this.publishUpdateOuAuthenticationPolicyEvent(shouldPublishEvent);
   }
 
-  private void throwExceptionIfNotSameOrgWith(Ou ou) {
-    if (!this.orgId().equals(ou.orgId())) {
-      throw new InvalidValueException(
-          ExceptionEvent.OU_ASSIGNMENT,
-          ExceptionReason.OU_NOT_ASSIGNED_TO_PARENT,
-          "child OU OrgId: "
-              + this.orgId().toString()
-              + ", parent OU OrgId: "
-              + ou.orgId().toString(),
-          ExceptionLevel.ERROR);
-    }
-  }
-
   private void throwExceptionIfNotChildOf(Ou parentOu) {
     if (!this.parent().equals(parentOu.id())) {
       throw new InvalidValueException(
-          ExceptionEvent.OU_ASSIGNMENT,
-          ExceptionReason.OU_ORG_MISMATCH,
-          "child OU orgId: "
-              + this.orgId().toString()
-              + ", parent OU Id: "
-              + parentOu.orgId().toString(),
-          ExceptionLevel.ERROR);
+          ExceptionEvent.SYNCHRONIZING_OU_WITH_PARENT,
+          ExceptionReason.OU_NOT_ASSIGNED_TO_PARENT,
+          parentOu.id().toString(),
+          ExceptionLevel.INFO);
     }
   }
 

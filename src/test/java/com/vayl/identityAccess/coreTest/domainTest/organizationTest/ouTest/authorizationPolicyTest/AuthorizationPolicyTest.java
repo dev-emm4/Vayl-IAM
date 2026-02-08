@@ -81,14 +81,14 @@ public class AuthorizationPolicyTest {
   }
 
   @Test
-  public void copyWith_passingNull_doesNotChangeField() {
+  public void copyWith_passingEmptyList_doesNotChangeField() {
     List<LicenseContractId> licenseContractIds = List.of(this.createLicenseContract().id());
     List<RoleId> roleIds = List.of(new RoleId(UUID.randomUUID().toString()));
     AuthorizationPolicy originalPolicy = new AuthorizationPolicy(licenseContractIds, roleIds, true);
 
-    AuthorizationPolicy newPolicy = originalPolicy.copyWith(null, null, false);
+    AuthorizationPolicy newPolicy = originalPolicy.copyWith(List.of(), List.of(), false);
 
-    assert !newPolicy.isInherited() : "The new policy should have isInherited set to false.";
+    assert !(newPolicy.isInherited()) : "The new policy should have isInherited set to false.";
     assert newPolicy.assignedLicenseContracts().equals(originalPolicy.assignedLicenseContracts())
         : "License contracts should be the same.";
     assert newPolicy.assignedRoles().equals(originalPolicy.assignedRoles())
@@ -106,11 +106,48 @@ public class AuthorizationPolicyTest {
     AuthorizationPolicy newPolicy =
         originalPolicy.copyWith(newLicenseContractIds, newRoleIds, false);
 
-    assert !newPolicy.isInherited() : "The new policy should have isInherited set to false.";
+    assert !(newPolicy.isInherited()) : "The new policy should have isInherited set to false.";
     assert newPolicy.assignedLicenseContracts().equals(newLicenseContractIds)
         : "License contracts should be updated.";
-    assert newPolicy.assignedRoles().equals(newRoleIds)
-        : "Assigned roles should be updated.";
+    assert newPolicy.assignedRoles().equals(newRoleIds) : "Assigned roles should be updated.";
+  }
+
+  @Test
+  public void isLicenseContractIdsEquals_sameLicenseContracts_returnTrue() {
+    List<LicenseContractId> licenseContractIds = List.of(this.createLicenseContract().id());
+    List<RoleId> roleIds = List.of(new RoleId(UUID.randomUUID().toString()));
+    AuthorizationPolicy policy = new AuthorizationPolicy(licenseContractIds, roleIds, false);
+
+    assert policy.isLicenseContractsEquals(licenseContractIds)
+        : "isLicenseContractsEquals should return true for the same license contracts.";
+  }
+
+  @Test
+  public void isLicenseContractIdsEquals_differentLicenseContracts_returnFalse() {
+    List<LicenseContractId> licenseContractIds1 = List.of(this.createLicenseContract().id());
+    List<LicenseContractId> licenseContractIds2 = List.of(this.createLicenseContract().id());
+    List<RoleId> roleIds = List.of(new RoleId(UUID.randomUUID().toString()));
+    AuthorizationPolicy policy = new AuthorizationPolicy(licenseContractIds1, roleIds, false);
+  }
+
+  @Test
+  public void isRoleIdsEquals_sameRoleIds_returnTrue() {
+    List<LicenseContractId> licenseContractIds = List.of(this.createLicenseContract().id());
+    List<RoleId> roleIds = List.of(new RoleId(UUID.randomUUID().toString()));
+    AuthorizationPolicy policy = new AuthorizationPolicy(licenseContractIds, roleIds, false);
+
+    assert policy.isRoleIdsEquals(roleIds) : "isRolesEquals should return true for the same roles.";
+  }
+
+  @Test
+  public void isRoleIdsEquals_differentRoleIds_returnFalse() {
+    List<LicenseContractId> licenseContractIds = List.of(this.createLicenseContract().id());
+    List<RoleId> roleIds1 = List.of(new RoleId(UUID.randomUUID().toString()));
+    List<RoleId> roleIds2 = List.of(new RoleId(UUID.randomUUID().toString()));
+    AuthorizationPolicy policy = new AuthorizationPolicy(licenseContractIds, roleIds1, false);
+
+    assert !policy.isRoleIdsEquals(roleIds2)
+        : "isRolesEquals should return false for different roles.";
   }
 
   private LicenseContract createLicenseContract() {

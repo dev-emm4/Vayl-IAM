@@ -11,17 +11,17 @@ import com.vayl.identityAccess.core.domain.common.DomainErrors.InvalidValueExcep
 import com.vayl.identityAccess.core.domain.role.DefaultRole;
 import java.util.ArrayList;
 import java.util.List;
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.Test;
 
 public class DefaultRoleTest {
-  // TODO: TODO: Replace String with a more specific Contract
   @Test
   void constructor_withInvalidPermissions_throwsInvalidValueException() {
+    Api api1 = this.createApi("example.com");
+    Api api2 = this.createApi("example2.com");
+    // creating permissions located in api1
+    List<PermissionId> permissionInApi1 = this.createPermissionsFor(api1, 5);
     try {
-      Api api1 = this.createApi("example.com");
-      Api api2 = this.createApi("example2.com");
-      // creating permissions located in api1
-      List<PermissionId> permissionInApi1 = this.createPermissionsFor(api1, 5);
       // using api1 permissions to create role for api2
       DefaultRole defaultRole = api2.createDefaultRole("create-user", permissionInApi1);
 
@@ -46,16 +46,19 @@ public class DefaultRoleTest {
               + " expected: "
               + ExceptionLevel.ERROR;
 
-      assert e.invalidValue() == null
-          : "Exception message mismatch got " + e.invalidValue() + " expected" + null;
+      assert e.invalidValue().equals(permissionInApi1.getFirst().toString())
+          : "Exception message mismatch got "
+              + e.invalidValue()
+              + " expected "
+              + permissionInApi1.getFirst().toString();
     }
   }
 
   @Test
   void constructor_withValidPermissions_createDefaultRoleCorrectly() {
     Api api = this.createApi("example.com");
-    List<PermissionId> assignPermissions = this.createPermissionsFor(api, 5);
-    DefaultRole defaultRole = api.createDefaultRole("create-user", assignPermissions);
+    List<PermissionId> permissionIds = this.createPermissionsFor(api, 5);
+    DefaultRole defaultRole = api.createDefaultRole("create-user", permissionIds);
 
     assert defaultRole.name().equals("create-user")
         : "Role name mismatch got " + defaultRole.name() + " expected " + "create-user";
@@ -66,46 +69,48 @@ public class DefaultRoleTest {
             + " expected "
             + api.id();
 
-    assert defaultRole.grantedPermissions().size() == assignPermissions.size()
+    assert defaultRole.grantedPermissionIds().size() == permissionIds.size()
         : "Granted permissions size mismatch got "
-            + defaultRole.grantedPermissions().size()
+            + defaultRole.grantedPermissionIds().size()
             + " expected "
-            + assignPermissions.size();
+            + permissionIds.size();
   }
 
   @Test
-  void modifyGrantedPermissions_withValidPermissions_modifiesPermissionsCorrectly() {
+  void modifyGrantedPermissions_withValidPermissions_modifiesPermissionIdsCorrectly() {
     Api api = this.createApi("example.com");
-    List<PermissionId> totalPermission = this.createPermissionsFor(api, 15);
+    List<PermissionId> totalPermissionIds = this.createPermissionsFor(api, 15);
 
-    List<PermissionId> initialGrantedPermissions = totalPermission.subList(0, 11);
-    List<PermissionId> permissionsToAdd = totalPermission.subList(11, 13);
-    List<PermissionId> permissionsToRemove = totalPermission.subList(0, 3);
+    List<PermissionId> initialGrantedPermissionsIds = totalPermissionIds.subList(0, 11);
+    List<PermissionId> permissionIdsToAdd = totalPermissionIds.subList(11, 13);
+    List<PermissionId> permissionIdsToRemove = totalPermissionIds.subList(0, 3);
 
-    DefaultRole defaultRole = api.createDefaultRole("create-user", initialGrantedPermissions);
-    defaultRole.modifyGrantedPermissions(permissionsToAdd, permissionsToRemove);
+    DefaultRole defaultRole = api.createDefaultRole("create-user", initialGrantedPermissionsIds);
+    defaultRole.modifyGrantedPermissions(permissionIdsToAdd, permissionIdsToRemove);
 
     int expectedSize =
-        initialGrantedPermissions.size() + permissionsToAdd.size() - permissionsToRemove.size();
+        initialGrantedPermissionsIds.size()
+            + permissionIdsToAdd.size()
+            - permissionIdsToRemove.size();
 
-    assert defaultRole.grantedPermissions().size() == expectedSize
+    assert defaultRole.grantedPermissionIds().size() == expectedSize
         : "Granted permissions size mismatch after modification got "
-            + defaultRole.grantedPermissions().size()
+            + defaultRole.grantedPermissionIds().size()
             + " expected "
             + expectedSize;
   }
 
   @Test
-  void modifyGrantedPermissions_withInvalidPermissions_throwInvalidValueException() {
+  void modifyGrantedPermissions_withInvalidPermissionIds_throwInvalidValueException() {
+    Api api1 = this.createApi("example.com");
+    Api api2 = this.createApi("example2.com");
+
+    List<PermissionId> permissionIdsInApi1 = this.createPermissionsFor(api1, 5);
+    List<PermissionId> permissionIdsInApi2 = this.createPermissionsFor(api2, 5);
+
+    DefaultRole roleInApi1 = api1.createDefaultRole("admin", permissionIdsInApi1);
     try {
-      Api api1 = this.createApi("example.com");
-      Api api2 = this.createApi("example2.com");
-
-      List<PermissionId> permissionsInApi1 = this.createPermissionsFor(api1, 5);
-      List<PermissionId> permissionsInApi2 = this.createPermissionsFor(api2, 5);
-
-      DefaultRole roleInApi1 = api1.createDefaultRole("admin", permissionsInApi1);
-      roleInApi1.modifyGrantedPermissions(permissionsInApi2, List.of());
+      roleInApi1.modifyGrantedPermissions(permissionIdsInApi2, List.of());
 
       assert false
           : "Expected exception was not thrown when modifying defaultRole with invalid Permission";
@@ -126,19 +131,56 @@ public class DefaultRoleTest {
           : "InvalidValueError level mismatch got: "
               + e.level()
               + " expected: "
-              + ExceptionLevel.ERROR;
+              + ExceptionLevel.INFO;
 
-      assert e.invalidValue() == null
-          : "Exception message mismatch got " + e.invalidValue() + " expected" + null;
+      assert e.invalidValue().equals(permissionIdsInApi2.getFirst().toString())
+          : "Exception message mismatch got "
+              + e.invalidValue()
+              + " expected "
+              + permissionIdsInApi2.getFirst().toString();
     }
   }
 
-  private Api createApi(String audience) {
+  @Test
+  void modifyGrantedPermissions_withRemovingUnassignedPermission_throwInvalidValueException() {
+    Api api = this.createApi("example.com");
+    List<PermissionId> permissionIds = this.createPermissionsFor(api, 5);
+
+    DefaultRole role = api.createDefaultRole("admin", permissionIds.subList(1, 3));
+    PermissionId unassignedPermissionId = permissionIds.getFirst();
+
+    try {
+      role.modifyGrantedPermissions(List.of(), List.of(unassignedPermissionId));
+
+      assert false
+          : "Expected exception was not thrown when modifying defaultRole with unassigned Permission";
+    } catch (InvalidValueException e) {
+      assert e.event().equals(ExceptionEvent.DEFAULT_ROLE_PERMISSION_MODIFICATION)
+          : "InvalidValueError event mismatch got: "
+              + e.event()
+              + " expected: "
+              + ExceptionEvent.DEFAULT_ROLE_PERMISSION_MODIFICATION;
+
+      assert e.reason().equals(ExceptionReason.REMOVING_UNASSIGNED_PERMISSION)
+          : "InvalidValueError reason mismatch got: "
+              + e.reason()
+              + " expected: "
+              + ExceptionReason.REMOVING_UNASSIGNED_PERMISSION;
+
+      assert e.level().equals(ExceptionLevel.INFO)
+          : "InvalidValueError level mismatch got: "
+              + e.level()
+              + " expected: "
+              + ExceptionLevel.INFO;
+    }
+  }
+
+  private @NonNull Api createApi(String audience) {
     ApiId id = new ApiId(audience);
     return new Api(id, "Example-API");
   }
 
-  private List<PermissionId> createPermissionsFor(Api api, int amount) {
+  private @NonNull List<PermissionId> createPermissionsFor(Api api, int amount) {
     List<PermissionId> permissionIds = new ArrayList<>();
 
     for (int i = 0; i < amount; i++) {
