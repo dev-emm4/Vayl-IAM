@@ -7,7 +7,9 @@ import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionLevel;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.InvalidValueException;
 import com.vayl.identityAccess.core.domain.organization.OrgId;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import org.jspecify.annotations.NonNull;
 
 public class CustomRole implements Role {
@@ -15,7 +17,7 @@ public class CustomRole implements Role {
   RoleId id;
   String name;
   ApiId apiId;
-  List<PermissionId> assignedPermissionIds;
+  Set<PermissionId> assignedPermissionIds = new HashSet<PermissionId>();
 
   public CustomRole(
       @NonNull OrgId orgId,
@@ -27,7 +29,7 @@ public class CustomRole implements Role {
     this.setId(id);
     this.setName(name);
     this.setApiId(apiId);
-    this.setAssignedPermissionIds(assignedPermissionIds);
+    this.assignPermissionIds(assignedPermissionIds);
   }
 
   private void setOrgId(OrgId orgId) {
@@ -46,22 +48,18 @@ public class CustomRole implements Role {
     this.apiId = apiId;
   }
 
-  private void setAssignedPermissionIds(List<PermissionId> assignedPermissionIds) {
-    this.assignedPermissionIds = assignedPermissionIds;
-  }
-
   public void modifyGrantedPermissions(
       @NonNull List<PermissionId> addPermissionIds,
       @NonNull List<PermissionId> removePermissionIds) {
 
-    this.assignPermission(addPermissionIds);
+    this.assignPermissionIds(addPermissionIds);
     this.removeGrantedPermissions(removePermissionIds);
   }
 
-  private void assignPermission(@NonNull List<PermissionId> addPermission) {
+  private void assignPermissionIds(@NonNull List<PermissionId> addPermission) {
     for (PermissionId permissionId : addPermission) {
       this.throwErrorIfPermissionNotLocatedInAssignedApi(permissionId);
-      this.assignedPermissionIds().add(permissionId);
+      this.assignedPermissionIds.add(permissionId);
     }
   }
 
@@ -111,7 +109,7 @@ public class CustomRole implements Role {
     return this.name;
   }
 
-  public List<PermissionId> assignedPermissionIds() {
+  public Set<PermissionId> assignedPermissionIds() {
     return this.assignedPermissionIds;
   }
 }

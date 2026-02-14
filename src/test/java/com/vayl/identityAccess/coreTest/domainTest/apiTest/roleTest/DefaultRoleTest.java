@@ -2,155 +2,75 @@ package com.vayl.identityAccess.coreTest.domainTest.apiTest.roleTest;
 
 import com.vayl.identityAccess.core.domain.api.Api;
 import com.vayl.identityAccess.core.domain.api.ApiId;
-import com.vayl.identityAccess.core.domain.api.permission.Permission;
 import com.vayl.identityAccess.core.domain.api.permission.PermissionId;
+import com.vayl.identityAccess.core.domain.api.role.DefaultRole;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionEvent;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionLevel;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.InvalidValueException;
-import com.vayl.identityAccess.core.domain.api.role.DefaultRole;
 import java.util.ArrayList;
 import java.util.List;
 import org.jspecify.annotations.NonNull;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class DefaultRoleTest {
-  @Test
-  void constructor_withInvalidPermissions_throwsInvalidValueException() {
-    Api api1 = this.createApi("example.com");
-    Api api2 = this.createApi("example2.com");
-    // creating permissions located in api1
-    List<PermissionId> permissionInApi1 = this.createPermissionsFor(api1, 5);
-    try {
-      // using api1 permissions to create role for api2
-      DefaultRole defaultRole = api2.createDefaultRole("create-user", permissionInApi1);
+  Api api;
+  List<PermissionId> permissionIds;
 
-      assert false
-          : "Expected exception was not thrown when creating defaultRole with invalid Permission";
-    } catch (InvalidValueException e) {
-      assert e.event().equals(ExceptionEvent.DEFAULT_ROLE_CREATION)
-          : "InvalidValueError event mismatch got: "
-              + e.event()
-              + " expected: "
-              + ExceptionEvent.DEFAULT_ROLE_CREATION;
-
-      assert e.reason().equals(ExceptionReason.GRANTED_PERMISSION_NOT_LOCATED_IN_API)
-          : "InvalidValueError reason mismatch got: "
-              + e.reason()
-              + " expected: "
-              + ExceptionReason.GRANTED_PERMISSION_NOT_LOCATED_IN_API;
-
-      assert e.level().equals(ExceptionLevel.INFO)
-          : "InvalidValueError level mismatch got: "
-              + e.level()
-              + " expected: "
-              + ExceptionLevel.ERROR;
-
-      assert e.invalidValue().equals(permissionInApi1.getFirst().toString())
-          : "Exception message mismatch got "
-              + e.invalidValue()
-              + " expected "
-              + permissionInApi1.getFirst().toString();
-    }
+  @BeforeAll
+  public void InitAll() {
+    this.api = new Api(new ApiId("example.com"), "admin");
+    this.permissionIds = this.createPermissionIdsFor(this.api, 6, "create-user");
   }
 
   @Test
-  void constructor_withValidPermissions_createDefaultRoleCorrectly() {
-    Api api = this.createApi("example.com");
-    List<PermissionId> permissionIds = this.createPermissionsFor(api, 5);
-    DefaultRole defaultRole = api.createDefaultRole("create-user", permissionIds);
+  public void createCustomRole_withRequiredParameter_createCustomRole() {
+    String roleName = "accountant";
+    DefaultRole role = this.api.createDefaultRole(roleName, this.permissionIds);
 
-    assert defaultRole.name().equals("create-user")
-        : "Role name mismatch got " + defaultRole.name() + " expected " + "create-user";
-
-    assert defaultRole.assignedApiIds().equals(api.id())
-        : "assignedApiIds mismatch got "
-            + defaultRole.assignedApiIds().toString()
+    assert role.assignedApiIds().equals(this.api.id())
+        : "assigned API ID mismatch got "
+            + role.assignedApiIds().toString()
             + " expected "
-            + api.id();
-
-    assert defaultRole.assignedPermissionIds().size() == permissionIds.size()
-        : "Granted permissions size mismatch got "
-            + defaultRole.assignedPermissionIds().size()
+            + this.api.id().toString();
+    assert role.name().equals("accountant")
+        : "role name mismatch got " + role.name() + " expected " + roleName;
+    assert new ArrayList<>(role.assignedPermissionIds()).equals(this.permissionIds)
+        : "role assignedPermissionIds mismatch got "
+            + role.assignedPermissionIds()
             + " expected "
-            + permissionIds.size();
+            + this.permissionIds;
   }
 
   @Test
-  void modifyGrantedPermissions_withValidPermissions_modifiesPermissionIdsCorrectly() {
-    Api api = this.createApi("example.com");
-    List<PermissionId> totalPermissionIds = this.createPermissionsFor(api, 15);
+  public void modifyGrantedPermission_withValidPermissions_modifyPermission() {
+    String roleName = "accountant";
+    DefaultRole role = this.api.createDefaultRole(roleName, this.permissionIds);
 
-    List<PermissionId> initialGrantedPermissionsIds = totalPermissionIds.subList(0, 11);
-    List<PermissionId> permissionIdsToAdd = totalPermissionIds.subList(11, 13);
-    List<PermissionId> permissionIdsToRemove = totalPermissionIds.subList(0, 3);
+    List<PermissionId> addPermissionIds = this.createPermissionIdsFor(this.api, 6, "analytic-perm");
 
-    DefaultRole defaultRole = api.createDefaultRole("create-user", initialGrantedPermissionsIds);
-    defaultRole.modifyGrantedPermissions(permissionIdsToAdd, permissionIdsToRemove);
+    role.modifyGrantedPermissions(addPermissionIds, this.permissionIds);
 
-    int expectedSize =
-        initialGrantedPermissionsIds.size()
-            + permissionIdsToAdd.size()
-            - permissionIdsToRemove.size();
-
-    assert defaultRole.assignedPermissionIds().size() == expectedSize
-        : "Granted permissions size mismatch after modification got "
-            + defaultRole.assignedPermissionIds().size()
+    assert new ArrayList<>(role.assignedPermissionIds()).equals(addPermissionIds)
+        : "role assignedPermissionIds mismatch got "
+            + role.assignedPermissionIds()
             + " expected "
-            + expectedSize;
+            + addPermissionIds;
   }
 
   @Test
-  void modifyGrantedPermissions_withInvalidPermissionIds_throwInvalidValueException() {
-    Api api1 = this.createApi("example.com");
-    Api api2 = this.createApi("example2.com");
+  public void modifyGrantedPermission_withUnassignedRemovePermissionId_throwException() {
+    String roleName = "accountant";
+    DefaultRole role = this.api.createDefaultRole(roleName, this.permissionIds);
 
-    List<PermissionId> permissionIdsInApi1 = this.createPermissionsFor(api1, 5);
-    List<PermissionId> permissionIdsInApi2 = this.createPermissionsFor(api2, 5);
-
-    DefaultRole roleInApi1 = api1.createDefaultRole("admin", permissionIdsInApi1);
-    try {
-      roleInApi1.modifyGrantedPermissions(permissionIdsInApi2, List.of());
-
-      assert false
-          : "Expected exception was not thrown when modifying defaultRole with invalid Permission";
-    } catch (InvalidValueException e) {
-      assert e.event().equals(ExceptionEvent.DEFAULT_ROLE_PERMISSION_MODIFICATION)
-          : "InvalidValueError event mismatch got: "
-              + e.event()
-              + " expected: "
-              + ExceptionEvent.DEFAULT_ROLE_PERMISSION_MODIFICATION;
-
-      assert e.reason().equals(ExceptionReason.GRANTED_PERMISSION_NOT_LOCATED_IN_API)
-          : "InvalidValueError reason mismatch got: "
-              + e.reason()
-              + " expected: "
-              + ExceptionReason.GRANTED_PERMISSION_NOT_LOCATED_IN_API;
-
-      assert e.level().equals(ExceptionLevel.INFO)
-          : "InvalidValueError level mismatch got: "
-              + e.level()
-              + " expected: "
-              + ExceptionLevel.INFO;
-
-      assert e.invalidValue().equals(permissionIdsInApi2.getFirst().toString())
-          : "Exception message mismatch got "
-              + e.invalidValue()
-              + " expected "
-              + permissionIdsInApi2.getFirst().toString();
-    }
-  }
-
-  @Test
-  void modifyGrantedPermissions_withRemovingUnassignedPermission_throwInvalidValueException() {
-    Api api = this.createApi("example.com");
-    List<PermissionId> permissionIds = this.createPermissionsFor(api, 5);
-
-    DefaultRole role = api.createDefaultRole("admin", permissionIds.subList(1, 3));
-    PermissionId unassignedPermissionId = permissionIds.getFirst();
+    List<PermissionId> removePermissionIds = this.createPermissionIdsFor(api, 6, "analytic-perm");
 
     try {
-      role.modifyGrantedPermissions(List.of(), List.of(unassignedPermissionId));
+
+      role.modifyGrantedPermissions(this.permissionIds, removePermissionIds);
 
       assert false
           : "Expected exception was not thrown when modifying defaultRole with unassigned Permission";
@@ -175,18 +95,51 @@ public class DefaultRoleTest {
     }
   }
 
-  private @NonNull Api createApi(String audience) {
-    ApiId id = new ApiId(audience);
-    return new Api(id, "Example-API");
+  @Test
+  public void modifyGrantedPermission_withAddPermissionIdsInDifferentApi_throwException() {
+    Api differnetApi = new Api(new ApiId("example.com"), "billing-API");
+    List<PermissionId> differentApiPermissionIds =
+        this.createPermissionIdsFor(differnetApi, 8, "create-users");
+
+    DefaultRole role = this.api.createDefaultRole("admin", this.permissionIds);
+
+    try {
+      role.modifyGrantedPermissions(differentApiPermissionIds, this.permissionIds);
+
+      assert false
+          : "Expected exception was not thrown when modifying defaultRole with invalid Permission";
+    } catch (InvalidValueException e) {
+      assert e.event().equals(ExceptionEvent.DEFAULT_ROLE_PERMISSION_MODIFICATION)
+          : "InvalidValueError event mismatch got: "
+              + e.event()
+              + " expected: "
+              + ExceptionEvent.DEFAULT_ROLE_PERMISSION_MODIFICATION;
+
+      assert e.reason().equals(ExceptionReason.GRANTED_PERMISSION_NOT_LOCATED_IN_API)
+          : "InvalidValueError reason mismatch got: "
+              + e.reason()
+              + " expected: "
+              + ExceptionReason.GRANTED_PERMISSION_NOT_LOCATED_IN_API;
+
+      assert e.level().equals(ExceptionLevel.INFO)
+          : "InvalidValueError level mismatch got: "
+              + e.level()
+              + " expected: "
+              + ExceptionLevel.INFO;
+
+      assert e.invalidValue().equals(differentApiPermissionIds.getFirst().toString())
+          : "Exception message mismatch got "
+              + e.invalidValue()
+              + " expected "
+              + differentApiPermissionIds.getFirst().toString();
+    }
   }
 
-  private @NonNull List<PermissionId> createPermissionsFor(Api api, int amount) {
+  private @NonNull List<PermissionId> createPermissionIdsFor(Api api, int amount, String name) {
     List<PermissionId> permissionIds = new ArrayList<>();
 
     for (int i = 0; i < amount; i++) {
-      String name = "perm" + i;
-      Permission permission = api.createPermission(name, "");
-      permissionIds.add(permission.id());
+      permissionIds.add(api.createPermission(name + i, "").id());
     }
 
     return permissionIds;
