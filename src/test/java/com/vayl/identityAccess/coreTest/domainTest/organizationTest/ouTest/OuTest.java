@@ -2,7 +2,6 @@ package com.vayl.identityAccess.coreTest.domainTest.organizationTest.ouTest;
 
 import com.vayl.identityAccess.core.domain.api.Api;
 import com.vayl.identityAccess.core.domain.api.ApiId;
-import com.vayl.identityAccess.core.domain.api.LicenseRestrictable;
 import com.vayl.identityAccess.core.domain.common.Date;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionEvent;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionLevel;
@@ -10,8 +9,6 @@ import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.InvalidValueException;
 import com.vayl.identityAccess.core.domain.common.MfaType;
 import com.vayl.identityAccess.core.domain.license.LicenseId;
-import com.vayl.identityAccess.core.domain.license.licenseRestrictionRegistry.LicenseRestriction;
-import com.vayl.identityAccess.core.domain.license.licenseRestrictionRegistry.LicenseRestrictionRegistry;
 import com.vayl.identityAccess.core.domain.organization.OrgId;
 import com.vayl.identityAccess.core.domain.organization.licenseContract.LicenseContractId;
 import com.vayl.identityAccess.core.domain.organization.ou.Ou;
@@ -20,8 +17,8 @@ import com.vayl.identityAccess.core.domain.organization.ou.authenticationPolicy.
 import com.vayl.identityAccess.core.domain.organization.ou.authenticationPolicy.MfaPolicy;
 import com.vayl.identityAccess.core.domain.organization.ou.authenticationPolicy.RecoveryPolicy;
 import com.vayl.identityAccess.core.domain.organization.ou.authorizationPolicy.AuthorizationPolicy;
-import com.vayl.identityAccess.core.domain.role.Role;
-import com.vayl.identityAccess.core.domain.role.RoleId;
+import com.vayl.identityAccess.core.domain.api.role.Role;
+import com.vayl.identityAccess.core.domain.api.role.RoleId;
 import java.util.*;
 import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.BeforeAll;
@@ -33,15 +30,12 @@ public class OuTest {
 
   private static final Date DEFAULT_MFA_EXPIRY = new Date("2023-12-01T00:00:00Z");
 
-  private List<Role> unrestrictedApiRoles;
-
-  private Api restrictedApi;
-  private List<Role> restrictedApiRoles;
-  private LicenseRestrictionRegistry licenseRestrictionRegistry;
-
+  private Api api;
+  private List<LicenseId> licenseIds;
   private OrgId orgId;
-  private List<LicenseContractId> blackListedLicenseContractIds;
-  private List<LicenseContractId> whiteListedLicenseContractIds;
+  private List<Role> roles;
+
+  private List<LicenseContractId> licenseContractIds;
 
   private Ou topLevelOu;
 
@@ -50,25 +44,12 @@ public class OuTest {
     // domain ids and APIs
     this.orgId = new OrgId(UUID.randomUUID().toString());
 
-    Api unrestrictedApi = this.createApi("free.com", "email-app");
-    this.unrestrictedApiRoles = List.of(unrestrictedApi.createDefaultRole("admin", List.of()));
+    this.api = this.createApi("subscribe.com", "bank-app");
+    this.roles = List.of(this.api.createDefaultRole("admin", List.of()));
 
-    this.restrictedApi = this.createApi("subscribe.com", "bank-app");
-    this.restrictedApiRoles = List.of(this.restrictedApi.createDefaultRole("admin", List.of()));
-
-    // licenses and license contracts
-    List<LicenseId> blackListedLicenseIds = createLicenseIds(3);
-    List<LicenseId> whiteListedLicenseIds = createLicenseIds(3);
-
-    this.blackListedLicenseContractIds = createLicenseContractId(orgId, blackListedLicenseIds);
-    this.whiteListedLicenseContractIds = createLicenseContractId(orgId, whiteListedLicenseIds);
-
-    // license restriction registry restricting access to restricted api
-    this.licenseRestrictionRegistry =
-        new LicenseRestrictionRegistry(
-            List.of(
-                createLicenseRestrictions(
-                    restrictedApi.id(), new HashSet<>(blackListedLicenseIds))));
+    // licenses and org license contracts
+    this.licenseIds = createLicenseIds(3);
+    this.licenseContractIds = createLicenseContractId(this.orgId, this.licenseIds);
 
     // initial OU under test
     this.topLevelOu =
@@ -76,8 +57,8 @@ public class OuTest {
             "admin",
             true,
             orgId,
-            this.whiteListedLicenseContractIds,
-            this.restrictedApiRoles.stream().map(Role::id).toList(),
+            this.licenseContractIds,
+            this.roles.stream().map(Role::id).toList(),
             new RecoveryPolicy(MfaType.AUTHENTICATOR_APP),
             new MfaPolicy(MfaType.EMAIL, DEFAULT_MFA_EXPIRY));
   }
@@ -100,12 +81,12 @@ public class OuTest {
     assert childAuthorizationPolicy.isInherited()
         : "Child OU authorization policy should be inherited";
     assert childAuthorizationPolicy
-            .assignedLicenseContracts()
-            .equals(parentauthorizationPolicy.assignedLicenseContracts())
+            .assignedLicenseContractIds()
+            .equals(parentauthorizationPolicy.assignedLicenseContractIds())
         : "Child OU should inherit license contracts from parent OU";
     assert childAuthorizationPolicy
-            .assignedRoles()
-            .equals(parentauthorizationPolicy.assignedRoles())
+            .assignedRoleIds()
+            .equals(parentauthorizationPolicy.assignedRoleIds())
         : "Child OU should inherit roles from parent OU";
     assert childAuthenticationPolicy.isInherited()
         : "Child OU authentication policy should be inherited";
@@ -119,73 +100,18 @@ public class OuTest {
 
   @Test
   public void
-      updateAuthorizationPolicy_ifOuDoesNotHaveLicenseToUnrestrictedApi_shouldUpdateAuthorizationPolicy() {
-    topLevelOu.updateAuthorizationPolicy(
-        this.blackListedLicenseContractIds, this.unrestrictedApiRoles, licenseRestrictionRegistry);
+      updateAuthorizationPolicy_ifContractsAndRolesBelongToOrg_shouldUpdateAuthorizationPolicy() {
+    topLevelOu.updateAuthorizationPolicy(this.licenseContractIds, this.roles);
 
     AuthorizationPolicy updatedAuthorizationPolicy = topLevelOu.authorizationPolicy();
 
     assert !updatedAuthorizationPolicy.isInherited()
         : "Updated authorization policy should not be inherited";
-    assert updatedAuthorizationPolicy
-            .assignedLicenseContracts()
-            .equals(this.blackListedLicenseContractIds)
+    assert updatedAuthorizationPolicy.assignedLicenseContractIds().equals(this.licenseContractIds)
         : "Updated authorization policy should have the new license contracts assigned";
     assert updatedAuthorizationPolicy
-            .assignedRoles()
-            .equals(this.unrestrictedApiRoles.stream().map(Role::id).toList())
-        : "Updated authorization policy should have the new roles assigned";
-  }
-
-  @Test
-  public void
-      updateAuthorizationPolicy_ifOuDoesNotHaveLicenseToRestrictedApi_shouldThrowException() {
-
-    try {
-      topLevelOu.updateAuthorizationPolicy(
-          blackListedLicenseContractIds, this.restrictedApiRoles, licenseRestrictionRegistry);
-      assert false
-          : "Expected an exception to be thrown due to missing required license for restricted API";
-    } catch (InvalidValueException e) {
-      assert e.event().equals(ExceptionEvent.UPDATING_AUTHORIZATION_POLICY)
-          : "Exception event mismatch got: "
-              + e.event()
-              + " expected: "
-              + ExceptionEvent.UPDATING_AUTHORIZATION_POLICY;
-      assert e.reason()
-              .equals(ExceptionReason.ACCESS_DENIED_TO_RESTRICTABLE_BY_LICENSE_RESTRICTION_REGISTRY)
-          : "Exception reason mismatch got: "
-              + e.reason()
-              + " expected: "
-              + ExceptionReason.ACCESS_DENIED_TO_RESTRICTABLE_BY_LICENSE_RESTRICTION_REGISTRY;
-      assert e.invalidValue().equals(this.restrictedApi.id().toString())
-          : "Exception invalid value mismatch got: "
-              + e.invalidValue()
-              + " expected: "
-              + this.restrictedApi.id().toString();
-      assert e.level().equals(ExceptionLevel.INFO)
-          : "Exception level mismatch got: " + e.event() + " expected: " + ExceptionLevel.INFO;
-    }
-  }
-
-  @Test
-  public void
-      updateAuthorizationPolicy_OuHasLicenseToRestrictedApi_shouldUpdateAuthorizationPolicy() {
-
-    topLevelOu.updateAuthorizationPolicy(
-        whiteListedLicenseContractIds, this.restrictedApiRoles, licenseRestrictionRegistry);
-
-    AuthorizationPolicy updatedAuthorizationPolicy = topLevelOu.authorizationPolicy();
-
-    assert !updatedAuthorizationPolicy.isInherited()
-        : "Updated authorization policy should not be inherited";
-    assert updatedAuthorizationPolicy
-            .assignedLicenseContracts()
-            .equals(this.whiteListedLicenseContractIds)
-        : "Updated authorization policy should have the new license contracts assigned";
-    assert updatedAuthorizationPolicy
-            .assignedRoles()
-            .equals(this.restrictedApiRoles.stream().map(Role::id).toList())
+            .assignedRoleIds()
+            .equals(this.roles.stream().map(Role::id).toList())
         : "Updated authorization policy should have the new roles assigned";
   }
 
@@ -193,19 +119,11 @@ public class OuTest {
   public void
       updateAuthorizationPolicy_OuHasLicenseContractThatBelongsToDifferentOrg_shouldThrowException() {
     OrgId differentOrgId = new OrgId(UUID.randomUUID().toString());
-    Ou billingOu =
-        this.createOu(
-            "billing",
-            false,
-            differentOrgId,
-            List.of(),
-            List.of(),
-            new RecoveryPolicy(MfaType.AUTHENTICATOR_APP),
-            new MfaPolicy(MfaType.EMAIL, new Date("2023-12-01T00:00:00Z")));
+    List<LicenseContractId> unauthorizedLicenseContracts =
+        this.createLicenseContractId(differentOrgId, this.licenseIds);
 
     try {
-      billingOu.updateAuthorizationPolicy(
-          this.whiteListedLicenseContractIds, this.restrictedApiRoles, licenseRestrictionRegistry);
+      topLevelOu.updateAuthorizationPolicy(unauthorizedLicenseContracts, this.roles);
 
       assert false
           : "Expected an exception to be thrown due to license contracts belonging to different org";
@@ -215,16 +133,16 @@ public class OuTest {
               + e.event()
               + " expected: "
               + ExceptionEvent.UPDATING_AUTHORIZATION_POLICY;
-      assert e.reason().equals(ExceptionReason.LICENSE_AND_OU_ORG_CONFLICT)
+      assert e.reason().equals(ExceptionReason.LICENSE_BELONGS_TO_DIFFERENT_ORG)
           : "Exception reason mismatch got: "
               + e.reason()
               + " expected: "
-              + ExceptionReason.LICENSE_AND_OU_ORG_CONFLICT;
-      assert e.invalidValue().equals(this.orgId.toString())
+              + ExceptionReason.LICENSE_BELONGS_TO_DIFFERENT_ORG;
+      assert e.invalidValue().equals(differentOrgId.toString())
           : "Exception invalid value mismatch got: "
               + e.invalidValue()
               + " expected: "
-              + this.orgId.toString();
+              + differentOrgId.toString();
       assert e.level().equals(ExceptionLevel.INFO)
           : "Exception level mismatch got: " + e.event() + " expected: " + ExceptionLevel.INFO;
     }
@@ -247,14 +165,14 @@ public class OuTest {
 
   @Test
   public void
-      assignOu_OuInTheSameOrgWithInheritanceToggleActive_shouldAssignChildToParentAndSynchronizeParentAndChild() {
+      assignOu_OusInTheSameOrgAndInheritanceToggleActive_shouldAssignChildToParentAndSynchronizeParentAndChild() {
     Ou childOu =
         this.createOu(
             "developers",
             false,
             this.orgId,
-            this.blackListedLicenseContractIds,
-            this.unrestrictedApiRoles.stream().map(Role::id).toList(),
+            this.licenseContractIds,
+            this.roles.stream().map(Role::id).toList(),
             new RecoveryPolicy(MfaType.EMAIL),
             new MfaPolicy(MfaType.SMS, DEFAULT_MFA_EXPIRY));
 
@@ -273,12 +191,12 @@ public class OuTest {
     assert childAuthorizationPolicy.isInherited()
         : "Child OU authorization policy should be inherited";
     assert childAuthorizationPolicy
-            .assignedLicenseContracts()
-            .equals(parentAuthorizationPolicy.assignedLicenseContracts())
+            .assignedLicenseContractIds()
+            .equals(parentAuthorizationPolicy.assignedLicenseContractIds())
         : "Child OU should inherit license contracts from parent OU";
     assert childAuthorizationPolicy
-            .assignedRoles()
-            .equals(parentAuthorizationPolicy.assignedRoles())
+            .assignedRoleIds()
+            .equals(parentAuthorizationPolicy.assignedRoleIds())
         : "Child OU should inherit roles from parent OU";
     assert childAuthenticationPolicy.isInherited()
         : "Child OU authentication policy should be inherited";
@@ -292,14 +210,14 @@ public class OuTest {
 
   @Test
   public void
-      assignOu_OuInTheSameOWithInheritanceToggleInactive_shouldAssignChildToParentButNotSynchronizeParentAndChild() {
+      assignOu_OusInTheSameOrgAndInheritanceToggleInactive_shouldAssignChildToParentButNotSynchronizeParentAndChild() {
     Ou childOu =
         this.createOu(
             "accounting",
             false,
             this.orgId,
-            this.blackListedLicenseContractIds,
-            this.unrestrictedApiRoles.stream().map(Role::id).toList(),
+            this.licenseContractIds,
+            this.roles.stream().map(Role::id).toList(),
             new RecoveryPolicy(MfaType.EMAIL),
             new MfaPolicy(MfaType.SMS, DEFAULT_MFA_EXPIRY));
 
@@ -318,10 +236,10 @@ public class OuTest {
     assert !newAuthorizationPolicy.isInherited()
         : "Child OU authorization policy should be inherited";
     assert newAuthorizationPolicy
-            .assignedLicenseContracts()
-            .equals(oldAuthorizationPolicy.assignedLicenseContracts())
+            .assignedLicenseContractIds()
+            .equals(oldAuthorizationPolicy.assignedLicenseContractIds())
         : "Child OU should inherit license contracts from parent OU";
-    assert newAuthorizationPolicy.assignedRoles().equals(oldAuthorizationPolicy.assignedRoles())
+    assert newAuthorizationPolicy.assignedRoleIds().equals(oldAuthorizationPolicy.assignedRoleIds())
         : "Child OU should inherit roles from parent OU";
     assert !newAuthenticationPolicy.isInherited()
         : "Child OU authentication policy should be inherited";
@@ -473,8 +391,8 @@ public class OuTest {
             "developers",
             false,
             this.orgId,
-            this.blackListedLicenseContractIds,
-            this.unrestrictedApiRoles.stream().map(Role::id).toList(),
+            this.licenseContractIds,
+            this.roles.stream().map(Role::id).toList(),
             new RecoveryPolicy(MfaType.EMAIL),
             new MfaPolicy(MfaType.SMS, DEFAULT_MFA_EXPIRY));
 
@@ -494,12 +412,12 @@ public class OuTest {
     assert childAuthorizationPolicy.isInherited()
         : "Child OU authorization policy should be inherited";
     assert childAuthorizationPolicy
-            .assignedLicenseContracts()
-            .equals(parentAuthorizationPolicy.assignedLicenseContracts())
+            .assignedLicenseContractIds()
+            .equals(parentAuthorizationPolicy.assignedLicenseContractIds())
         : "Child OU should inherit license contracts from parent OU";
     assert childAuthorizationPolicy
-            .assignedRoles()
-            .equals(parentAuthorizationPolicy.assignedRoles())
+            .assignedRoleIds()
+            .equals(parentAuthorizationPolicy.assignedRoleIds())
         : "Child OU should inherit roles from parent OU";
   }
 
@@ -510,8 +428,8 @@ public class OuTest {
             "developers",
             false,
             this.orgId,
-            this.blackListedLicenseContractIds,
-            this.unrestrictedApiRoles.stream().map(Role::id).toList(),
+            this.licenseContractIds,
+            this.roles.stream().map(Role::id).toList(),
             new RecoveryPolicy(MfaType.EMAIL),
             new MfaPolicy(MfaType.SMS, DEFAULT_MFA_EXPIRY));
 
@@ -548,8 +466,8 @@ public class OuTest {
             "developers",
             false,
             this.orgId,
-            this.blackListedLicenseContractIds,
-            this.unrestrictedApiRoles.stream().map(Role::id).toList(),
+            this.licenseContractIds,
+            this.roles.stream().map(Role::id).toList(),
             new RecoveryPolicy(MfaType.EMAIL),
             new MfaPolicy(MfaType.SMS, DEFAULT_MFA_EXPIRY));
 
@@ -583,8 +501,8 @@ public class OuTest {
             "developers",
             false,
             this.orgId,
-            this.blackListedLicenseContractIds,
-            this.unrestrictedApiRoles.stream().map(Role::id).toList(),
+            this.licenseContractIds,
+            this.roles.stream().map(Role::id).toList(),
             new RecoveryPolicy(MfaType.EMAIL),
             new MfaPolicy(MfaType.SMS, DEFAULT_MFA_EXPIRY));
 
@@ -636,11 +554,6 @@ public class OuTest {
     }
 
     return licenseContractIds;
-  }
-
-  private LicenseRestriction createLicenseRestrictions(
-      LicenseRestrictable restrictable, Set<LicenseId> licenseIds) {
-    return new LicenseRestriction(restrictable, licenseIds);
   }
 
   private @NonNull Ou createOu(

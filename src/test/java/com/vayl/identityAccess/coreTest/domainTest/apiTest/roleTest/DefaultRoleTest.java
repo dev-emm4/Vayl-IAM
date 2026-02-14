@@ -1,4 +1,4 @@
-package com.vayl.identityAccess.coreTest.domainTest.roleTest;
+package com.vayl.identityAccess.coreTest.domainTest.apiTest.roleTest;
 
 import com.vayl.identityAccess.core.domain.api.Api;
 import com.vayl.identityAccess.core.domain.api.ApiId;
@@ -8,7 +8,7 @@ import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionEvent;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionLevel;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.InvalidValueException;
-import com.vayl.identityAccess.core.domain.role.DefaultRole;
+import com.vayl.identityAccess.core.domain.api.role.DefaultRole;
 import java.util.ArrayList;
 import java.util.List;
 import org.jspecify.annotations.NonNull;
@@ -63,15 +63,15 @@ public class DefaultRoleTest {
     assert defaultRole.name().equals("create-user")
         : "Role name mismatch got " + defaultRole.name() + " expected " + "create-user";
 
-    assert defaultRole.assignedApi().equals(api.id())
-        : "assignedApi mismatch got "
-            + defaultRole.assignedApi().toString()
+    assert defaultRole.assignedApiIds().equals(api.id())
+        : "assignedApiIds mismatch got "
+            + defaultRole.assignedApiIds().toString()
             + " expected "
             + api.id();
 
-    assert defaultRole.grantedPermissionIds().size() == permissionIds.size()
+    assert defaultRole.assignedPermissionIds().size() == permissionIds.size()
         : "Granted permissions size mismatch got "
-            + defaultRole.grantedPermissionIds().size()
+            + defaultRole.assignedPermissionIds().size()
             + " expected "
             + permissionIds.size();
   }
@@ -93,9 +93,9 @@ public class DefaultRoleTest {
             + permissionIdsToAdd.size()
             - permissionIdsToRemove.size();
 
-    assert defaultRole.grantedPermissionIds().size() == expectedSize
+    assert defaultRole.assignedPermissionIds().size() == expectedSize
         : "Granted permissions size mismatch after modification got "
-            + defaultRole.grantedPermissionIds().size()
+            + defaultRole.assignedPermissionIds().size()
             + " expected "
             + expectedSize;
   }

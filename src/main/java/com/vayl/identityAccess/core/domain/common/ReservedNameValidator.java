@@ -5,7 +5,7 @@ import java.util.Set;
 
 public class ReservedNameValidator {
     private static final Set<String> RESERVED_WORDS = new HashSet<>(Arrays.asList(
-            "admin", "root", "superuser", "system"
+           "password", "username", "primary_email", "authorization_policy", "authentication_policy" , "mfa_policy"
     ));
 
     public boolean isValid(String input) {

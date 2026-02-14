@@ -1,7 +1,7 @@
 package com.vayl.identityAccess.core.domain.organization.ou.authorizationPolicy;
 
 import com.vayl.identityAccess.core.domain.organization.licenseContract.LicenseContractId;
-import com.vayl.identityAccess.core.domain.role.RoleId;
+import com.vayl.identityAccess.core.domain.api.role.RoleId;
 import java.util.ArrayList;
 import java.util.List;
 import org.jspecify.annotations.NonNull;
@@ -32,11 +32,11 @@ public class AuthorizationPolicy {
     this.isInherited = isInherited;
   }
 
-  public List<LicenseContractId> assignedLicenseContracts() {
+  public List<LicenseContractId> assignedLicenseContractIds() {
     return this.assignedLicenseContracts;
   }
 
-  public List<RoleId> assignedRoles() {
+  public List<RoleId> assignedRoleIds() {
     return this.assignedRoles;
   }
 
@@ -49,25 +49,25 @@ public class AuthorizationPolicy {
       @NonNull List<RoleId> roleIds,
       boolean isInherited) {
     List<LicenseContractId> newLicenseContractIds =
-        licenseContractIds.isEmpty() ? this.assignedLicenseContracts() : licenseContractIds;
-    List<RoleId> newAssignedRoleIds = roleIds.isEmpty() ? this.assignedRoles() : roleIds;
+        licenseContractIds.isEmpty() ? this.assignedLicenseContractIds() : licenseContractIds;
+    List<RoleId> newAssignedRoleIds = roleIds.isEmpty() ? this.assignedRoleIds() : roleIds;
     return new AuthorizationPolicy(newLicenseContractIds, newAssignedRoleIds, isInherited);
   }
 
-  public boolean isLicenseContractsEquals(List<LicenseContractId> licenseContractIds) {
-    return this.assignedLicenseContracts().equals(licenseContractIds);
+  public boolean assignedLicenseContractIdsEquals(List<LicenseContractId> licenseContractIds) {
+    return this.assignedLicenseContractIds().equals(licenseContractIds);
   }
 
   public boolean isRoleIdsEquals(List<RoleId> roleIds) {
-    return this.assignedRoles().equals(roleIds);
+    return this.assignedRoleIds().equals(roleIds);
   }
 
   @Override
   public String toString() {
     return "AuthorizationPolicy{"
-        + "assignedLicenseContracts="
+        + "assignedLicenseContractIds="
         + this.assignedLicenseContracts
-        + ", assignedRoles="
+        + ", assignedRoleIds="
         + this.assignedRoles
         + ", isInherited="
         + this.isInherited

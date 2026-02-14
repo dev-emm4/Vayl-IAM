@@ -2,12 +2,14 @@ package com.vayl.identityAccess.core.domain.api;
 
 import com.vayl.identityAccess.core.domain.api.permission.Permission;
 import com.vayl.identityAccess.core.domain.api.permission.PermissionId;
+import com.vayl.identityAccess.core.domain.api.role.CustomRole;
+import com.vayl.identityAccess.core.domain.api.role.DefaultRole;
+import com.vayl.identityAccess.core.domain.api.role.RoleId;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionEvent;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionLevel;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.InvalidValueException;
-import com.vayl.identityAccess.core.domain.role.DefaultRole;
-import com.vayl.identityAccess.core.domain.role.RoleId;
+import com.vayl.identityAccess.core.domain.organization.OrgId;
 import java.util.List;
 import java.util.UUID;
 import org.jspecify.annotations.NonNull;
@@ -39,6 +41,14 @@ public class Api {
 
     RoleId roleId = new RoleId(UUID.randomUUID().toString());
     return new DefaultRole(roleId, name, this.id(), permissionIds);
+  }
+
+  public CustomRole createCustomRole(
+      @NonNull String name, @NonNull OrgId orgId, @NonNull List<PermissionId> permissionIds) {
+    this.throwErrorIfPermissionNotLocatedInApi(permissionIds);
+
+    return new CustomRole(
+        orgId, new RoleId(UUID.randomUUID().toString()), name, this.id(), permissionIds);
   }
 
   private void throwErrorIfPermissionNotLocatedInApi(@NonNull List<PermissionId> permissionIds) {

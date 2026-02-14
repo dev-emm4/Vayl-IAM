@@ -6,7 +6,7 @@ import com.vayl.identityAccess.core.domain.organization.OrgId;
 import com.vayl.identityAccess.core.domain.organization.licenseContract.LicenseContract;
 import com.vayl.identityAccess.core.domain.organization.licenseContract.LicenseContractId;
 import com.vayl.identityAccess.core.domain.organization.ou.authorizationPolicy.AuthorizationPolicy;
-import com.vayl.identityAccess.core.domain.role.RoleId;
+import com.vayl.identityAccess.core.domain.api.role.RoleId;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -43,9 +43,9 @@ public class AuthorizationPolicyTest {
 
     String expectedString =
         "AuthorizationPolicy{"
-            + "assignedLicenseContracts="
+            + "assignedLicenseContractIds="
             + licenseContractIds.toString()
-            + ", assignedRoles="
+            + ", assignedRoleIds="
             + roleIds.toString()
             + ", isInherited="
             + false
@@ -89,9 +89,9 @@ public class AuthorizationPolicyTest {
     AuthorizationPolicy newPolicy = originalPolicy.copyWith(List.of(), List.of(), false);
 
     assert !(newPolicy.isInherited()) : "The new policy should have isInherited set to false.";
-    assert newPolicy.assignedLicenseContracts().equals(originalPolicy.assignedLicenseContracts())
+    assert newPolicy.assignedLicenseContractIds().equals(originalPolicy.assignedLicenseContractIds())
         : "License contracts should be the same.";
-    assert newPolicy.assignedRoles().equals(originalPolicy.assignedRoles())
+    assert newPolicy.assignedRoleIds().equals(originalPolicy.assignedRoleIds())
         : "Assigned roles should be the same.";
   }
 
@@ -107,9 +107,9 @@ public class AuthorizationPolicyTest {
         originalPolicy.copyWith(newLicenseContractIds, newRoleIds, false);
 
     assert !(newPolicy.isInherited()) : "The new policy should have isInherited set to false.";
-    assert newPolicy.assignedLicenseContracts().equals(newLicenseContractIds)
+    assert newPolicy.assignedLicenseContractIds().equals(newLicenseContractIds)
         : "License contracts should be updated.";
-    assert newPolicy.assignedRoles().equals(newRoleIds) : "Assigned roles should be updated.";
+    assert newPolicy.assignedRoleIds().equals(newRoleIds) : "Assigned roles should be updated.";
   }
 
   @Test
@@ -118,8 +118,8 @@ public class AuthorizationPolicyTest {
     List<RoleId> roleIds = List.of(new RoleId(UUID.randomUUID().toString()));
     AuthorizationPolicy policy = new AuthorizationPolicy(licenseContractIds, roleIds, false);
 
-    assert policy.isLicenseContractsEquals(licenseContractIds)
-        : "isLicenseContractsEquals should return true for the same license contracts.";
+    assert policy.assignedLicenseContractIdsEquals(licenseContractIds)
+        : "assignedLicenseContractIdsEquals should return true for the same license contracts.";
   }
 
   @Test

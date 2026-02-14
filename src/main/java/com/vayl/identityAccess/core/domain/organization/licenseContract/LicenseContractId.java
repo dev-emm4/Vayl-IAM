@@ -20,10 +20,6 @@ public class LicenseContractId {
     return this.licenseId;
   }
 
-  public LicenseId licenseContractId() {
-    return this.licenseId;
-  }
-
   @Override
   public String toString() {
     return "LicenseContractId{" + "orgId=" + this.orgId + ", licenseId=" + this.licenseId + '}';

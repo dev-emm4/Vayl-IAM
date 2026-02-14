@@ -1,10 +1,10 @@
-package com.vayl.identityAccess.coreTest.domainTest.roleTest;
+package com.vayl.identityAccess.coreTest.domainTest.apiTest.roleTest;
 
 import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionEvent;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionLevel;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.InvalidValueException;
-import com.vayl.identityAccess.core.domain.role.RoleId;
+import com.vayl.identityAccess.core.domain.api.role.RoleId;
 import org.junit.jupiter.api.Test;
 
 public class RoleIdTest {

@@ -5,6 +5,7 @@ import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionLevel;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.InvalidValueException;
 import com.vayl.identityAccess.core.domain.common.IdValidator;
+import com.vayl.identityAccess.core.domain.organization.licenseContract.LicenseContractId;
 
 public class LicenseId {
   private String id;
@@ -49,4 +50,5 @@ public class LicenseId {
   public int hashCode() {
     return this.id.hashCode();
   }
+
 }

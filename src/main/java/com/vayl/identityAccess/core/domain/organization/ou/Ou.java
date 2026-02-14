@@ -4,16 +4,14 @@ import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionEvent;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionLevel;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.InvalidValueException;
-import com.vayl.identityAccess.core.domain.license.LicenseId;
-import com.vayl.identityAccess.core.domain.license.licenseRestrictionRegistry.LicenseRestrictionRegistry;
 import com.vayl.identityAccess.core.domain.organization.OrgId;
 import com.vayl.identityAccess.core.domain.organization.licenseContract.LicenseContractId;
 import com.vayl.identityAccess.core.domain.organization.ou.authenticationPolicy.AuthenticationPolicy;
 import com.vayl.identityAccess.core.domain.organization.ou.authenticationPolicy.MfaPolicy;
 import com.vayl.identityAccess.core.domain.organization.ou.authenticationPolicy.RecoveryPolicy;
 import com.vayl.identityAccess.core.domain.organization.ou.authorizationPolicy.AuthorizationPolicy;
-import com.vayl.identityAccess.core.domain.role.Role;
-import com.vayl.identityAccess.core.domain.role.RoleId;
+import com.vayl.identityAccess.core.domain.api.role.Role;
+import com.vayl.identityAccess.core.domain.api.role.RoleId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -142,49 +140,25 @@ public class Ou {
   }
 
   public void updateAuthorizationPolicy(
-      @NonNull List<LicenseContractId> licenseContractIds,
-      @NonNull List<Role> roles,
-      @NonNull LicenseRestrictionRegistry registry) {
-    this.throwErrorIfLicenseRegistryIsNull(registry);
+      @NonNull List<LicenseContractId> licenseContractIds, @NonNull List<Role> roles) {
     this.throwErrorIfLicenseContractsInDifferentOrg(licenseContractIds);
     this.throwErrorIfRolesInDifferentOrg(roles);
 
-    boolean isOuAnAudience = false;
-    boolean isUaAnAudience = false;
-    List<RoleId> accessibleRoleIds = new ArrayList<RoleId>();
-    List<LicenseContractId> accessibleContractIds = new ArrayList<LicenseContractId>();
+    boolean isOuAnAudience =
+        !(this.authorizationPolicy().assignedLicenseContractIds().equals(licenseContractIds));
+    boolean isUaAnAudience =
+        !(this.authorizationPolicy().assignedLicenseContractIds().equals(licenseContractIds));
 
-    if (!(licenseContractIds.isEmpty())) {
-      accessibleContractIds = licenseContractIds;
-      isUaAnAudience =
-          !(this.authorizationPolicy().isLicenseContractsEquals(accessibleContractIds));
-      isOuAnAudience =
-          !(this.authorizationPolicy().isLicenseContractsEquals(accessibleContractIds));
-    }
-
-    registry.initializeAssignedLicense(getLicenseIdsFromContractsId(accessibleContractIds));
-    this.throwErrorIfRolesIsNotAllowedByRegistry(roles, registry);
-
-    if (!(roles.isEmpty())) {
-      accessibleRoleIds = this.getRoleIds(roles);
-      isOuAnAudience =
-          !(this.authorizationPolicy().isRoleIdsEquals(accessibleRoleIds)) || isOuAnAudience;
-    }
+    isOuAnAudience =
+        !(this.authorizationPolicy()
+                .assignedRoleIds()
+                .equals(roles.stream().map(Role::id).toList()))
+            || isOuAnAudience;
 
     this.setAuthorizationPolicy(
-        new AuthorizationPolicy(accessibleContractIds, accessibleRoleIds, false));
+        new AuthorizationPolicy(licenseContractIds, roles.stream().map(Role::id).toList(), false));
 
     this.publishUpdateOuAuthorizationPolicyEvent(isOuAnAudience, isUaAnAudience);
-  }
-
-  private void throwErrorIfLicenseRegistryIsNull(LicenseRestrictionRegistry registry) {
-    if (registry == null) {
-      throw new InvalidValueException(
-          ExceptionEvent.UPDATING_AUTHORIZATION_POLICY,
-          ExceptionReason.LICENSE_RESTRICTION_REGISTRY_NOT_PROVIDED,
-          null,
-          ExceptionLevel.ERROR);
-    }
   }
 
   private void throwErrorIfLicenseContractsInDifferentOrg(
@@ -194,7 +168,7 @@ public class Ou {
       if (!(licenseContractId.orgId() == this.orgId())) {
         throw new InvalidValueException(
             ExceptionEvent.UPDATING_AUTHORIZATION_POLICY,
-            ExceptionReason.LICENSE_AND_OU_ORG_CONFLICT,
+            ExceptionReason.LICENSE_BELONGS_TO_DIFFERENT_ORG,
             licenseContractId.orgId().toString(),
             ExceptionLevel.INFO);
       }
@@ -207,38 +181,14 @@ public class Ou {
       if (!(role.belongsTo(this.orgId()))) {
         throw new InvalidValueException(
             ExceptionEvent.UPDATING_AUTHORIZATION_POLICY,
-            ExceptionReason.ROLES_AND_OU_ORG_CONFLICT,
+            ExceptionReason.ROLES_BELONG_TO_DIFFERENT_ORG,
             "role orgId: " + role.id().toString() + ", OU orgId: " + this.orgId().toString(),
             ExceptionLevel.INFO);
       }
     }
   }
 
-  private List<LicenseId> getLicenseIdsFromContractsId(List<LicenseContractId> licenseContractIds) {
-    List<LicenseId> licenseIds = new ArrayList<>();
-
-    for (LicenseContractId licenseContractId : licenseContractIds) {
-      licenseIds.add(licenseContractId.licenseId());
-    }
-
-    return licenseIds;
-  }
-
-  private void throwErrorIfRolesIsNotAllowedByRegistry(
-      List<Role> roles, LicenseRestrictionRegistry registry) {
-
-    for (Role role : roles) {
-      if (!(registry.canAccessLicenseRestrictable(role.assignedApi()))) {
-        throw new InvalidValueException(
-            ExceptionEvent.UPDATING_AUTHORIZATION_POLICY,
-            ExceptionReason.ACCESS_DENIED_TO_RESTRICTABLE_BY_LICENSE_RESTRICTION_REGISTRY,
-            role.assignedApi().toString(),
-            ExceptionLevel.INFO);
-      }
-    }
-  }
-
-  private List<RoleId> getRoleIds(List<Role> roles) {
+  private @NonNull List<RoleId> getRoleIds(List<Role> roles) {
     List<RoleId> roleIds = new ArrayList<RoleId>();
 
     for (Role role : roles) {
@@ -331,13 +281,15 @@ public class Ou {
     AuthorizationPolicy parentAuthorizationPolicy = parentOu.authorizationPolicy();
 
     if (!parentAuthorizationPolicy
-        .assignedLicenseContracts()
-        .equals(authorizationPolicy.assignedLicenseContracts())) {
+        .assignedLicenseContractIds()
+        .equals(authorizationPolicy.assignedLicenseContractIds())) {
       isOuAnAudience = true;
       isUserAnAudience = true;
     }
 
-    if (!parentAuthorizationPolicy.assignedRoles().equals(authorizationPolicy.assignedRoles())) {
+    if (!parentAuthorizationPolicy
+        .assignedRoleIds()
+        .equals(authorizationPolicy.assignedRoleIds())) {
       isOuAnAudience = true;
     }
 

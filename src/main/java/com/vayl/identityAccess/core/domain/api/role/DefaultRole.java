@@ -1,4 +1,4 @@
-package com.vayl.identityAccess.core.domain.role;
+package com.vayl.identityAccess.core.domain.api.role;
 
 import com.vayl.identityAccess.core.domain.api.ApiId;
 import com.vayl.identityAccess.core.domain.api.permission.PermissionId;
@@ -15,14 +15,14 @@ import org.jspecify.annotations.NonNull;
 public class DefaultRole implements Role {
   RoleId id;
   String name;
-  ApiId assignedApi;
-  Set<PermissionId> grantedPermissionIds = new HashSet<>();
+  ApiId assignedApiIds;
+  Set<PermissionId> assignedPermissionIds = new HashSet<>();
 
-  public DefaultRole(RoleId id, String name, ApiId apiId, List<PermissionId> grantedPermissionIds) {
+  public DefaultRole(RoleId id, String name, ApiId apiId, List<PermissionId> assignedPermissionIds) {
     this.setId(id);
     this.setName(name);
     this.assignApi(apiId);
-    this.assignPermission(grantedPermissionIds);
+    this.assignPermissionIds(assignedPermissionIds);
   }
 
   private void setId(RoleId id) {
@@ -34,26 +34,26 @@ public class DefaultRole implements Role {
   }
 
   private void assignApi(ApiId assignApi) {
-    this.assignedApi = assignApi;
+    this.assignedApiIds = assignApi;
   }
 
   public void modifyGrantedPermissions(
       @NonNull List<PermissionId> addPermissionIds,
       @NonNull List<PermissionId> removePermissionIds) {
 
-    this.assignPermission(addPermissionIds);
+    this.assignPermissionIds(addPermissionIds);
     this.removeGrantedPermissions(removePermissionIds);
   }
 
-  private void assignPermission(@NonNull List<PermissionId> addPermission) {
+  private void assignPermissionIds(@NonNull List<PermissionId> addPermission) {
     for (PermissionId permissionId : addPermission) {
       this.throwErrorIfPermissionNotLocatedInAssignedApi(permissionId);
-      this.grantedPermissionIds.add(permissionId);
+      this.assignedPermissionIds.add(permissionId);
     }
   }
 
   private void throwErrorIfPermissionNotLocatedInAssignedApi(@NonNull PermissionId permissionId) {
-    if (permissionId.permissionLocation() != this.assignedApi()) {
+    if (permissionId.permissionLocation() != this.assignedApiIds()) {
       throw new InvalidValueException(
           ExceptionEvent.DEFAULT_ROLE_PERMISSION_MODIFICATION,
           ExceptionReason.GRANTED_PERMISSION_NOT_LOCATED_IN_API,
@@ -65,12 +65,12 @@ public class DefaultRole implements Role {
   private void removeGrantedPermissions(@NonNull List<PermissionId> removePermissions) {
     for (PermissionId permissionId : removePermissions) {
       this.throwErrorIfRemovePermissionNotAssigned(permissionId);
-      this.grantedPermissionIds.remove(permissionId);
+      this.assignedPermissionIds.remove(permissionId);
     }
   }
 
   private void throwErrorIfRemovePermissionNotAssigned(@NonNull PermissionId permissionId) {
-    if (!this.grantedPermissionIds().contains(permissionId)) {
+    if (!this.assignedPermissionIds().contains(permissionId)) {
       throw new InvalidValueException(
           ExceptionEvent.DEFAULT_ROLE_PERMISSION_MODIFICATION,
           ExceptionReason.REMOVING_UNASSIGNED_PERMISSION,
@@ -87,15 +87,15 @@ public class DefaultRole implements Role {
     return this.name;
   }
 
-  public ApiId assignedApi() {
-    return this.assignedApi;
+  public ApiId assignedApiIds() {
+    return this.assignedApiIds;
   }
 
   public boolean belongsTo(OrgId orgId) {
     return true;
   }
 
-  public Set<PermissionId> grantedPermissionIds() {
-    return this.grantedPermissionIds;
+  public Set<PermissionId> assignedPermissionIds() {
+    return this.assignedPermissionIds;
   }
 }

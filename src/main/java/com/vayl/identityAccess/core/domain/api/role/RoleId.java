@@ -1,4 +1,4 @@
-package com.vayl.identityAccess.core.domain.role;
+package com.vayl.identityAccess.core.domain.api.role;
 
 import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionEvent;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionLevel;
