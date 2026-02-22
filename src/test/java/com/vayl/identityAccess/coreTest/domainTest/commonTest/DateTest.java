@@ -1,10 +1,8 @@
 package com.vayl.identityAccess.coreTest.domainTest.commonTest;
 
 import com.vayl.identityAccess.core.domain.common.Date;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionEvent;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionLevel;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.InvalidValueException;
+import com.vayl.identityAccess.core.domain.common.DomainErrors.inputViolation.InvalidValueException;
 import org.junit.jupiter.api.Test;
 
 public class DateTest {
@@ -17,23 +15,11 @@ public class DateTest {
       assert false
           : "Expected InvalidValueException was not thrown for invalid date: " + invalidDate;
     } catch (InvalidValueException e) {
-      assert e.event().equals(ExceptionEvent.DATE_CREATION)
-          : "InvalidValueError event mismatch got: "
-              + e.event()
-              + " expected: "
-              + ExceptionEvent.DATE_CREATION;
-
-      assert e.reason().equals(ExceptionReason.INVALID_DATE_FORMAT)
-              : "InvalidValueError reason mismatch got: "
+      assert e.reason().equals(ExceptionReason.INVALID_DATE)
+          : "InvalidValueError reason mismatch got: "
               + e.reason()
               + " expected: "
-              + ExceptionReason.INVALID_DATE_FORMAT;
-
-      assert e.level().equals(ExceptionLevel.INFO)
-              : "InvalidValueError level mismatch got: "
-              + e.level()
-              + " expected: "
-              + ExceptionLevel.INFO;
+              + ExceptionReason.INVALID_DATE;
 
       assert e.invalidValue().equals(invalidDate)
           : "InvalidValueError invalidValue mismatch got: "
@@ -53,7 +39,7 @@ public class DateTest {
 
   @Test
   void equals_withSameDate_returnsTrue() {
-    String validDate = "2023-12-01T00:00:00Z";
+   String validDate = "2023-12-01T00:00:00Z";
     Date date1 = new Date(validDate);
     Date date2 = new Date(validDate);
 

@@ -1,17 +1,15 @@
 package com.vayl.identityAccess.core.domain.organization.ou;
 
-import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionEvent;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionLevel;
+import com.vayl.identityAccess.core.domain.api.role.Role;
+import com.vayl.identityAccess.core.domain.api.role.RoleId;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.InvalidValueException;
+import com.vayl.identityAccess.core.domain.common.DomainErrors.inputViolation.InvalidValueException;
 import com.vayl.identityAccess.core.domain.organization.OrgId;
 import com.vayl.identityAccess.core.domain.organization.licenseContract.LicenseContractId;
 import com.vayl.identityAccess.core.domain.organization.ou.authenticationPolicy.AuthenticationPolicy;
 import com.vayl.identityAccess.core.domain.organization.ou.authenticationPolicy.MfaPolicy;
 import com.vayl.identityAccess.core.domain.organization.ou.authenticationPolicy.RecoveryPolicy;
 import com.vayl.identityAccess.core.domain.organization.ou.authorizationPolicy.AuthorizationPolicy;
-import com.vayl.identityAccess.core.domain.api.role.Role;
-import com.vayl.identityAccess.core.domain.api.role.RoleId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -145,15 +143,8 @@ public class Ou {
     this.throwErrorIfRolesInDifferentOrg(roles);
 
     boolean isOuAnAudience =
-        !(this.authorizationPolicy().assignedLicenseContractIds().equals(licenseContractIds));
-    boolean isUaAnAudience =
-        !(this.authorizationPolicy().assignedLicenseContractIds().equals(licenseContractIds));
-
-    isOuAnAudience =
-        !(this.authorizationPolicy()
-                .assignedRoleIds()
-                .equals(roles.stream().map(Role::id).toList()))
-            || isOuAnAudience;
+        !(this.isLicenseContractsAssigned(licenseContractIds)) || !(this.isRolesAssigned(roles));
+    boolean isUaAnAudience = !(this.isLicenseContractsAssigned(licenseContractIds));
 
     this.setAuthorizationPolicy(
         new AuthorizationPolicy(licenseContractIds, roles.stream().map(Role::id).toList(), false));
@@ -167,10 +158,7 @@ public class Ou {
     for (LicenseContractId licenseContractId : licenseContractIds) {
       if (!(licenseContractId.orgId() == this.orgId())) {
         throw new InvalidValueException(
-            ExceptionEvent.UPDATING_AUTHORIZATION_POLICY,
-            ExceptionReason.LICENSE_BELONGS_TO_DIFFERENT_ORG,
-            licenseContractId.orgId().toString(),
-            ExceptionLevel.INFO);
+            ExceptionReason.LICENSE_BELONGS_TO_DIFFERENT_ORG, licenseContractId.toString());
       }
     }
   }
@@ -178,26 +166,21 @@ public class Ou {
   private void throwErrorIfRolesInDifferentOrg(@NonNull List<Role> roles) {
 
     for (Role role : roles) {
-      if (!(role.belongsTo(this.orgId()))) {
+      if (!(role.accessibleBy(this.orgId()))) {
         throw new InvalidValueException(
-            ExceptionEvent.UPDATING_AUTHORIZATION_POLICY,
-            ExceptionReason.ROLES_BELONG_TO_DIFFERENT_ORG,
-            "role orgId: " + role.id().toString() + ", OU orgId: " + this.orgId().toString(),
-            ExceptionLevel.INFO);
+            ExceptionReason.ROLES_BELONG_TO_DIFFERENT_ORG, role.id().toString());
       }
     }
   }
 
-  private @NonNull List<RoleId> getRoleIds(List<Role> roles) {
-    List<RoleId> roleIds = new ArrayList<RoleId>();
+  private boolean isLicenseContractsAssigned(List<LicenseContractId> licenseContractIds) {
+    return this.authorizationPolicy().assignedLicenseContractIds().equals(licenseContractIds);
+  }
 
-    for (Role role : roles) {
-      if (role.belongsTo(this.orgId())) {
-        roleIds.add(role.id());
-      }
-    }
-
-    return roleIds;
+  private boolean isRolesAssigned(List<Role> roles) {
+    return this.authorizationPolicy()
+            .assignedRoleIds()
+            .equals(roles.stream().map(Role::id).toList());
   }
 
   public void assignOu(
@@ -233,43 +216,30 @@ public class Ou {
     }
   }
 
-  private void throwExceptionIfAssigningChildInDifferentOrg(Ou ou) {
-    if (!this.orgId().equals(ou.orgId())) {
+  private void throwExceptionIfAssigningChildInDifferentOrg(Ou childOu) {
+    if (!this.orgId().equals(childOu.orgId())) {
       throw new InvalidValueException(
-          ExceptionEvent.OU_ASSIGNMENT,
-          ExceptionReason.PARENT_AND_CHILD_ORG_CONFLICT,
-          ou.orgId().toString(),
-          ExceptionLevel.INFO);
+          ExceptionReason.PARENT_AND_CHILD_ORG_CONFLICT, childOu.id().toString());
     }
   }
 
   private void throwExceptionIfAssigningSelf(Ou childOu) {
     if (childOu.id() == this.id()) {
-      throw new InvalidValueException(
-          ExceptionEvent.OU_ASSIGNMENT,
-          ExceptionReason.ASSIGNING_SELF,
-          childOu.id().toString(),
-          ExceptionLevel.INFO);
+      throw new InvalidValueException(ExceptionReason.ASSIGNING_SELF, childOu.id().toString());
     }
   }
 
   private void throwExceptionIfAssigningParent(@NonNull Ou childOu) {
     if (this.parent().equals(childOu.id())) {
       throw new InvalidValueException(
-          ExceptionEvent.OU_ASSIGNMENT,
-          ExceptionReason.ASSIGNING_PARENT_TO_CHILD,
-          childOu.id().toString(),
-          ExceptionLevel.INFO);
+          ExceptionReason.ASSIGNING_PARENT_TO_CHILD, childOu.id().toString());
     }
   }
 
   private void throwExceptionIfChildIsTopLevel(Ou childOu) {
     if (childOu.isTopLevel()) {
       throw new InvalidValueException(
-          ExceptionEvent.OU_ASSIGNMENT,
-          ExceptionReason.ASSIGNING_TOP_LEVEL_OU_TO_PARENT,
-          childOu.id().toString(),
-          ExceptionLevel.INFO);
+          ExceptionReason.ASSIGNING_TOP_LEVEL_OU_TO_PARENT, childOu.id().toString());
     }
   }
 
@@ -317,10 +287,7 @@ public class Ou {
   private void throwExceptionIfNotChildOf(Ou parentOu) {
     if (!this.parent().equals(parentOu.id())) {
       throw new InvalidValueException(
-          ExceptionEvent.SYNCHRONIZING_OU_WITH_PARENT,
-          ExceptionReason.OU_NOT_ASSIGNED_TO_PARENT,
-          parentOu.id().toString(),
-          ExceptionLevel.INFO);
+          ExceptionReason.OU_NOT_ASSIGNED_TO_PARENT, parentOu.id().toString());
     }
   }
 

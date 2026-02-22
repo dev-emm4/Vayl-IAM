@@ -1,10 +1,8 @@
 package com.vayl.identityAccess.coreTest.domainTest.fieldConfigurationTest;
 
 import com.vayl.identityAccess.core.domain.common.Date;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionEvent;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionLevel;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.InvalidValueException;
+import com.vayl.identityAccess.core.domain.common.DomainErrors.inputViolation.InvalidValueException;
 import com.vayl.identityAccess.core.domain.fieldConfiguration.FieldConfigId;
 import com.vayl.identityAccess.core.domain.fieldConfiguration.FieldType;
 import com.vayl.identityAccess.core.domain.fieldConfiguration.VerifiableFieldConfig;
@@ -15,7 +13,7 @@ import org.junit.jupiter.api.Test;
 public class VerifiableFieldConfigTest {
   @Test
   void constructor_withInvalidFieldType_throwsInvalidValueException() {
-    String fieldName = "address";
+    java.lang.String fieldName = "address";
     FieldConfigId id = new FieldConfigId(fieldName);
 
     Date enforcementDate =
@@ -30,36 +28,23 @@ public class VerifiableFieldConfigTest {
         assert false
             : "Expected InvalidValueError was not thrown for invalid field type: " + fieldType;
       } catch (InvalidValueException e) {
-        assert e.event().equals(ExceptionEvent.VERIFIABLE_FIELD_CONFIG_CREATION)
-            : "InvalidValueError event mismatch got: "
-                + e.event()
-                + " expected: "
-                + ExceptionEvent.UNVERIFIABLE_FIELD_CONFIG_CREATION;
-
         assert e.reason().equals(ExceptionReason.INVALID_FIELD_TYPE)
             : "InvalidValueError reason mismatch got: "
                 + e.reason()
                 + " expected: "
                 + ExceptionReason.INVALID_FIELD_TYPE;
-
-        assert e.level().equals(ExceptionLevel.INFO)
-            : "InvalidValueError level mismatch got: "
-                + e.level()
-                + " expected: "
-                + ExceptionLevel.INFO;
-
         assert e.invalidValue().equals(fieldType.toString())
             : "InvalidValueException invalidValue mismatch got: "
                 + e.invalidValue()
                 + " expected: "
-                + fieldType.toString();
+                + fieldType;
       }
     }
   }
 
   @Test
   void constructor_withValidFieldType_createsInstanceCorrectly() {
-    String fieldName = "address";
+    java.lang.String fieldName = "address";
 
     FieldConfigId id = new FieldConfigId(fieldName);
     Date enforcementDate =
@@ -94,7 +79,7 @@ public class VerifiableFieldConfigTest {
 
   @Test
   void modify_ifPrimaryEmailFieldConfigAndEnforcementDateChanged_throwInvalidValueException() {
-    String fieldName = "PRIMARY_EMAIL";
+    java.lang.String fieldName = "PRIMARY_EMAIL";
 
     FieldConfigId id = new FieldConfigId(fieldName);
     Date initialEnforcementDate = new Date(Instant.now().toString());
@@ -109,36 +94,26 @@ public class VerifiableFieldConfigTest {
       assert false
           : "VerifiableFieldConfig with fieldName = PRIMARY_EMAIL had enforcementDate modified.";
     } catch (InvalidValueException e) {
-      assert e.event().equals(ExceptionEvent.VERIFIABLE_FIELD_CONFIG_MODIFICATION)
-          : "InvalidValueError event mismatch got: "
-              + e.event()
-              + " expected: "
-              + ExceptionEvent.VERIFIABLE_FIELD_CONFIG_MODIFICATION;
 
-      assert e.reason().equals(ExceptionReason.PRIMARY_EMAIL_ENFORCEMENT_DATE_CANNOT_BE_CHANGED)
+      assert e.reason()
+              .equals(ExceptionReason.UPDATING_ENFORCEMENT_DATE_IN_PRIMARY_EMAIL_FIELD_CONFIG)
           : "InvalidValueError reason mismatch got: "
               + e.reason()
               + " expected: "
               + ExceptionReason.INVALID_FIELD_TYPE;
 
-      assert e.level().equals(ExceptionLevel.INFO)
-          : "InvalidValueError level mismatch got: "
-              + e.level()
-              + " expected: "
-              + ExceptionLevel.INFO;
-
       assert e.invalidValue().equals(newEnforcementDate.toString())
           : "InvalidValueException invalidValue mismatch got: "
               + e.invalidValue()
               + " expected: "
-              + newEnforcementDate.toString();
+              + newEnforcementDate;
     }
   }
 
   @Test
   void
       modify_ifPrimaryEmailFieldTypeEnabledAndEnforcementDateUnchanged_updatesVerificationRequirementCorrectly() {
-    String fieldName = "Primary_Email";
+    java.lang.String fieldName = "Primary_Email";
     FieldConfigId id = new FieldConfigId(fieldName);
     Date initialEnforcementDate = new Date(Instant.now().toString());
     VerifiableFieldConfig fieldConfig =
@@ -158,7 +133,7 @@ public class VerifiableFieldConfigTest {
 
   @Test
   void modify_withValidParameters_updatesSuccessfully() {
-    String fieldName = "Test Field";
+    java.lang.String fieldName = "Test Field";
 
     FieldConfigId id = new FieldConfigId(fieldName);
     Date initialEnforcementDate = new Date(Instant.now().toString());

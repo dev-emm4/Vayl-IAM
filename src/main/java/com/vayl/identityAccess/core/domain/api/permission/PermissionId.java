@@ -2,10 +2,8 @@ package com.vayl.identityAccess.core.domain.api.permission;
 
 import com.vayl.identityAccess.core.domain.api.ApiId;
 import com.vayl.identityAccess.core.domain.api.LicenseRestrictable;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionEvent;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionLevel;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.InvalidValueException;
+import com.vayl.identityAccess.core.domain.common.DomainErrors.inputViolation.InvalidValueException;
 import org.jspecify.annotations.NonNull;
 
 public class PermissionId implements LicenseRestrictable {
@@ -28,11 +26,7 @@ public class PermissionId implements LicenseRestrictable {
 
   private void throwErrorOnBlankName(@NonNull String name) {
     if (name.isBlank()) {
-      throw new InvalidValueException(
-          ExceptionEvent.PERMISSION_ID_CREATION,
-          ExceptionReason.BLANK_PERMISSION_NAME_PROVIDED,
-          name,
-          ExceptionLevel.INFO);
+      throw new InvalidValueException(ExceptionReason.INVALID_PERMISSION_ID, name);
     }
   }
 

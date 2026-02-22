@@ -1,31 +1,24 @@
 package com.vayl.identityAccess.core.domain.license;
 
-import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionEvent;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionLevel;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.InvalidValueException;
+import com.vayl.identityAccess.core.domain.common.DomainErrors.inputViolation.InvalidValueException;
 import com.vayl.identityAccess.core.domain.common.IdValidator;
-import com.vayl.identityAccess.core.domain.organization.licenseContract.LicenseContractId;
 
 public class LicenseId {
   private String id;
 
-  public LicenseId(String anId) {
-    this.setId(anId);
+  public LicenseId(String id) {
+    this.setId(id);
   }
 
-  public void setId(String anId) {
-    this.throwErrorOnInvalidId(anId);
-    this.id = anId;
+  private void setId(String id) {
+    this.throwErrorOnInvalidId(id);
+    this.id = id;
   }
 
-  private void throwErrorOnInvalidId(String anId) {
-    if (!IdValidator.isValid(anId)) {
-      throw new InvalidValueException(
-          ExceptionEvent.SUBSCRIPTION_ID_CREATION,
-          ExceptionReason.INVALID_ID,
-          anId,
-          ExceptionLevel.ERROR);
+  private void throwErrorOnInvalidId(String id) {
+    if (!IdValidator.isValid(id)) {
+      throw new InvalidValueException(ExceptionReason.INVALID_LICENSE_ID, id);
     }
   }
 
@@ -35,11 +28,11 @@ public class LicenseId {
   }
 
   @Override
-  public boolean equals(Object anObject) {
+  public boolean equals(Object object) {
 
     boolean isEqual = false;
-    if (anObject != null && this.getClass() == anObject.getClass()) {
-      LicenseId typedObject = (LicenseId) anObject;
+    if (object != null && this.getClass() == object.getClass()) {
+      LicenseId typedObject = (LicenseId) object;
       isEqual = typedObject.toString().equals(this.toString());
     }
 
@@ -50,5 +43,4 @@ public class LicenseId {
   public int hashCode() {
     return this.id.hashCode();
   }
-
 }

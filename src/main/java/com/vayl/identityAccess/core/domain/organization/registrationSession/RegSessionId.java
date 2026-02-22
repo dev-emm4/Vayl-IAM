@@ -1,13 +1,13 @@
-package com.vayl.identityAccess.core.domain.organization.ou;
+package com.vayl.identityAccess.core.domain.organization.registrationSession;
 
 import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.inputViolation.InvalidValueException;
 import com.vayl.identityAccess.core.domain.common.IdValidator;
 
-public class OuId {
+public class RegSessionId {
   private String id;
 
-  public OuId(String id) {
+  public RegSessionId(String id) {
     this.setId(id);
   }
 
@@ -18,7 +18,7 @@ public class OuId {
 
   private void throwErrorOnInvalidId(String id) {
     if (!IdValidator.isValid(id)) {
-      throw new InvalidValueException(ExceptionReason.INVALID_OU_ID, id);
+      throw new InvalidValueException(ExceptionReason.INVALID_REG_SESSION_ID, id);
     }
   }
 
@@ -28,15 +28,19 @@ public class OuId {
   }
 
   @Override
-  public boolean equals(Object obj) {
-    if (this == obj) return true;
-    if (obj == null || getClass() != obj.getClass()) return false;
-    OuId orgId = (OuId) obj;
-    return id.equals(orgId.id);
+  public boolean equals(Object anObject) {
+
+    boolean isEqual = false;
+    if (anObject != null && this.getClass() == anObject.getClass()) {
+      RegSessionId typedObject = (RegSessionId) anObject;
+      isEqual = typedObject.toString().equals(this.toString());
+    }
+
+    return isEqual;
   }
 
   @Override
   public int hashCode() {
-    return id.hashCode();
+    return this.id.hashCode();
   }
 }

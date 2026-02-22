@@ -1,9 +1,9 @@
 package com.vayl.identityAccess.core.domain.common;
 
-import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionEvent;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionLevel;
+import com.vayl.identityAccess.core.application.ExceptionEvent;
+import com.vayl.identityAccess.core.application.ExceptionLevel;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.InvalidValueException;
+import com.vayl.identityAccess.core.domain.common.DomainErrors.inputViolation.InvalidValueException;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
@@ -24,11 +24,7 @@ public class Date {
       // This specifically looks for the YYYY-MM-DDTHH:mm:ssZ format
       DateTimeFormatter.ISO_INSTANT.parse(date);
     } catch (DateTimeParseException e) {
-      throw new InvalidValueException(
-          ExceptionEvent.DATE_CREATION,
-          ExceptionReason.INVALID_DATE_FORMAT,
-          date,
-          ExceptionLevel.INFO);
+      throw new InvalidValueException(ExceptionReason.INVALID_DATE, date);
     }
   }
 

@@ -1,10 +1,8 @@
 package com.vayl.identityAccess.core.domain.fieldConfiguration;
 
 import com.vayl.identityAccess.core.domain.common.Date;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionEvent;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionLevel;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.InvalidValueException;
+import com.vayl.identityAccess.core.domain.common.DomainErrors.inputViolation.InvalidValueException;
 
 public class VerifiableFieldConfig implements FieldConfiguration {
   private FieldConfigId id;
@@ -29,11 +27,7 @@ public class VerifiableFieldConfig implements FieldConfiguration {
 
   private void setFieldType(FieldType fieldType) {
     if (!isFieldTypeAllowed(fieldType)) {
-      throw new InvalidValueException(
-          ExceptionEvent.VERIFIABLE_FIELD_CONFIG_CREATION,
-          ExceptionReason.INVALID_FIELD_TYPE,
-          fieldType.toString(),
-          ExceptionLevel.INFO);
+      throw new InvalidValueException(ExceptionReason.INVALID_FIELD_TYPE, fieldType.toString());
     }
     this.fieldType = fieldType;
   }
@@ -51,12 +45,11 @@ public class VerifiableFieldConfig implements FieldConfiguration {
   }
 
   private void throwErrorOnPrimaryEmailViolation(Date enforcementDate) {
-    if (this.fieldName().equalsIgnoreCase("PRIMARY_EMAIL") && !this.enforcementDate.equals(enforcementDate)) {
+    if (this.fieldName().equalsIgnoreCase("PRIMARY_EMAIL")
+        && !this.enforcementDate.equals(enforcementDate)) {
       throw new InvalidValueException(
-          ExceptionEvent.VERIFIABLE_FIELD_CONFIG_MODIFICATION,
-          ExceptionReason.PRIMARY_EMAIL_ENFORCEMENT_DATE_CANNOT_BE_CHANGED,
-          enforcementDate.toString(),
-          ExceptionLevel.INFO);
+          ExceptionReason.UPDATING_ENFORCEMENT_DATE_IN_PRIMARY_EMAIL_FIELD_CONFIG,
+          enforcementDate.toString());
     }
   }
 
@@ -72,7 +65,7 @@ public class VerifiableFieldConfig implements FieldConfiguration {
     return this.id;
   }
 
-  public String fieldName() {
+  public java.lang.String fieldName() {
     return this.id.toString();
   }
 

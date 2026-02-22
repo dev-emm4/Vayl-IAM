@@ -1,18 +1,15 @@
 package com.vayl.identityAccess.core.domain.fieldConfiguration;
 
 import com.vayl.identityAccess.core.domain.common.Date;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionEvent;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionLevel;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.InvalidValueException;
+import com.vayl.identityAccess.core.domain.common.DomainErrors.inputViolation.InvalidValueException;
 
 public class UnverifiableFieldConfig implements FieldConfiguration {
   private FieldConfigId id;
   private FieldType fieldType;
   private Date enforcementDate;
 
-  public UnverifiableFieldConfig(
-      FieldConfigId id, FieldType fieldType, Date enforcementDate) {
+  public UnverifiableFieldConfig(FieldConfigId id, FieldType fieldType, Date enforcementDate) {
     this.setId(id);
     this.setFieldType(fieldType);
     this.setEnforcementDate(enforcementDate);
@@ -24,11 +21,7 @@ public class UnverifiableFieldConfig implements FieldConfiguration {
 
   private void setFieldType(FieldType fieldType) {
     if (!isFieldTypeAllowed(fieldType)) {
-      throw new InvalidValueException(
-          ExceptionEvent.UNVERIFIABLE_FIELD_CONFIG_CREATION,
-          ExceptionReason.INVALID_FIELD_TYPE,
-          fieldType.toString(),
-          ExceptionLevel.INFO);
+      throw new InvalidValueException(ExceptionReason.INVALID_FIELD_TYPE, fieldType.toString());
     }
 
     this.fieldType = fieldType;
@@ -57,7 +50,7 @@ public class UnverifiableFieldConfig implements FieldConfiguration {
     return this.fieldType;
   }
 
-  public String fieldName() {
+  public java.lang.String fieldName() {
     return this.id().toString();
   }
 

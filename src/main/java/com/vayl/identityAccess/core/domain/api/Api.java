@@ -5,10 +5,8 @@ import com.vayl.identityAccess.core.domain.api.permission.PermissionId;
 import com.vayl.identityAccess.core.domain.api.role.CustomRole;
 import com.vayl.identityAccess.core.domain.api.role.DefaultRole;
 import com.vayl.identityAccess.core.domain.api.role.RoleId;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionEvent;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionLevel;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.InvalidValueException;
+import com.vayl.identityAccess.core.domain.common.DomainErrors.inputViolation.InvalidValueException;
 import com.vayl.identityAccess.core.domain.organization.OrgId;
 import java.util.List;
 import java.util.UUID;
@@ -55,10 +53,7 @@ public class Api {
     for (PermissionId permissionId : permissionIds) {
       if (permissionId.permissionLocation() != this.id()) {
         throw new InvalidValueException(
-            ExceptionEvent.DEFAULT_ROLE_CREATION,
-            ExceptionReason.GRANTED_PERMISSION_NOT_LOCATED_IN_API,
-            permissionId.toString(),
-            ExceptionLevel.INFO);
+            ExceptionReason.ASSIGNING_UNAUTHORIZED_PERMISSION_TO_ROLE, permissionId.toString());
       }
     }
   }

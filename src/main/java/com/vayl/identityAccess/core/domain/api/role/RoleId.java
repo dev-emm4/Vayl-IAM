@@ -1,27 +1,24 @@
 package com.vayl.identityAccess.core.domain.api.role;
 
-import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionEvent;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionLevel;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.InvalidValueException;
+import com.vayl.identityAccess.core.domain.common.DomainErrors.inputViolation.InvalidValueException;
 import com.vayl.identityAccess.core.domain.common.IdValidator;
 
 public class RoleId {
   String id;
 
-  public RoleId(String anId) {
-    this.setId(anId);
+  public RoleId(String id) {
+    this.setId(id);
   }
 
-  private void setId(String anId) {
-    this.throwErrorOnInvalidId(anId);
-    this.id = anId;
+  private void setId(String id) {
+    this.throwErrorOnInvalidId(id);
+    this.id = id;
   }
 
-  private void throwErrorOnInvalidId(String anId) {
-    if (!IdValidator.isValid(anId)) {
-      throw new InvalidValueException(
-          ExceptionEvent.ROLE_ID_CREATION, ExceptionReason.INVALID_ID, anId, ExceptionLevel.ERROR);
+  private void throwErrorOnInvalidId(String id) {
+    if (!IdValidator.isValid(id)) {
+      throw new InvalidValueException(ExceptionReason.INVALID_ROLE_ID, id);
     }
   }
 
@@ -31,11 +28,11 @@ public class RoleId {
   }
 
   @Override
-  public boolean equals(Object anObject) {
+  public boolean equals(Object object) {
 
     boolean isEqual = false;
-    if (anObject != null && this.getClass() == anObject.getClass()) {
-      RoleId typedObject = (RoleId) anObject;
+    if (object != null && this.getClass() == object.getClass()) {
+      RoleId typedObject = (RoleId) object;
       isEqual = typedObject.toString().equals(this.toString());
     }
 

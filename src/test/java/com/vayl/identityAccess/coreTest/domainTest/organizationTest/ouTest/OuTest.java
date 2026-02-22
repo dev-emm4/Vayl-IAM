@@ -2,11 +2,11 @@ package com.vayl.identityAccess.coreTest.domainTest.organizationTest.ouTest;
 
 import com.vayl.identityAccess.core.domain.api.Api;
 import com.vayl.identityAccess.core.domain.api.ApiId;
+import com.vayl.identityAccess.core.domain.api.role.Role;
+import com.vayl.identityAccess.core.domain.api.role.RoleId;
 import com.vayl.identityAccess.core.domain.common.Date;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionEvent;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionLevel;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.InvalidValueException;
+import com.vayl.identityAccess.core.domain.common.DomainErrors.inputViolation.InvalidValueException;
 import com.vayl.identityAccess.core.domain.common.MfaType;
 import com.vayl.identityAccess.core.domain.license.LicenseId;
 import com.vayl.identityAccess.core.domain.organization.OrgId;
@@ -17,8 +17,6 @@ import com.vayl.identityAccess.core.domain.organization.ou.authenticationPolicy.
 import com.vayl.identityAccess.core.domain.organization.ou.authenticationPolicy.MfaPolicy;
 import com.vayl.identityAccess.core.domain.organization.ou.authenticationPolicy.RecoveryPolicy;
 import com.vayl.identityAccess.core.domain.organization.ou.authorizationPolicy.AuthorizationPolicy;
-import com.vayl.identityAccess.core.domain.api.role.Role;
-import com.vayl.identityAccess.core.domain.api.role.RoleId;
 import java.util.*;
 import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.BeforeAll;
@@ -44,11 +42,11 @@ public class OuTest {
     // domain ids and APIs
     this.orgId = new OrgId(UUID.randomUUID().toString());
 
-    this.api = this.createApi("subscribe.com", "bank-app");
+    this.api = this.createApi();
     this.roles = List.of(this.api.createDefaultRole("admin", List.of()));
 
     // licenses and org license contracts
-    this.licenseIds = createLicenseIds(3);
+    this.licenseIds = createLicenseIds();
     this.licenseContractIds = createLicenseContractId(this.orgId, this.licenseIds);
 
     // initial OU under test
@@ -128,23 +126,16 @@ public class OuTest {
       assert false
           : "Expected an exception to be thrown due to license contracts belonging to different org";
     } catch (InvalidValueException e) {
-      assert e.event().equals(ExceptionEvent.UPDATING_AUTHORIZATION_POLICY)
-          : "Exception event mismatch got: "
-              + e.event()
-              + " expected: "
-              + ExceptionEvent.UPDATING_AUTHORIZATION_POLICY;
       assert e.reason().equals(ExceptionReason.LICENSE_BELONGS_TO_DIFFERENT_ORG)
           : "Exception reason mismatch got: "
               + e.reason()
               + " expected: "
               + ExceptionReason.LICENSE_BELONGS_TO_DIFFERENT_ORG;
-      assert e.invalidValue().equals(differentOrgId.toString())
+      assert e.invalidValue().equals(unauthorizedLicenseContracts.getFirst().toString())
           : "Exception invalid value mismatch got: "
               + e.invalidValue()
               + " expected: "
-              + differentOrgId.toString();
-      assert e.level().equals(ExceptionLevel.INFO)
-          : "Exception level mismatch got: " + e.event() + " expected: " + ExceptionLevel.INFO;
+              + unauthorizedLicenseContracts.getFirst().toString();
     }
   }
 
@@ -268,23 +259,16 @@ public class OuTest {
       assert false
           : "Expected an exception to be thrown due to parent ou and child ou org conflict";
     } catch (InvalidValueException e) {
-      assert e.event().equals(ExceptionEvent.OU_ASSIGNMENT)
-          : "Exception event mismatch got: "
-              + e.event()
-              + " expected: "
-              + ExceptionEvent.OU_ASSIGNMENT;
       assert e.reason().equals(ExceptionReason.PARENT_AND_CHILD_ORG_CONFLICT)
           : "Exception reason mismatch got: "
               + e.reason()
               + " expected: "
               + ExceptionReason.PARENT_AND_CHILD_ORG_CONFLICT;
-      assert e.invalidValue().equals(childOu.orgId().toString())
+      assert e.invalidValue().equals(childOu.id().toString())
           : "Exception invalid value mismatch got: "
               + e.invalidValue()
               + " expected: "
-              + childOu.orgId().toString();
-      assert e.level().equals(ExceptionLevel.INFO)
-          : "Exception level mismatch got: " + e.event() + " expected: " + ExceptionLevel.INFO;
+              + childOu.id().toString();
     }
   }
 
@@ -305,11 +289,6 @@ public class OuTest {
 
       assert false : "Expected an exception to be thrown when assigning top-level ou to an ou";
     } catch (InvalidValueException e) {
-      assert e.event().equals(ExceptionEvent.OU_ASSIGNMENT)
-          : "Exception event mismatch got: "
-              + e.event()
-              + " expected: "
-              + ExceptionEvent.OU_ASSIGNMENT;
       assert e.reason().equals(ExceptionReason.ASSIGNING_TOP_LEVEL_OU_TO_PARENT)
           : "Exception reason mismatch got: "
               + e.reason()
@@ -320,8 +299,6 @@ public class OuTest {
               + e.invalidValue()
               + " expected: "
               + this.topLevelOu.id().toString();
-      assert e.level().equals(ExceptionLevel.INFO)
-          : "Exception level mismatch got: " + e.event() + " expected: " + ExceptionLevel.INFO;
     }
   }
 
@@ -335,11 +312,6 @@ public class OuTest {
 
       assert false : "Expected an exception to be thrown when assigning parent ou to child ou";
     } catch (InvalidValueException e) {
-      assert e.event().equals(ExceptionEvent.OU_ASSIGNMENT)
-          : "Exception event mismatch got: "
-              + e.event()
-              + " expected: "
-              + ExceptionEvent.OU_ASSIGNMENT;
       assert e.reason().equals(ExceptionReason.ASSIGNING_PARENT_TO_CHILD)
           : "Exception reason mismatch got: "
               + e.reason()
@@ -350,8 +322,6 @@ public class OuTest {
               + e.invalidValue()
               + " expected: "
               + parentOu.id().toString();
-      assert e.level().equals(ExceptionLevel.INFO)
-          : "Exception level mismatch got: " + e.event() + " expected: " + ExceptionLevel.INFO;
     }
   }
 
@@ -364,11 +334,6 @@ public class OuTest {
 
       assert false : "Expected an exception to be thrown when assigning parent ou to child ou";
     } catch (InvalidValueException e) {
-      assert e.event().equals(ExceptionEvent.OU_ASSIGNMENT)
-          : "Exception event mismatch got: "
-              + e.event()
-              + " expected: "
-              + ExceptionEvent.OU_ASSIGNMENT;
       assert e.reason().equals(ExceptionReason.ASSIGNING_SELF)
           : "Exception reason mismatch got: "
               + e.reason()
@@ -379,8 +344,6 @@ public class OuTest {
               + e.invalidValue()
               + " expected: "
               + ou.id().toString();
-      assert e.level().equals(ExceptionLevel.INFO)
-          : "Exception level mismatch got: " + e.event() + " expected: " + ExceptionLevel.INFO;
     }
   }
 
@@ -439,11 +402,6 @@ public class OuTest {
       assert false
           : "Expected an exception to be thrown when synchronizing ou with ou that is not parent";
     } catch (InvalidValueException e) {
-      assert e.event().equals(ExceptionEvent.SYNCHRONIZING_OU_WITH_PARENT)
-          : "Exception event mismatch got: "
-              + e.event()
-              + " expected: "
-              + ExceptionEvent.SYNCHRONIZING_OU_WITH_PARENT;
       assert e.reason().equals(ExceptionReason.OU_NOT_ASSIGNED_TO_PARENT)
           : "Exception reason mismatch got: "
               + e.reason()
@@ -454,8 +412,6 @@ public class OuTest {
               + e.invalidValue()
               + " expected: "
               + this.topLevelOu.id().toString();
-      assert e.level().equals(ExceptionLevel.INFO)
-          : "Exception level mismatch got: " + e.event() + " expected: " + ExceptionLevel.INFO;
     }
   }
 
@@ -512,11 +468,6 @@ public class OuTest {
       assert false
           : "Expected an exception to be thrown when synchronizing ou with ou that is not parent";
     } catch (InvalidValueException e) {
-      assert e.event().equals(ExceptionEvent.SYNCHRONIZING_OU_WITH_PARENT)
-          : "Exception event mismatch got: "
-              + e.event()
-              + " expected: "
-              + ExceptionEvent.SYNCHRONIZING_OU_WITH_PARENT;
       assert e.reason().equals(ExceptionReason.OU_NOT_ASSIGNED_TO_PARENT)
           : "Exception reason mismatch got: "
               + e.reason()
@@ -527,19 +478,17 @@ public class OuTest {
               + e.invalidValue()
               + " expected: "
               + this.topLevelOu.id().toString();
-      assert e.level().equals(ExceptionLevel.INFO)
-          : "Exception level mismatch got: " + e.event() + " expected: " + ExceptionLevel.INFO;
     }
   }
 
-  private Api createApi(String audience, String name) {
-    ApiId apiId = new ApiId(audience);
-    return new Api(apiId, name);
+  private Api createApi() {
+    ApiId apiId = new ApiId("subscribe.com");
+    return new Api(apiId, "bank-app");
   }
 
-  private List<LicenseId> createLicenseIds(int amount) {
+  private List<LicenseId> createLicenseIds() {
     List<LicenseId> licenseIds = new ArrayList<>();
-    for (int i = 0; i < amount; i++) {
+    for (int i = 0; i < 7; i++) {
       licenseIds.add(new LicenseId(UUID.randomUUID().toString()));
     }
     return licenseIds;
@@ -557,7 +506,7 @@ public class OuTest {
   }
 
   private @NonNull Ou createOu(
-      String name,
+      java.lang.String name,
       boolean isTopLevel,
       OrgId orgId,
       List<LicenseContractId> licenseContractIds,

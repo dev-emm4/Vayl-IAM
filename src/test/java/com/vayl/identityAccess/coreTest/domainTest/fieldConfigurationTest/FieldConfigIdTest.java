@@ -1,40 +1,27 @@
 package com.vayl.identityAccess.coreTest.domainTest.fieldConfigurationTest;
 
-import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionEvent;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionLevel;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.InvalidValueException;
+import com.vayl.identityAccess.core.domain.common.DomainErrors.inputViolation.InvalidValue;
+import com.vayl.identityAccess.core.domain.common.DomainErrors.inputViolation.InvalidValueException;
 import com.vayl.identityAccess.core.domain.fieldConfiguration.FieldConfigId;
 import org.junit.jupiter.api.Test;
 
 public class FieldConfigIdTest {
-
   @Test
   void constructor_withInvalidFieldName_throwsInvalidValueException() {
     String invalidFieldName = " ";
 
     try {
       new FieldConfigId(invalidFieldName);
+
       assert false
           : "Expected InvalidValueException was not thrown for blank string" + invalidFieldName;
     } catch (InvalidValueException e) {
-      assert e.event().equals(ExceptionEvent.FIELD_CONFIG_ID_CREATION)
-          : "InvalidValueError event mismatch got: "
-              + e.event()
-              + " expected: "
-              + ExceptionEvent.FIELD_CONFIG_ID_CREATION;
-
-      assert e.reason().equals(ExceptionReason.INVALID_ID)
+      assert e.reason().equals(ExceptionReason.INVALID_FIELD_CONFIG_ID)
           : "InvalidValueError reason mismatch got: "
               + e.reason()
               + " expected: "
-              + ExceptionReason.INVALID_ID;
-
-      assert e.level().equals(ExceptionLevel.INFO)
-          : "InvalidValueError level mismatch got: "
-              + e.level()
-              + " expected: "
-              + ExceptionLevel.INFO;
+              + ExceptionReason.INVALID_FIELD_CONFIG_ID;
 
       assert e.invalidValue().equals(invalidFieldName)
           : "InvalidValueError invalidValue mismatch got: "
@@ -46,7 +33,7 @@ public class FieldConfigIdTest {
 
   @Test
   void constructor_withValidFieldName_createsId() {
-    String fieldName = "address";
+    java.lang.String fieldName = "address";
     FieldConfigId fieldConfigId = new FieldConfigId(fieldName);
 
     assert true

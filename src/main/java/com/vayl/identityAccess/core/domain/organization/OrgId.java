@@ -1,9 +1,7 @@
 package com.vayl.identityAccess.core.domain.organization;
 
-import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionEvent;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionLevel;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.InvalidValueException;
+import com.vayl.identityAccess.core.domain.common.DomainErrors.inputViolation.InvalidValueException;
 import com.vayl.identityAccess.core.domain.common.IdValidator;
 
 public class OrgId {
@@ -18,10 +16,9 @@ public class OrgId {
     this.id = id;
   }
 
-  private void throwErrorOnInvalidId(String anId) {
-    if (!IdValidator.isValid(anId)) {
-      throw new InvalidValueException(
-          ExceptionEvent.ORG_ID_CREATION, ExceptionReason.INVALID_ID, anId, ExceptionLevel.ERROR);
+  private void throwErrorOnInvalidId(String id) {
+    if (!IdValidator.isValid(id)) {
+      throw new InvalidValueException(ExceptionReason.INVALID_ORG_ID, id);
     }
   }
 

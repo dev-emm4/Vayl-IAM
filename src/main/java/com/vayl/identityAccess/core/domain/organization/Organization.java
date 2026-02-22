@@ -7,7 +7,7 @@ public class Organization {
   public Organization(OrgId orgId, String name) {
     this.setOrgId(orgId);
     this.setName(name);
-    // TODO: Publish organization_created event
+    // TODO: Publish organization_created reason
   }
 
   private void setOrgId(OrgId orgId) {

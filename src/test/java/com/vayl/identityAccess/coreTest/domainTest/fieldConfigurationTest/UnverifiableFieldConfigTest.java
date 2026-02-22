@@ -1,10 +1,8 @@
 package com.vayl.identityAccess.coreTest.domainTest.fieldConfigurationTest;
 
 import com.vayl.identityAccess.core.domain.common.Date;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionEvent;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionLevel;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.InvalidValueException;
+import com.vayl.identityAccess.core.domain.common.DomainErrors.inputViolation.InvalidValueException;
 import com.vayl.identityAccess.core.domain.fieldConfiguration.FieldConfigId;
 import com.vayl.identityAccess.core.domain.fieldConfiguration.FieldType;
 import com.vayl.identityAccess.core.domain.fieldConfiguration.UnverifiableFieldConfig;
@@ -29,36 +27,24 @@ public class UnverifiableFieldConfigTest {
         assert false
             : "Expected InvalidValueException was not thrown for invalid field type: " + fieldType;
       } catch (InvalidValueException e) {
-        assert e.event().equals(ExceptionEvent.UNVERIFIABLE_FIELD_CONFIG_CREATION)
-            : "InvalidValueError event mismatch got: "
-                + e.event()
-                + " expected: "
-                + ExceptionEvent.UNVERIFIABLE_FIELD_CONFIG_CREATION;
-
         assert e.reason().equals(ExceptionReason.INVALID_FIELD_TYPE)
             : "InvalidValueError reason mismatch got: "
                 + e.reason()
                 + " expected: "
                 + ExceptionReason.INVALID_FIELD_TYPE;
 
-        assert e.level().equals(ExceptionLevel.INFO)
-            : "InvalidValueError level mismatch got: "
-                + e.level()
-                + " expected: "
-                + ExceptionLevel.INFO;
-
         assert e.invalidValue().equals(fieldType.toString())
             : "InvalidValueException invalidValue mismatch got: "
                 + e.invalidValue()
                 + " expected: "
-                + fieldType.toString();
+                + fieldType;
       }
     }
   }
 
   @Test
   void constructor_withValidFieldType_createsInstanceCorrectly() {
-    String fieldName = "address";
+    java.lang.String fieldName = "address";
     FieldConfigId id = new FieldConfigId(fieldName);
     Date enforcementDate =
         new Date(Instant.now().toString()); // generate a UTC ISO format date string

@@ -1,9 +1,7 @@
 package com.vayl.identityAccess.coreTest.domainTest.organizationTest;
 
-import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionEvent;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionLevel;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.InvalidValueException;
+import com.vayl.identityAccess.core.domain.common.DomainErrors.inputViolation.InvalidValueException;
 import com.vayl.identityAccess.core.domain.organization.OrgId;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -18,24 +16,11 @@ public class OrgIdTest {
       assert false
           : "Expected InvalidValueException was not thrown for invalid UUIDv4 id" + invalidId;
     } catch (InvalidValueException e) {
-      assert e.event().equals(ExceptionEvent.ORG_ID_CREATION)
-          : "InvalidValueError event mismatch got: "
-              + e.event()
-              + " expected: "
-              + ExceptionEvent.ORG_ID_CREATION;
-
-      assert e.reason().equals(ExceptionReason.INVALID_ID)
+      assert e.reason().equals(ExceptionReason.INVALID_ORG_ID)
           : "InvalidValueError reason mismatch got: "
               + e.reason()
               + " expected: "
-              + ExceptionReason.INVALID_ID;
-
-      assert e.level().equals(ExceptionLevel.ERROR)
-          : "InvalidValueError level mismatch got: "
-              + e.level()
-              + " expected: "
-              + ExceptionLevel.ERROR;
-
+              + ExceptionReason.INVALID_ORG_ID;
       assert e.invalidValue().equals(invalidId)
           : "InvalidValueError invalidValue mismatch got: "
               + e.invalidValue()
@@ -46,7 +31,7 @@ public class OrgIdTest {
 
   @Test
   void constructor_withUUIDv4Id_createsId() {
-    String validId = UUID.randomUUID().toString();
+    java.lang.String validId = UUID.randomUUID().toString();
     OrgId orgId = new OrgId(validId);
 
     assert true
@@ -55,7 +40,7 @@ public class OrgIdTest {
 
   @Test
   void equals_withSameId_returnsTrue() {
-    String validId = UUID.randomUUID().toString();
+    java.lang.String validId = UUID.randomUUID().toString();
     OrgId id1 = new OrgId(validId);
     OrgId id2 = new OrgId(validId);
 
@@ -72,7 +57,7 @@ public class OrgIdTest {
 
   @Test
   void toString_returnsIdString() {
-    String validId = UUID.randomUUID().toString();
+    java.lang.String validId = UUID.randomUUID().toString();
     OrgId orgId = new OrgId(validId);
 
     assert orgId.toString().equals(validId) : "toString should return the id string";
@@ -80,7 +65,7 @@ public class OrgIdTest {
 
   @Test
   void hashCode_withSameId_returnsSameHashCode() {
-    String validId = UUID.randomUUID().toString();
+    java.lang.String validId = UUID.randomUUID().toString();
     OrgId id1 = new OrgId(validId);
     OrgId id2 = new OrgId(validId);
 

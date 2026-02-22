@@ -1,9 +1,7 @@
 package com.vayl.identityAccess.core.domain.fieldConfiguration;
 
-import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionEvent;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionLevel;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.InvalidValueException;
+import com.vayl.identityAccess.core.domain.common.DomainErrors.inputViolation.InvalidValueException;
 import org.jspecify.annotations.NonNull;
 
 public class FieldConfigId {
@@ -14,17 +12,13 @@ public class FieldConfigId {
   }
 
   public void setName(String name) {
-    this.throwErrorOnInvalidId(name);
+    this.throwErrorIfNameIsBlank(name);
     this.name = name;
   }
 
-  private void throwErrorOnInvalidId(@NonNull String name) {
+  private void throwErrorIfNameIsBlank(@NonNull String name) {
     if (name.isBlank()) {
-      throw new InvalidValueException(
-          ExceptionEvent.FIELD_CONFIG_ID_CREATION,
-          ExceptionReason.INVALID_ID,
-          name,
-          ExceptionLevel.INFO);
+      throw new InvalidValueException(ExceptionReason.INVALID_FIELD_CONFIG_ID, name);
     }
   }
 

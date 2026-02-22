@@ -2,10 +2,8 @@ package com.vayl.identityAccess.core.domain.api.role;
 
 import com.vayl.identityAccess.core.domain.api.ApiId;
 import com.vayl.identityAccess.core.domain.api.permission.PermissionId;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionEvent;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionLevel;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.InvalidValueException;
+import com.vayl.identityAccess.core.domain.common.DomainErrors.inputViolation.InvalidValueException;
 import com.vayl.identityAccess.core.domain.organization.OrgId;
 import java.util.HashSet;
 import java.util.List;
@@ -18,7 +16,8 @@ public class DefaultRole implements Role {
   ApiId assignedApiIds;
   Set<PermissionId> assignedPermissionIds = new HashSet<>();
 
-  public DefaultRole(RoleId id, String name, ApiId apiId, List<PermissionId> assignedPermissionIds) {
+  public DefaultRole(
+      RoleId id, String name, ApiId apiId, List<PermissionId> assignedPermissionIds) {
     this.setId(id);
     this.setName(name);
     this.assignApi(apiId);
@@ -53,12 +52,9 @@ public class DefaultRole implements Role {
   }
 
   private void throwErrorIfPermissionNotLocatedInAssignedApi(@NonNull PermissionId permissionId) {
-    if (permissionId.permissionLocation() != this.assignedApiIds()) {
+    if (permissionId.permissionLocation() != this.assignedApiId()) {
       throw new InvalidValueException(
-          ExceptionEvent.DEFAULT_ROLE_PERMISSION_MODIFICATION,
-          ExceptionReason.GRANTED_PERMISSION_NOT_LOCATED_IN_API,
-          permissionId.toString(),
-          ExceptionLevel.INFO);
+          ExceptionReason.ASSIGNING_UNAUTHORIZED_PERMISSION_TO_ROLE, permissionId.toString());
     }
   }
 
@@ -72,10 +68,7 @@ public class DefaultRole implements Role {
   private void throwErrorIfRemovePermissionNotAssigned(@NonNull PermissionId permissionId) {
     if (!this.assignedPermissionIds().contains(permissionId)) {
       throw new InvalidValueException(
-          ExceptionEvent.DEFAULT_ROLE_PERMISSION_MODIFICATION,
-          ExceptionReason.REMOVING_UNASSIGNED_PERMISSION,
-          permissionId.toString(),
-          ExceptionLevel.INFO);
+          ExceptionReason.REMOVING_UNASSIGNED_PERMISSION_FROM_ROLE, permissionId.toString());
     }
   }
 
@@ -87,11 +80,11 @@ public class DefaultRole implements Role {
     return this.name;
   }
 
-  public ApiId assignedApiIds() {
+  public ApiId assignedApiId() {
     return this.assignedApiIds;
   }
 
-  public boolean belongsTo(OrgId orgId) {
+  public boolean accessibleBy(OrgId orgId) {
     return true;
   }
 

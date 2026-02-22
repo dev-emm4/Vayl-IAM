@@ -2,10 +2,8 @@ package com.vayl.identityAccess.core.domain.api.role;
 
 import com.vayl.identityAccess.core.domain.api.ApiId;
 import com.vayl.identityAccess.core.domain.api.permission.PermissionId;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionEvent;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionLevel;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.InvalidValueException;
+import com.vayl.identityAccess.core.domain.common.DomainErrors.inputViolation.InvalidValueException;
 import com.vayl.identityAccess.core.domain.organization.OrgId;
 import java.util.HashSet;
 import java.util.List;
@@ -64,12 +62,9 @@ public class CustomRole implements Role {
   }
 
   private void throwErrorIfPermissionNotLocatedInAssignedApi(@NonNull PermissionId permissionId) {
-    if (permissionId.permissionLocation() != this.assignedApiIds()) {
+    if (permissionId.permissionLocation() != this.assignedApiId()) {
       throw new InvalidValueException(
-          ExceptionEvent.CUSTOM_ROLE_PERMISSION_MODIFICATION,
-          ExceptionReason.GRANTED_PERMISSION_NOT_LOCATED_IN_API,
-          permissionId.toString(),
-          ExceptionLevel.INFO);
+          ExceptionReason.ASSIGNING_UNAUTHORIZED_PERMISSION_TO_ROLE, permissionId.toString());
     }
   }
 
@@ -83,20 +78,17 @@ public class CustomRole implements Role {
   private void throwErrorIfRemovePermissionNotAssigned(@NonNull PermissionId permissionId) {
     if (!this.assignedPermissionIds().contains(permissionId)) {
       throw new InvalidValueException(
-          ExceptionEvent.CUSTOM_ROLE_PERMISSION_MODIFICATION,
-          ExceptionReason.REMOVING_UNASSIGNED_PERMISSION,
-          permissionId.toString(),
-          ExceptionLevel.INFO);
+          ExceptionReason.REMOVING_UNASSIGNED_PERMISSION_FROM_ROLE, permissionId.toString());
     }
   }
 
   @Override
-  public ApiId assignedApiIds() {
+  public ApiId assignedApiId() {
     return this.apiId;
   }
 
   @Override
-  public boolean belongsTo(OrgId orgId) {
+  public boolean accessibleBy(OrgId orgId) {
     return this.orgId.equals(orgId);
   }
 

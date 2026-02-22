@@ -1,11 +1,9 @@
 package com.vayl.identityAccess.core.domain.api;
 
-import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionEvent;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionLevel;
 import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.InvalidValueException;
+import com.vayl.identityAccess.core.domain.common.DomainErrors.inputViolation.InvalidValueException;
 
-public class ApiId implements LicenseRestrictable{
+public class ApiId implements LicenseRestrictable {
   private String id;
 
   public ApiId(String id) {
@@ -21,7 +19,7 @@ public class ApiId implements LicenseRestrictable{
     UrlValidator urlValidator = new UrlValidator();
     if (!urlValidator.isValid(id)) {
       throw new InvalidValueException(
-          ExceptionEvent.API_ID_CREATION, ExceptionReason.INVALID_ID, id, ExceptionLevel.INFO);
+          ExceptionReason.INVALID_API_ID, id);
     }
   }
 

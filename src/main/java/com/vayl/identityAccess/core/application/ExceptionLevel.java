@@ -1,4 +1,4 @@
-package com.vayl.identityAccess.core.domain.common.DomainErrors;
+package com.vayl.identityAccess.core.application;
 
 public enum ExceptionLevel {
     WARNING,
