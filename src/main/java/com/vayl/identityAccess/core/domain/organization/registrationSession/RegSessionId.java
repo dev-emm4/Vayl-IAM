@@ -1,46 +1,19 @@
 package com.vayl.identityAccess.core.domain.organization.registrationSession;
 
-import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.inputViolation.InvalidValueException;
-import com.vayl.identityAccess.core.domain.common.IdValidator;
+import com.vayl.identityAccess.core.domain.common.AssertionConcern;
+import com.vayl.identityAccess.core.domain.common.DomainException.ExceptionReason;
+import com.vayl.identityAccess.core.domain.common.validator.UuidValidator;
+import org.jspecify.annotations.NonNull;
 
-public class RegSessionId {
-  private String id;
-
-  public RegSessionId(String id) {
-    this.setId(id);
-  }
-
-  private void setId(String id) {
-    this.throwErrorOnInvalidId(id);
+public record RegSessionId(String id) {
+  public RegSessionId(@NonNull String id) {
+    AssertionConcern.isNotNull(id, ExceptionReason.INVALID_REG_SESSION_ARG);
+    AssertionConcern.isValid(new UuidValidator(), id, ExceptionReason.INVALID_REG_SESSION_ARG);
     this.id = id;
   }
 
-  private void throwErrorOnInvalidId(String id) {
-    if (!IdValidator.isValid(id)) {
-      throw new InvalidValueException(ExceptionReason.INVALID_REG_SESSION_ID, id);
-    }
-  }
-
   @Override
-  public String toString() {
+  public @NonNull String toString() {
     return this.id;
-  }
-
-  @Override
-  public boolean equals(Object anObject) {
-
-    boolean isEqual = false;
-    if (anObject != null && this.getClass() == anObject.getClass()) {
-      RegSessionId typedObject = (RegSessionId) anObject;
-      isEqual = typedObject.toString().equals(this.toString());
-    }
-
-    return isEqual;
-  }
-
-  @Override
-  public int hashCode() {
-    return this.id.hashCode();
   }
 }

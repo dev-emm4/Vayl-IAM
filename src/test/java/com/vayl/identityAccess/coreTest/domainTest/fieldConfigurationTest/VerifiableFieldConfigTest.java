@@ -1,8 +1,8 @@
 package com.vayl.identityAccess.coreTest.domainTest.fieldConfigurationTest;
 
-import com.vayl.identityAccess.core.domain.common.Date;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.inputViolation.InvalidValueException;
+import com.vayl.identityAccess.core.domain.common.DomainException.ExceptionReason;
+import com.vayl.identityAccess.core.domain.common.DomainException.InvalidValueException;
+import com.vayl.identityAccess.core.domain.common.inputtableValue.DateInput;
 import com.vayl.identityAccess.core.domain.fieldConfiguration.FieldConfigId;
 import com.vayl.identityAccess.core.domain.fieldConfiguration.FieldType;
 import com.vayl.identityAccess.core.domain.fieldConfiguration.VerifiableFieldConfig;
@@ -12,143 +12,143 @@ import org.junit.jupiter.api.Test;
 
 public class VerifiableFieldConfigTest {
   @Test
-  void constructor_withInvalidFieldType_throwsInvalidValueException() {
-    java.lang.String fieldName = "address";
+  void constructor_withInvalidFieldType_throwException() {
+    String fieldName = "address";
     FieldConfigId id = new FieldConfigId(fieldName);
 
-    Date enforcementDate =
-        new Date(Instant.now().toString()); // generate a UTC ISO format date string
+    DateInput enforcementDateInput =
+        new DateInput(Instant.now().toString()); // generate a UTC ISO format date string
     List<FieldType> invalidFieldTypes =
         List.of(FieldType.STRING, FieldType.DATE, FieldType.ADDRESS, FieldType.USERNAME);
 
     for (FieldType fieldType : invalidFieldTypes) {
       try {
-        VerifiableFieldConfig fieldConfig =
-            new VerifiableFieldConfig(id, fieldType, true, enforcementDate);
-        assert false
-            : "Expected InvalidValueError was not thrown for invalid field type: " + fieldType;
+        new VerifiableFieldConfig(id, fieldType, true, enforcementDateInput);
+
+        assert false : "Exception expected";
       } catch (InvalidValueException e) {
-        assert e.reason().equals(ExceptionReason.INVALID_FIELD_TYPE)
-            : "InvalidValueError reason mismatch got: "
-                + e.reason()
-                + " expected: "
-                + ExceptionReason.INVALID_FIELD_TYPE;
-        assert e.invalidValue().equals(fieldType.toString())
-            : "InvalidValueException invalidValue mismatch got: "
-                + e.invalidValue()
-                + " expected: "
-                + fieldType;
+        assert e.reason().equals(ExceptionReason.INVALID_FIELD_CONFIG_ARG)
+            : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_FIELD_CONFIG_ARG;
+      }
+    }
+  }
+
+  @Test
+  void constructor_withNullParameter_throwException() {
+    FieldConfigId id = new FieldConfigId("address");
+    DateInput enforcementDateInput = new DateInput(Instant.now().toString());
+
+    for (int i = 0; i < 3; i++) {
+      try {
+        if (i == 0) new VerifiableFieldConfig(null, FieldType.EMAIL, true, enforcementDateInput);
+        if (i == 1) new VerifiableFieldConfig(id, null, true, enforcementDateInput);
+        if (i == 2) new VerifiableFieldConfig(id, FieldType.EMAIL, true, null);
+
+        assert false : "Exception expected";
+      } catch (InvalidValueException e) {
+        assert e.reason().equals(ExceptionReason.INVALID_FIELD_CONFIG_ARG)
+            : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_FIELD_CONFIG_ARG;
       }
     }
   }
 
   @Test
   void constructor_withValidFieldType_createsInstanceCorrectly() {
-    java.lang.String fieldName = "address";
+    String fieldName = "address";
 
     FieldConfigId id = new FieldConfigId(fieldName);
-    Date enforcementDate =
-        new Date(Instant.now().toString()); // generate a UTC ISO format date string
+    DateInput enforcementDateInput =
+        new DateInput(Instant.now().toString()); // generate a UTC ISO format date string
     List<FieldType> validFieldTypes = List.of(FieldType.EMAIL, FieldType.PHONE, FieldType.PASSCODE);
 
     for (FieldType fieldType : validFieldTypes) {
       VerifiableFieldConfig fieldConfig =
-          new VerifiableFieldConfig(id, fieldType, true, enforcementDate);
+          new VerifiableFieldConfig(id, fieldType, true, enforcementDateInput);
 
       assert fieldConfig.fieldName().equals(fieldName)
-          : "Field fieldName mismatch got: " + fieldConfig.fieldName() + " expected: " + fieldName;
+          : "got: " + fieldConfig.fieldName() + " expected: " + fieldName;
       assert fieldConfig.fieldType().equals(fieldType)
-          : "FieldType mismatch got: "
-              + fieldConfig.fieldType().toString()
-              + " expected: "
-              + fieldType.toString();
-      assert fieldConfig.enforcementDate().equals(enforcementDate)
-          : "Enforcement date mismatch got: "
-              + fieldConfig.enforcementDate().toString()
-              + " expected: "
-              + enforcementDate.toString();
-      assert fieldConfig.isVerifiable()
-          : "Verification requirement mismatch got: false expected: true";
-      assert fieldConfig.id().equals(id)
-          : "FieldConfigId mismatch got: "
-              + fieldConfig.id().toString()
-              + " expected: "
-              + id.toString();
+          : "got: " + fieldConfig.fieldType() + " expected: " + fieldType;
+      assert fieldConfig.enforcementDate().equals(enforcementDateInput)
+          : "got: " + fieldConfig.enforcementDate() + " expected: " + enforcementDateInput;
+      assert fieldConfig.isVerifiable() : "got: false expected: true";
+      assert fieldConfig.id().equals(id) : "got: " + fieldConfig.id() + " expected: " + id;
     }
   }
 
   @Test
-  void modify_ifPrimaryEmailFieldConfigAndEnforcementDateChanged_throwInvalidValueException() {
-    java.lang.String fieldName = "PRIMARY_EMAIL";
+  void modify_ifFieldNameIsPrimaryEmailAndEnforcementDateChanged_throwException() {
+    String fieldName = "PRIMARY_EMAIL";
 
     FieldConfigId id = new FieldConfigId(fieldName);
-    Date initialEnforcementDate = new Date(Instant.now().toString());
+    DateInput initialEnforcementDateInput = new DateInput(Instant.now().toString());
     VerifiableFieldConfig fieldConfig =
-        new VerifiableFieldConfig(id, FieldType.EMAIL, true, initialEnforcementDate);
+        new VerifiableFieldConfig(id, FieldType.EMAIL, true, initialEnforcementDateInput);
 
-    Date newEnforcementDate = new Date(Instant.now().plusSeconds(86400).toString()); // add 1 day
+    DateInput newEnforcementDateInput =
+        new DateInput(Instant.now().plusSeconds(86400).toString()); // add 1 day
 
     try {
-      fieldConfig.modify(newEnforcementDate, false);
+      fieldConfig.modify(newEnforcementDateInput, false);
 
-      assert false
-          : "VerifiableFieldConfig with fieldName = PRIMARY_EMAIL had enforcementDate modified.";
+      assert false : "Exception expected";
     } catch (InvalidValueException e) {
-
-      assert e.reason()
-              .equals(ExceptionReason.UPDATING_ENFORCEMENT_DATE_IN_PRIMARY_EMAIL_FIELD_CONFIG)
-          : "InvalidValueError reason mismatch got: "
-              + e.reason()
-              + " expected: "
-              + ExceptionReason.INVALID_FIELD_TYPE;
-
-      assert e.invalidValue().equals(newEnforcementDate.toString())
-          : "InvalidValueException invalidValue mismatch got: "
-              + e.invalidValue()
-              + " expected: "
-              + newEnforcementDate;
+      assert e.reason().equals(ExceptionReason.INVALID_FIELD_CONFIG_ARG)
+          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_FIELD_CONFIG_ARG;
     }
   }
 
   @Test
   void
-      modify_ifPrimaryEmailFieldTypeEnabledAndEnforcementDateUnchanged_updatesVerificationRequirementCorrectly() {
-    java.lang.String fieldName = "Primary_Email";
+      modify_ifFieldNameIsPrimaryEmailAndEnforcementDateUnchanged_updatesVerificationRequirementCorrectly() {
+    String fieldName = "Primary_Email";
     FieldConfigId id = new FieldConfigId(fieldName);
-    Date initialEnforcementDate = new Date(Instant.now().toString());
+    DateInput initialEnforcementDateInput = new DateInput(Instant.now().toString());
     VerifiableFieldConfig fieldConfig =
-        new VerifiableFieldConfig(id, FieldType.EMAIL, true, initialEnforcementDate);
+        new VerifiableFieldConfig(id, FieldType.EMAIL, true, initialEnforcementDateInput);
 
     // Modify with the same enforcement date but change verification requirement
-    fieldConfig.modify(initialEnforcementDate, false);
+    fieldConfig.modify(initialEnforcementDateInput, false);
 
-    assert fieldConfig.enforcementDate().equals(initialEnforcementDate)
-        : "Enforcement date should remain unchanged. expected: "
-            + initialEnforcementDate.toString()
-            + " got: "
-            + fieldConfig.enforcementDate().toString();
-    assert !fieldConfig.isVerifiable()
-        : "Verification requirement was not updated correctly. expected: false got: true";
+    assert fieldConfig.enforcementDate().equals(initialEnforcementDateInput)
+        : "got: " + fieldConfig.enforcementDate() + " expected: " + initialEnforcementDateInput;
+    assert !fieldConfig.isVerifiable() : "got: " + fieldConfig.isVerifiable() + " expected: false";
   }
 
   @Test
   void modify_withValidParameters_updatesSuccessfully() {
-    java.lang.String fieldName = "Test Field";
+    String fieldName = "Test Field";
 
     FieldConfigId id = new FieldConfigId(fieldName);
-    Date initialEnforcementDate = new Date(Instant.now().toString());
+    DateInput initialEnforcementDateInput = new DateInput(Instant.now().toString());
     VerifiableFieldConfig fieldConfig =
-        new VerifiableFieldConfig(id, FieldType.EMAIL, true, initialEnforcementDate);
+        new VerifiableFieldConfig(id, FieldType.EMAIL, true, initialEnforcementDateInput);
 
-    Date newEnforcementDate = new Date(Instant.now().plusSeconds(86400).toString()); // add 1 day
-    fieldConfig.modify(newEnforcementDate, false);
+    DateInput newEnforcementDateInput =
+        new DateInput(Instant.now().plusSeconds(86400).toString()); // add 1 day
+    fieldConfig.modify(newEnforcementDateInput, false);
 
-    assert fieldConfig.enforcementDate().equals(newEnforcementDate)
-        : "Enforcement date was not updated correctly. expected: "
-            + newEnforcementDate.toString()
-            + " got: "
-            + fieldConfig.enforcementDate().toString();
-    assert !fieldConfig.isVerifiable()
-        : "Verification requirement was not updated correctly. expected: false got: true";
+    assert fieldConfig.enforcementDate().equals(newEnforcementDateInput)
+        : " got: " + fieldConfig.enforcementDate() + "expected: " + newEnforcementDateInput;
+    assert !fieldConfig.isVerifiable() : "got: " + fieldConfig.isVerifiable() + " expected: false";
+  }
+
+  @Test
+  void modify_withNullEnforcementDate_throwException() {
+    String fieldName = "address";
+
+    FieldConfigId id = new FieldConfigId(fieldName);
+    DateInput initialEnforcementDateInput = new DateInput(Instant.now().toString());
+    VerifiableFieldConfig fieldConfig =
+        new VerifiableFieldConfig(id, FieldType.PHONE, true, initialEnforcementDateInput);
+
+    try {
+      fieldConfig.modify(null, true);
+
+      assert false : "ExceptionN Expected";
+    } catch (InvalidValueException e) {
+      assert e.reason().equals(ExceptionReason.INVALID_FIELD_CONFIG_ARG)
+          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_FIELD_CONFIG_ARG;
+    }
   }
 }

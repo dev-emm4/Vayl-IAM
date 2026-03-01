@@ -6,7 +6,7 @@ import com.vayl.identityAccess.core.domain.organization.ou.OuId;
 import com.vayl.identityAccess.core.domain.organization.registrationSession.regPhase.MfaRegPhase;
 import com.vayl.identityAccess.core.domain.organization.registrationSession.regPhase.ProfileRegPhase;
 
-public class registrationSession {
+public class RegistrationSession {
     OrgId orgId;
     OuId ouId;
     RegSessionId id;

@@ -1,47 +1,22 @@
 package com.vayl.identityAccess.core.domain.api;
 
-import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.inputViolation.InvalidValueException;
+import com.vayl.identityAccess.core.domain.common.AssertionConcern;
+import com.vayl.identityAccess.core.domain.common.DomainException.ExceptionReason;
+import com.vayl.identityAccess.core.domain.common.validator.UrlValidator;
+import org.jspecify.annotations.NonNull;
 
-public class ApiId implements LicenseRestrictable {
-  private String id;
-
-  public ApiId(String id) {
-    this.setId(id);
-  }
-
-  private void setId(String id) {
+public record ApiId(@NonNull String id) implements LicenseRestrictable {
+  public ApiId {
     this.throwErrorOnInvalidId(id);
-    this.id = id;
   }
 
   private void throwErrorOnInvalidId(String id) {
-    UrlValidator urlValidator = new UrlValidator();
-    if (!urlValidator.isValid(id)) {
-      throw new InvalidValueException(
-          ExceptionReason.INVALID_API_ID, id);
-    }
+    AssertionConcern.isNotNull(id, ExceptionReason.INVALID_API_ARG);
+    AssertionConcern.isValid(new UrlValidator(), id, ExceptionReason.INVALID_API_ARG);
   }
 
   @Override
-  public String toString() {
+  public @NonNull String toString() {
     return this.id;
-  }
-
-  @Override
-  public boolean equals(Object anObject) {
-
-    boolean isEqual = false;
-    if (anObject != null && this.getClass() == anObject.getClass()) {
-      ApiId typedObject = (ApiId) anObject;
-      isEqual = typedObject.toString().equals(this.toString());
-    }
-
-    return isEqual;
-  }
-
-  @Override
-  public int hashCode() {
-    return this.id.hashCode();
   }
 }

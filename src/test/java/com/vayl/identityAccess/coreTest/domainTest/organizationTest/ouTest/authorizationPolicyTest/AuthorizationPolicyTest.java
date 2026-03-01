@@ -1,40 +1,19 @@
 package com.vayl.identityAccess.coreTest.domainTest.organizationTest.ouTest.authorizationPolicyTest;
 
-import com.vayl.identityAccess.core.domain.common.Date;
+import com.vayl.identityAccess.core.domain.api.role.RoleId;
+import com.vayl.identityAccess.core.domain.common.DomainException.ExceptionReason;
+import com.vayl.identityAccess.core.domain.common.DomainException.InvalidValueException;
+import com.vayl.identityAccess.core.domain.common.inputtableValue.DateInput;
 import com.vayl.identityAccess.core.domain.license.LicenseId;
 import com.vayl.identityAccess.core.domain.organization.OrgId;
 import com.vayl.identityAccess.core.domain.organization.licenseContract.LicenseContract;
 import com.vayl.identityAccess.core.domain.organization.licenseContract.LicenseContractId;
 import com.vayl.identityAccess.core.domain.organization.ou.authorizationPolicy.AuthorizationPolicy;
-import com.vayl.identityAccess.core.domain.api.role.RoleId;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 public class AuthorizationPolicyTest {
-  @Test
-  public void equals_sameAttributes_returnTrue() {
-    List<LicenseContractId> licenseContractIds = List.of(this.createLicenseContract().id());
-    List<RoleId> roleIds = List.of(new RoleId(UUID.randomUUID().toString()));
-    AuthorizationPolicy policy1 = new AuthorizationPolicy(licenseContractIds, roleIds, false);
-    AuthorizationPolicy policy2 = new AuthorizationPolicy(licenseContractIds, roleIds, false);
-
-    assert policy1.equals(policy2) : "Policies with the same attributes should be equal.";
-  }
-
-  @Test
-  public void equals_differentAttributes_returnFalse() {
-    List<LicenseContractId> licenseContractIds1 = List.of(this.createLicenseContract().id());
-    List<RoleId> roleIds1 = List.of(new RoleId(UUID.randomUUID().toString()));
-    AuthorizationPolicy policy1 = new AuthorizationPolicy(licenseContractIds1, roleIds1, false);
-
-    List<LicenseContractId> licenseContractIds2 = List.of(this.createLicenseContract().id());
-    List<RoleId> roleIds = List.of(new RoleId(UUID.randomUUID().toString()));
-    AuthorizationPolicy policy2 = new AuthorizationPolicy(licenseContractIds2, roleIds, true);
-
-    assert !policy1.equals(policy2) : "Policies with different attributes should not be equal.";
-  }
-
   @Test
   public void toString_validAttributes_returnCorrectString() {
     List<LicenseContractId> licenseContractIds = List.of(this.createLicenseContract().id());
@@ -43,41 +22,50 @@ public class AuthorizationPolicyTest {
 
     String expectedString =
         "AuthorizationPolicy{"
-            + "assignedLicenseContractIds="
-            + licenseContractIds.toString()
-            + ", assignedRoleIds="
-            + roleIds.toString()
+            + "licenseContractIds="
+            + licenseContractIds
+            + ", roleIds="
+            + roleIds
             + ", isInherited="
             + false
             + '}';
 
     assert policy.toString().equals(expectedString)
-        : "toString should return the correct string representation.";
+        : "got: " + policy + " expected: " + expectedString;
   }
 
   @Test
-  public void hashCode_sameAttributes_returnSameHashCode() {
+  void constructor_withNullParameters_throwException() {
     List<LicenseContractId> licenseContractIds = List.of(this.createLicenseContract().id());
     List<RoleId> roleIds = List.of(new RoleId(UUID.randomUUID().toString()));
-    AuthorizationPolicy policy1 = new AuthorizationPolicy(licenseContractIds, roleIds, false);
-    AuthorizationPolicy policy2 = new AuthorizationPolicy(licenseContractIds, roleIds, false);
 
-    assert policy1.hashCode() == policy2.hashCode()
-        : "Policies with the same attributes should have the same hash code.";
+    for (int i = 0; i < 2; i++) {
+      try {
+        if (i == 0) new AuthorizationPolicy(null, roleIds, true);
+        if (i == 1) new AuthorizationPolicy(licenseContractIds, null, true);
+
+        assert false : "Exception expected";
+      } catch (InvalidValueException e) {
+        assert e.reason() == ExceptionReason.INVALID_OU_ARG
+            : "got: " + e.reason() + "expected: " + ExceptionReason.INVALID_OU_ARG;
+      }
+    }
   }
 
   @Test
-  public void hashCode_differentAttributes_returnDifferentHashCode() {
-    List<LicenseContractId> licenseContractIds1 = List.of(this.createLicenseContract().id());
+  void constructor_withValidParameter_createAuthorizationPolicy() {
+    List<LicenseContractId> licenseContractIds = List.of(this.createLicenseContract().id());
     List<RoleId> roleIds = List.of(new RoleId(UUID.randomUUID().toString()));
-    AuthorizationPolicy policy1 = new AuthorizationPolicy(licenseContractIds1, roleIds, false);
+    boolean isInherited = false;
+    AuthorizationPolicy authorizationPolicy =
+        new AuthorizationPolicy(licenseContractIds, roleIds, isInherited);
 
-    List<LicenseContractId> licenseContractIds2 = List.of(this.createLicenseContract().id());
-    List<RoleId> roleIds2 = List.of(new RoleId(UUID.randomUUID().toString()));
-    AuthorizationPolicy policy2 = new AuthorizationPolicy(licenseContractIds2, roleIds2, true);
-
-    assert policy1.hashCode() != policy2.hashCode()
-        : "Policies with different attributes should have different hash codes.";
+    assert authorizationPolicy.licenseContractIds().equals(licenseContractIds)
+        : "got: " + authorizationPolicy.licenseContractIds() + " expected: " + licenseContractIds;
+    assert authorizationPolicy.roleIds().equals(roleIds)
+        : "got: " + authorizationPolicy.roleIds() + " expected: " + roleIds;
+    assert authorizationPolicy.isInherited() == isInherited
+        : "got: " + true + " expected: " + isInherited;
   }
 
   @Test
@@ -88,11 +76,11 @@ public class AuthorizationPolicyTest {
 
     AuthorizationPolicy newPolicy = originalPolicy.copyWith(List.of(), List.of(), false);
 
-    assert !(newPolicy.isInherited()) : "The new policy should have isInherited set to false.";
-    assert newPolicy.assignedLicenseContractIds().equals(originalPolicy.assignedLicenseContractIds())
-        : "License contracts should be the same.";
-    assert newPolicy.assignedRoleIds().equals(originalPolicy.assignedRoleIds())
-        : "Assigned roles should be the same.";
+    assert !(newPolicy.isInherited()) : "got: " + true + " expected: " + false;
+    assert newPolicy.licenseContractIds().equals(licenseContractIds)
+        : "got: " + newPolicy.licenseContractIds() + " expected: " + licenseContractIds;
+    assert newPolicy.roleIds().equals(roleIds)
+        : "got: " + newPolicy.roleIds() + " expected: " + roleIds;
   }
 
   @Test
@@ -106,48 +94,31 @@ public class AuthorizationPolicyTest {
     AuthorizationPolicy newPolicy =
         originalPolicy.copyWith(newLicenseContractIds, newRoleIds, false);
 
-    assert !(newPolicy.isInherited()) : "The new policy should have isInherited set to false.";
-    assert newPolicy.assignedLicenseContractIds().equals(newLicenseContractIds)
-        : "License contracts should be updated.";
-    assert newPolicy.assignedRoleIds().equals(newRoleIds) : "Assigned roles should be updated.";
+    assert !(newPolicy.isInherited()) : "got: " + true + " expected: " + false;
+    assert newPolicy.licenseContractIds().equals(newLicenseContractIds)
+        : "got: " + newPolicy.licenseContractIds() + " expected: " + newLicenseContractIds;
+    assert newPolicy.roleIds().equals(newRoleIds)
+        : "got: " + newPolicy.roleIds() + " expected: " + newRoleIds;
   }
 
   @Test
-  public void isLicenseContractIdsEquals_sameLicenseContracts_returnTrue() {
+  void copyWith_withNullParameters_throwException() {
     List<LicenseContractId> licenseContractIds = List.of(this.createLicenseContract().id());
     List<RoleId> roleIds = List.of(new RoleId(UUID.randomUUID().toString()));
-    AuthorizationPolicy policy = new AuthorizationPolicy(licenseContractIds, roleIds, false);
+    AuthorizationPolicy authorizationPolicy =
+        new AuthorizationPolicy(licenseContractIds, roleIds, true);
 
-    assert policy.assignedLicenseContractIdsEquals(licenseContractIds)
-        : "assignedLicenseContractIdsEquals should return true for the same license contracts.";
-  }
+    for (int i = 0; i < 2; i++) {
+      try {
+        if (i == 0) authorizationPolicy.copyWith(null, roleIds, true);
+        if (i == 1) authorizationPolicy.copyWith(licenseContractIds, null, true);
 
-  @Test
-  public void isLicenseContractIdsEquals_differentLicenseContracts_returnFalse() {
-    List<LicenseContractId> licenseContractIds1 = List.of(this.createLicenseContract().id());
-    List<LicenseContractId> licenseContractIds2 = List.of(this.createLicenseContract().id());
-    List<RoleId> roleIds = List.of(new RoleId(UUID.randomUUID().toString()));
-    AuthorizationPolicy policy = new AuthorizationPolicy(licenseContractIds1, roleIds, false);
-  }
-
-  @Test
-  public void isRoleIdsEquals_sameRoleIds_returnTrue() {
-    List<LicenseContractId> licenseContractIds = List.of(this.createLicenseContract().id());
-    List<RoleId> roleIds = List.of(new RoleId(UUID.randomUUID().toString()));
-    AuthorizationPolicy policy = new AuthorizationPolicy(licenseContractIds, roleIds, false);
-
-    assert policy.isRoleIdsEquals(roleIds) : "isRolesEquals should return true for the same roles.";
-  }
-
-  @Test
-  public void isRoleIdsEquals_differentRoleIds_returnFalse() {
-    List<LicenseContractId> licenseContractIds = List.of(this.createLicenseContract().id());
-    List<RoleId> roleIds1 = List.of(new RoleId(UUID.randomUUID().toString()));
-    List<RoleId> roleIds2 = List.of(new RoleId(UUID.randomUUID().toString()));
-    AuthorizationPolicy policy = new AuthorizationPolicy(licenseContractIds, roleIds1, false);
-
-    assert !policy.isRoleIdsEquals(roleIds2)
-        : "isRolesEquals should return false for different roles.";
+        assert false : "Exception expected";
+      } catch (InvalidValueException e) {
+        assert e.reason() == ExceptionReason.INVALID_OU_ARG
+            : "got: " + e.reason() + "expected: " + ExceptionReason.INVALID_OU_ARG;
+      }
+    }
   }
 
   private LicenseContract createLicenseContract() {
@@ -156,7 +127,7 @@ public class AuthorizationPolicyTest {
     LicenseContractId licenseContractId = new LicenseContractId(orgId, licenseId);
     int amountAllocated = 10;
     int amountRemaining = 10;
-    Date expireAt = new Date("2023-12-01T00:00:00Z");
+    DateInput expireAt = new DateInput("2023-12-01T00:00:00Z");
     return new LicenseContract(licenseContractId, amountAllocated, amountRemaining, expireAt);
   }
 }

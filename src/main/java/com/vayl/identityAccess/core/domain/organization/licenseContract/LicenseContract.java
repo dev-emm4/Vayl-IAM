@@ -1,16 +1,23 @@
 package com.vayl.identityAccess.core.domain.organization.licenseContract;
 
-import com.vayl.identityAccess.core.domain.common.Date;
+import com.vayl.identityAccess.core.domain.common.AssertionConcern;
+import com.vayl.identityAccess.core.domain.common.DomainException.ExceptionReason;
+import com.vayl.identityAccess.core.domain.common.inputtableValue.DateInput;
+import com.vayl.identityAccess.core.domain.license.LicenseId;
 import com.vayl.identityAccess.core.domain.organization.OrgId;
+import org.jspecify.annotations.NonNull;
 
 public class LicenseContract {
   private LicenseContractId id;
   private int amountAllocated;
   private int amountRemaining;
-  private Date expireAt;
+  private DateInput expireAt;
 
   public LicenseContract(
-      LicenseContractId id, int amountAllocated, int amountRemaining, Date expireAt) {
+      @NonNull LicenseContractId id,
+      int amountAllocated,
+      int amountRemaining,
+      @NonNull DateInput expireAt) {
     this.setId(id);
     this.setAmountAllocated(amountAllocated);
     this.setAmountRemaining(amountRemaining);
@@ -18,6 +25,7 @@ public class LicenseContract {
   }
 
   private void setId(LicenseContractId id) {
+    AssertionConcern.isNotNull(id, ExceptionReason.INVALID_LICENSE_CONTRACT_ARG);
     this.id = id;
   }
 
@@ -29,7 +37,8 @@ public class LicenseContract {
     this.amountRemaining = amountRemaining;
   }
 
-  private void setExpireAt(Date expireAt) {
+  private void setExpireAt(DateInput expireAt) {
+    AssertionConcern.isNotNull(expireAt, ExceptionReason.INVALID_LICENSE_CONTRACT_ARG);
     this.expireAt = expireAt;
   }
 
@@ -41,6 +50,10 @@ public class LicenseContract {
     return this.id.orgId();
   }
 
+  public LicenseId licenseId() {
+    return this.id().licenseId();
+  }
+
   public int amountAllocated() {
     return this.amountAllocated;
   }
@@ -49,24 +62,24 @@ public class LicenseContract {
     return this.amountRemaining;
   }
 
-  public Date expireAt() {
+  public DateInput expireAt() {
     return this.expireAt;
   }
 
-  public void decreasingAmountRemaining(){
-    //TODO: implement decreasingAmountRemaining in licenseContract
+  public void decreasingAmountRemaining() {
+    // TODO: implement decreasingAmountRemaining in licenseContract
   }
 
-  public void increaseAmountRemaining(){
+  public void increaseAmountRemaining() {
     this.amountRemaining += 1;
 
-    //TODO: publish increased_license_contract event
+    // TODO: publish increased_license_contract event
   }
 
-  public void increaseAllocatedAmount(int additionalAmount){
+  public void increaseAllocatedAmount(int additionalAmount) {
     this.amountAllocated += additionalAmount;
     this.amountRemaining += additionalAmount;
 
-    //TODO: publish increased_license_contract event
+    // TODO: publish increased_license_contract event
   }
 }

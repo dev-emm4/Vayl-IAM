@@ -1,62 +1,56 @@
 package com.vayl.identityAccess.coreTest.domainTest.organizationTest.ouTest.authenticationPolicyTest;
 
-import com.vayl.identityAccess.core.domain.common.Date;
+import com.vayl.identityAccess.core.domain.common.DomainException.ExceptionReason;
+import com.vayl.identityAccess.core.domain.common.DomainException.InvalidValueException;
 import com.vayl.identityAccess.core.domain.common.MfaType;
+import com.vayl.identityAccess.core.domain.common.inputtableValue.DateInput;
 import com.vayl.identityAccess.core.domain.organization.ou.authenticationPolicy.MfaPolicy;
 import org.junit.jupiter.api.Test;
 
 public class MfaPolicyTest {
   @Test
-  public void equals_sameAttributes_returnTrue() {
-    MfaPolicy mfaPolicy1 =
-        new MfaPolicy(MfaType.AUTHENTICATOR_APP, new Date("2023-12-01T00:00:00Z"));
-    MfaPolicy mfaPolicy2 =
-        new MfaPolicy(MfaType.AUTHENTICATOR_APP, new Date("2023-12-01T00:00:00Z"));
+  public void constructor_withNullParameters_throwException() {
+    MfaType mfaType = MfaType.EMAIL;
+    DateInput enforcementDate = new DateInput("2023-12-01T00:00:00Z");
 
-    assert mfaPolicy1.equals(mfaPolicy2);
+    for (int i = 0; i < 2; i++) {
+      try {
+        if (i == 0) new MfaPolicy(null, enforcementDate);
+        if (i == 1) new MfaPolicy(mfaType, null);
+
+        assert false : "Exception expected when passing null parameter";
+      } catch (InvalidValueException e) {
+        assert e.reason().equals(ExceptionReason.INVALID_OU_ARG)
+            : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_OU_ARG;
+      }
+    }
   }
 
   @Test
-  public void equals_differentAttributes_returnFalse() {
-    MfaPolicy mfaPolicy1 =
-        new MfaPolicy(MfaType.AUTHENTICATOR_APP, new Date("2023-12-01T00:00:00Z"));
-    MfaPolicy mfaPolicy2 = new MfaPolicy(MfaType.EMAIL, new Date("2023-12-15T00:00:00Z"));
+  void constructor_withValidParameters_throwException() {
+    MfaType mfaType = MfaType.EMAIL;
+    DateInput enforcementDate = new DateInput("2023-12-01T00:00:00Z");
+    MfaPolicy mfaPolicy = new MfaPolicy(mfaType, enforcementDate);
 
-    assert !mfaPolicy1.equals(mfaPolicy2);
+    assert mfaPolicy.mfaType().equals(mfaType)
+        : "got: " + mfaPolicy.mfaType() + " expected: " + mfaType;
+    assert mfaPolicy.enforcementDate().equals(enforcementDate)
+        : "got: " + mfaPolicy.enforcementDate() + "expected: " + enforcementDate;
   }
 
   @Test
   public void toString_validAttributes_returnCorrectString() {
     MfaPolicy mfaPolicy =
-        new MfaPolicy(MfaType.AUTHENTICATOR_APP, new Date("2023-12-01T00:00:00Z"));
+        new MfaPolicy(MfaType.AUTHENTICATOR_APP, new DateInput("2023-12-01T00:00:00Z"));
 
     String expectedString =
         "MfaPolicy{"
             + "mfaType="
             + MfaType.AUTHENTICATOR_APP
             + ", enforcementDate="
-            + new Date("2023-12-01T00:00:00Z")
+            + new DateInput("2023-12-01T00:00:00Z")
             + '}';
 
     assert mfaPolicy.toString().equals(expectedString);
-  }
-
-  @Test
-  public void hashCode_sameAttributes_returnSameHashCode() {
-    MfaPolicy mfaPolicy1 =
-        new MfaPolicy(MfaType.AUTHENTICATOR_APP, new Date("2023-12-01T00:00:00Z"));
-    MfaPolicy mfaPolicy2 =
-        new MfaPolicy(MfaType.AUTHENTICATOR_APP, new Date("2023-12-01T00:00:00Z"));
-
-    assert mfaPolicy1.hashCode() == mfaPolicy2.hashCode();
-  }
-
-  @Test
-  public void hashCode_differentAttributes_returnDifferentHashCode() {
-    MfaPolicy mfaPolicy1 =
-        new MfaPolicy(MfaType.AUTHENTICATOR_APP, new Date("2023-12-01T00:00:00Z"));
-    MfaPolicy mfaPolicy2 = new MfaPolicy(MfaType.EMAIL, new Date("2023-12-15T00:00:00Z"));
-
-    assert mfaPolicy1.hashCode() != mfaPolicy2.hashCode();
   }
 }

@@ -2,61 +2,25 @@ package com.vayl.identityAccess.core.domain.api.permission;
 
 import com.vayl.identityAccess.core.domain.api.ApiId;
 import com.vayl.identityAccess.core.domain.api.LicenseRestrictable;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.inputViolation.InvalidValueException;
+import com.vayl.identityAccess.core.domain.common.AssertionConcern;
+import com.vayl.identityAccess.core.domain.common.DomainException.ExceptionReason;
 import org.jspecify.annotations.NonNull;
 
-public class PermissionId implements LicenseRestrictable {
-  private ApiId permissionLocation;
-  private String name;
-
-  public PermissionId(ApiId id, @NonNull String name) {
-    this.setPermissionLocation(id);
-    this.setName(name);
-  }
-
-  private void setPermissionLocation(ApiId permissionLocation) {
-    this.permissionLocation = permissionLocation;
-  }
-
-  private void setName(@NonNull String name) {
-    this.throwErrorOnBlankName(name);
+public record PermissionId(ApiId apiId, String name) implements LicenseRestrictable {
+  public PermissionId(@NonNull ApiId apiId, @NonNull String name) {
+    throwErrorIfIdIsInvalid(apiId, name);
+    this.apiId = apiId;
     this.name = name;
   }
 
-  private void throwErrorOnBlankName(@NonNull String name) {
-    if (name.isBlank()) {
-      throw new InvalidValueException(ExceptionReason.INVALID_PERMISSION_ID, name);
-    }
+  private void throwErrorIfIdIsInvalid(ApiId apiId, String name) {
+    AssertionConcern.isNotNull(apiId, ExceptionReason.INVALID_PERMISSION_ARG);
+    AssertionConcern.isNotNull(name, ExceptionReason.INVALID_PERMISSION_ARG);
+    AssertionConcern.isNotBlank(name, ExceptionReason.INVALID_PERMISSION_ARG);
   }
 
   @Override
-  public String toString() {
-    return permissionLocation.toString() + "-" + this.name;
-  }
-
-  @Override
-  public boolean equals(Object object) {
-
-    boolean isEqual = false;
-    if (object != null && this.getClass() == object.getClass()) {
-      PermissionId typedObject = (PermissionId) object;
-      isEqual = typedObject.toString().equals(this.toString());
-    }
-
-    return isEqual;
-  }
-
-  @Override
-  public int hashCode() {
-    return this.toString().hashCode();
-  }
-
-  public ApiId permissionLocation() {
-    return this.permissionLocation;
-  }
-
-  public String name() {
-    return this.name;
+  public @NonNull String toString() {
+    return apiId.toString() + "-" + this.name;
   }
 }

@@ -2,17 +2,17 @@ package com.vayl.identityAccess.core.domain.organization.ou;
 
 import com.vayl.identityAccess.core.domain.api.role.Role;
 import com.vayl.identityAccess.core.domain.api.role.RoleId;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.inputViolation.InvalidValueException;
+import com.vayl.identityAccess.core.domain.common.AssertionConcern;
+import com.vayl.identityAccess.core.domain.common.DomainException.ExceptionReason;
 import com.vayl.identityAccess.core.domain.organization.OrgId;
 import com.vayl.identityAccess.core.domain.organization.licenseContract.LicenseContractId;
 import com.vayl.identityAccess.core.domain.organization.ou.authenticationPolicy.AuthenticationPolicy;
 import com.vayl.identityAccess.core.domain.organization.ou.authenticationPolicy.MfaPolicy;
 import com.vayl.identityAccess.core.domain.organization.ou.authenticationPolicy.RecoveryPolicy;
 import com.vayl.identityAccess.core.domain.organization.ou.authorizationPolicy.AuthorizationPolicy;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import org.jetbrains.annotations.Contract;
 import org.jspecify.annotations.NonNull;
 
 public class Ou {
@@ -25,13 +25,13 @@ public class Ou {
   private AuthenticationPolicy authenticationPolicy;
 
   public Ou(
-      OrgId orgId,
-      OuId id,
-      String name,
+      @NonNull OrgId orgId,
+      @NonNull OuId id,
+      @NonNull String name,
       boolean isTopLevel,
-      OuId parent,
-      AuthorizationPolicy authorizationPolicy,
-      AuthenticationPolicy authenticationPolicy) {
+      @NonNull OuId parent,
+      @NonNull AuthorizationPolicy authorizationPolicy,
+      @NonNull AuthenticationPolicy authenticationPolicy) {
     this.setOrgId(orgId);
     this.setId(id);
     this.setName(name);
@@ -42,14 +42,18 @@ public class Ou {
   }
 
   private void setOrgId(OrgId orgId) {
+    AssertionConcern.isNotNull(orgId, ExceptionReason.INVALID_OU_ARG);
     this.orgId = orgId;
   }
 
   private void setId(OuId id) {
+    AssertionConcern.isNotNull(id, ExceptionReason.INVALID_OU_ARG);
     this.id = id;
   }
 
   private void setName(String name) {
+    AssertionConcern.isNotNull(name, ExceptionReason.INVALID_OU_ARG);
+    AssertionConcern.isNotBlank(name, ExceptionReason.INVALID_OU_ARG);
     this.name = name;
   }
 
@@ -58,26 +62,29 @@ public class Ou {
   }
 
   private void setParent(OuId parent) {
+    AssertionConcern.isNotNull(parent, ExceptionReason.INVALID_OU_ARG);
     this.parent = parent;
   }
 
   private void setAuthorizationPolicy(AuthorizationPolicy authorizationPolicy) {
+    AssertionConcern.isNotNull(authorizationPolicy, ExceptionReason.INVALID_OU_ARG);
     this.authorizationPolicy = authorizationPolicy;
   }
 
   private void setAuthenticationPolicy(AuthenticationPolicy authenticationPolicy) {
+    AssertionConcern.isNotNull(authenticationPolicy, ExceptionReason.INVALID_OU_ARG);
     this.authenticationPolicy = authenticationPolicy;
   }
 
-  public OrgId orgId() {
+  public @NonNull OrgId orgId() {
     return this.orgId;
   }
 
-  public OuId id() {
+  public @NonNull OuId id() {
     return this.id;
   }
 
-  public String name() {
+  public @NonNull String name() {
     return this.name;
   }
 
@@ -85,31 +92,20 @@ public class Ou {
     return this.isTopLevel;
   }
 
-  public OuId parent() {
+  public @NonNull OuId parent() {
     return this.parent;
   }
 
-  public AuthorizationPolicy authorizationPolicy() {
+  public @NonNull AuthorizationPolicy authorizationPolicy() {
     return this.authorizationPolicy;
   }
 
-  public AuthenticationPolicy authenticationPolicy() {
+  public @NonNull AuthenticationPolicy authenticationPolicy() {
     return this.authenticationPolicy;
   }
 
-  private void assignAuthorizationPolicy(AuthorizationPolicy authorizationPolicy) {
-    this.setAuthorizationPolicy(authorizationPolicy);
-  }
-
-  private void assignAuthenticationPolicy(AuthenticationPolicy authenticationPolicy) {
-    this.setAuthenticationPolicy(authenticationPolicy);
-  }
-
-  private void updateParent(OuId parentId) {
-    this.setParent(parentId);
-  }
-
-  public Ou createOu(String name) {
+  @Contract("_ -> new")
+  public @NonNull Ou createOu(@NonNull String name) {
     OuId newOuId = new OuId(UUID.randomUUID().toString());
     AuthorizationPolicy newAuthorizationPolicy =
         this.authorizationPolicy().copyWith(List.of(), List.of(), true);
@@ -128,10 +124,11 @@ public class Ou {
 
   public void updateAuthenticationPolicy(
       @NonNull MfaPolicy mfaPolicy, @NonNull RecoveryPolicy recoveryPolicy) {
-    boolean shouldPublishEvent = false;
-    shouldPublishEvent = !(this.authenticationPolicy().mfaPolicy().equals(mfaPolicy));
-    shouldPublishEvent =
-        this.authenticationPolicy().recoveryPolicy().equals(recoveryPolicy) || shouldPublishEvent;
+    AssertionConcern.isNotNull(mfaPolicy, ExceptionReason.INVALID_OU_ARG);
+    AssertionConcern.isNotNull(recoveryPolicy, ExceptionReason.INVALID_OU_ARG);
+
+    boolean shouldPublishEvent =
+        !(this.isMfaPolicyAssigned(mfaPolicy)) || !(this.isRecoveryPolicyAssigned(recoveryPolicy));
 
     this.setAuthenticationPolicy(new AuthenticationPolicy(recoveryPolicy, mfaPolicy, false));
     this.publishUpdateOuAuthenticationPolicyEvent(shouldPublishEvent);
@@ -139,12 +136,16 @@ public class Ou {
 
   public void updateAuthorizationPolicy(
       @NonNull List<LicenseContractId> licenseContractIds, @NonNull List<Role> roles) {
-    this.throwErrorIfLicenseContractsInDifferentOrg(licenseContractIds);
-    this.throwErrorIfRolesInDifferentOrg(roles);
+    AssertionConcern.isNotNull(licenseContractIds, ExceptionReason.INVALID_OU_ARG);
+    AssertionConcern.isNotNull(roles, ExceptionReason.INVALID_OU_ARG);
+    AssertionConcern.isTrue(
+        this.isLicenseContractsInSameOrg(licenseContractIds), ExceptionReason.INVALID_OU_ARG);
+    AssertionConcern.isTrue(this.isRolesInSameOrg(roles), ExceptionReason.INVALID_OU_ARG);
 
     boolean isOuAnAudience =
-        !(this.isLicenseContractsAssigned(licenseContractIds)) || !(this.isRolesAssigned(roles));
-    boolean isUaAnAudience = !(this.isLicenseContractsAssigned(licenseContractIds));
+        !(this.isLicenseContractIdsAssigned(licenseContractIds))
+            || !(this.isRoleIdsAssigned(roles.stream().map(Role::id).toList()));
+    boolean isUaAnAudience = !(this.isLicenseContractIdsAssigned(licenseContractIds));
 
     this.setAuthorizationPolicy(
         new AuthorizationPolicy(licenseContractIds, roles.stream().map(Role::id).toList(), false));
@@ -152,50 +153,39 @@ public class Ou {
     this.publishUpdateOuAuthorizationPolicyEvent(isOuAnAudience, isUaAnAudience);
   }
 
-  private void throwErrorIfLicenseContractsInDifferentOrg(
-      @NonNull List<LicenseContractId> licenseContractIds) {
-
+  private boolean isLicenseContractsInSameOrg(@NonNull List<LicenseContractId> licenseContractIds) {
     for (LicenseContractId licenseContractId : licenseContractIds) {
       if (!(licenseContractId.orgId() == this.orgId())) {
-        throw new InvalidValueException(
-            ExceptionReason.LICENSE_BELONGS_TO_DIFFERENT_ORG, licenseContractId.toString());
+        return false;
       }
     }
+    return true;
   }
 
-  private void throwErrorIfRolesInDifferentOrg(@NonNull List<Role> roles) {
-
+  private boolean isRolesInSameOrg(@NonNull List<Role> roles) {
     for (Role role : roles) {
       if (!(role.accessibleBy(this.orgId()))) {
-        throw new InvalidValueException(
-            ExceptionReason.ROLES_BELONG_TO_DIFFERENT_ORG, role.id().toString());
+        return false;
       }
     }
-  }
-
-  private boolean isLicenseContractsAssigned(List<LicenseContractId> licenseContractIds) {
-    return this.authorizationPolicy().assignedLicenseContractIds().equals(licenseContractIds);
-  }
-
-  private boolean isRolesAssigned(List<Role> roles) {
-    return this.authorizationPolicy()
-            .assignedRoleIds()
-            .equals(roles.stream().map(Role::id).toList());
+    return true;
   }
 
   public void assignOu(
-      Ou childOu,
+      @NonNull Ou childOu,
       boolean shouldInheritAuthorizationPolicy,
       boolean shouldInheritAuthenticationPolicy) {
+    AssertionConcern.isNotNull(childOu, ExceptionReason.INVALID_OU_ARG);
+    AssertionConcern.isFalse(this.isChildInDifferentOrg(childOu), ExceptionReason.INVALID_OU_ARG);
+    AssertionConcern.isFalse(this.isChildSelf(childOu), ExceptionReason.INVALID_OU_ARG);
+    AssertionConcern.isFalse(this.isChildParent(childOu), ExceptionReason.INVALID_OU_ARG);
+    AssertionConcern.isFalse(this.isChildTopLevel(childOu), ExceptionReason.INVALID_OU_ARG);
+
     if (childOu.parent() == this.id()) {
       return;
     }
-    this.throwExceptionIfAssigningChildInDifferentOrg(childOu);
-    this.throwExceptionIfAssigningSelf(childOu);
-    this.throwExceptionIfAssigningParent(childOu);
-    this.throwExceptionIfChildIsTopLevel(childOu);
 
-    childOu.updateParent(this.id());
+    childOu.setParent(this.id());
 
     if (shouldInheritAuthorizationPolicy) {
       childOu.synchronizeAuthorizationPolicyWith(this);
@@ -203,7 +193,7 @@ public class Ou {
       AuthorizationPolicy childAuthorizationPolicy = childOu.authorizationPolicy();
       AuthorizationPolicy newChildAuthorizationPolicy =
           childAuthorizationPolicy.copyWith(List.of(), List.of(), false);
-      childOu.assignAuthorizationPolicy(newChildAuthorizationPolicy);
+      childOu.setAuthorizationPolicy(newChildAuthorizationPolicy);
     }
 
     if (shouldInheritAuthenticationPolicy) {
@@ -212,83 +202,72 @@ public class Ou {
       AuthenticationPolicy childAuthenticationPolicy = childOu.authenticationPolicy();
       AuthenticationPolicy newChildAuthenticationPolicy =
           childAuthenticationPolicy.copyWith(null, null, false);
-      childOu.assignAuthenticationPolicy(newChildAuthenticationPolicy);
+      childOu.setAuthenticationPolicy(newChildAuthenticationPolicy);
     }
   }
 
-  private void throwExceptionIfAssigningChildInDifferentOrg(Ou childOu) {
-    if (!this.orgId().equals(childOu.orgId())) {
-      throw new InvalidValueException(
-          ExceptionReason.PARENT_AND_CHILD_ORG_CONFLICT, childOu.id().toString());
-    }
+  private boolean isChildInDifferentOrg(@NonNull Ou childOu) {
+    return !this.orgId().equals(childOu.orgId());
   }
 
-  private void throwExceptionIfAssigningSelf(Ou childOu) {
-    if (childOu.id() == this.id()) {
-      throw new InvalidValueException(ExceptionReason.ASSIGNING_SELF, childOu.id().toString());
-    }
+  private boolean isChildSelf(@NonNull Ou childOu) {
+    return childOu.id().equals(this.id());
   }
 
-  private void throwExceptionIfAssigningParent(@NonNull Ou childOu) {
-    if (this.parent().equals(childOu.id())) {
-      throw new InvalidValueException(
-          ExceptionReason.ASSIGNING_PARENT_TO_CHILD, childOu.id().toString());
-    }
+  private boolean isChildParent(@NonNull Ou childOu) {
+    return this.parent().equals(childOu.id());
   }
 
-  private void throwExceptionIfChildIsTopLevel(Ou childOu) {
-    if (childOu.isTopLevel()) {
-      throw new InvalidValueException(
-          ExceptionReason.ASSIGNING_TOP_LEVEL_OU_TO_PARENT, childOu.id().toString());
-    }
+  private boolean isChildTopLevel(@NonNull Ou childOu) {
+    return childOu.isTopLevel();
   }
 
-  public void synchronizeAuthorizationPolicyWith(Ou parentOu) {
-    this.throwExceptionIfNotChildOf(parentOu);
+  public void synchronizeAuthorizationPolicyWith(@NonNull Ou parentOu) {
+    AssertionConcern.isNotNull(parentOu, ExceptionReason.INVALID_OU_ARG);
+    AssertionConcern.isTrue(isOuParent(parentOu), ExceptionReason.INVALID_OU_ARG);
 
-    boolean isOuAnAudience = false;
-    boolean isUserAnAudience = false;
     AuthorizationPolicy parentAuthorizationPolicy = parentOu.authorizationPolicy();
-
-    if (!parentAuthorizationPolicy
-        .assignedLicenseContractIds()
-        .equals(authorizationPolicy.assignedLicenseContractIds())) {
-      isOuAnAudience = true;
-      isUserAnAudience = true;
-    }
-
-    if (!parentAuthorizationPolicy
-        .assignedRoleIds()
-        .equals(authorizationPolicy.assignedRoleIds())) {
-      isOuAnAudience = true;
-    }
+    boolean isOuAnAudience =
+        !(this.isLicenseContractIdsAssigned(parentAuthorizationPolicy.licenseContractIds()))
+            || !(this.isRoleIdsAssigned(parentAuthorizationPolicy.roleIds()));
+    boolean isUserAnAudience =
+        !(this.isLicenseContractIdsAssigned(parentAuthorizationPolicy.licenseContractIds()));
 
     this.setAuthorizationPolicy(parentAuthorizationPolicy.copyWith(List.of(), List.of(), true));
     this.publishUpdateOuAuthorizationPolicyEvent(isOuAnAudience, isUserAnAudience);
   }
 
+  private boolean isLicenseContractIdsAssigned(List<LicenseContractId> licenseContractIds) {
+    return this.authorizationPolicy().licenseContractIds().equals(licenseContractIds);
+  }
+
+  private boolean isRoleIdsAssigned(List<RoleId> roleIds) {
+    return this.authorizationPolicy().roleIds().equals(roleIds);
+  }
+
   public void synchronizeAuthenticationPolicyWith(Ou parentOu) {
-    this.throwExceptionIfNotChildOf(parentOu);
+    AssertionConcern.isNotNull(parentOu, ExceptionReason.INVALID_OU_ARG);
+    AssertionConcern.isTrue(this.isOuParent(parentOu), ExceptionReason.INVALID_OU_ARG);
 
-    boolean shouldPublishEvent = false;
     AuthenticationPolicy parentAuthenticationPolicy = parentOu.authenticationPolicy();
-
-    if (!parentAuthenticationPolicy.mfaPolicy().equals(this.authenticationPolicy().mfaPolicy())
-        || !parentAuthenticationPolicy
-            .recoveryPolicy()
-            .equals(this.authenticationPolicy().recoveryPolicy())) {
-      shouldPublishEvent = true;
-    }
+    boolean shouldPublishEvent =
+        !(this.isMfaPolicyAssigned(parentAuthenticationPolicy.mfaPolicy()))
+            || !(this.isRecoveryPolicyAssigned(parentAuthenticationPolicy.recoveryPolicy()));
 
     this.setAuthenticationPolicy(parentAuthenticationPolicy.copyWith(null, null, true));
     this.publishUpdateOuAuthenticationPolicyEvent(shouldPublishEvent);
   }
 
-  private void throwExceptionIfNotChildOf(Ou parentOu) {
-    if (!this.parent().equals(parentOu.id())) {
-      throw new InvalidValueException(
-          ExceptionReason.OU_NOT_ASSIGNED_TO_PARENT, parentOu.id().toString());
-    }
+  private boolean isMfaPolicyAssigned(MfaPolicy mfaPolicy) {
+    return this.authenticationPolicy().mfaPolicy().equals(mfaPolicy);
+  }
+
+  private boolean isRecoveryPolicyAssigned(RecoveryPolicy recoveryPolicy) {
+    return this.authenticationPolicy().recoveryPolicy().equals(recoveryPolicy);
+  }
+
+  private boolean isOuParent(Ou parentOu) {
+    return this.parent().equals(parentOu.id());
   }
 
   private void publishUpdateOuAuthorizationPolicyEvent(

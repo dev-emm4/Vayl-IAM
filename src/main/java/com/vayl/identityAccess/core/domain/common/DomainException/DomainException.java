@@ -1,4 +1,4 @@
-package com.vayl.identityAccess.core.domain.common.DomainErrors;
+package com.vayl.identityAccess.core.domain.common.DomainException;
 
 import tools.jackson.databind.node.ObjectNode;
 

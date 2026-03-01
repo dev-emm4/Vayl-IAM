@@ -2,8 +2,8 @@ package com.vayl.identityAccess.core.domain.api.role;
 
 import com.vayl.identityAccess.core.domain.api.ApiId;
 import com.vayl.identityAccess.core.domain.api.permission.PermissionId;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.inputViolation.InvalidValueException;
+import com.vayl.identityAccess.core.domain.common.AssertionConcern;
+import com.vayl.identityAccess.core.domain.common.DomainException.ExceptionReason;
 import com.vayl.identityAccess.core.domain.organization.OrgId;
 import java.util.HashSet;
 import java.util.List;
@@ -11,29 +11,36 @@ import java.util.Set;
 import org.jspecify.annotations.NonNull;
 
 public class DefaultRole implements Role {
-  RoleId id;
-  String name;
-  ApiId assignedApiIds;
-  Set<PermissionId> assignedPermissionIds = new HashSet<>();
+  private RoleId id;
+  private String name;
+  private ApiId assignedApiId;
+  private final Set<PermissionId> assignedPermissionIds = new HashSet<>();
 
   public DefaultRole(
-      RoleId id, String name, ApiId apiId, List<PermissionId> assignedPermissionIds) {
+      @NonNull RoleId id,
+      @NonNull String name,
+      @NonNull ApiId apiId,
+      @NonNull List<PermissionId> assignedPermissionIds) {
     this.setId(id);
     this.setName(name);
-    this.assignApi(apiId);
+    this.setApiId(apiId);
     this.assignPermissionIds(assignedPermissionIds);
   }
 
   private void setId(RoleId id) {
+    AssertionConcern.isNotNull(id, ExceptionReason.INVALID_ROLE_ARG);
     this.id = id;
   }
 
   private void setName(String name) {
+    AssertionConcern.isNotNull(name, ExceptionReason.INVALID_ROLE_ARG);
+    AssertionConcern.isNotBlank(name, ExceptionReason.INVALID_ROLE_ARG);
     this.name = name;
   }
 
-  private void assignApi(ApiId assignApi) {
-    this.assignedApiIds = assignApi;
+  private void setApiId(ApiId assignApi) {
+    AssertionConcern.isNotNull(assignApi, ExceptionReason.INVALID_ROLE_ARG);
+    this.assignedApiId = assignApi;
   }
 
   public void modifyGrantedPermissions(
@@ -44,32 +51,28 @@ public class DefaultRole implements Role {
     this.removeGrantedPermissions(removePermissionIds);
   }
 
-  private void assignPermissionIds(@NonNull List<PermissionId> addPermission) {
-    for (PermissionId permissionId : addPermission) {
-      this.throwErrorIfPermissionNotLocatedInAssignedApi(permissionId);
+  private void assignPermissionIds(@NonNull List<PermissionId> permissionIds) {
+    AssertionConcern.isNotNull(permissionIds, ExceptionReason.INVALID_ROLE_ARG);
+
+    for (PermissionId permissionId : permissionIds) {
+      AssertionConcern.isEqual(
+          permissionId.apiId(), this.assignedApiId(), ExceptionReason.INVALID_ROLE_ARG);
       this.assignedPermissionIds.add(permissionId);
     }
   }
 
-  private void throwErrorIfPermissionNotLocatedInAssignedApi(@NonNull PermissionId permissionId) {
-    if (permissionId.permissionLocation() != this.assignedApiId()) {
-      throw new InvalidValueException(
-          ExceptionReason.ASSIGNING_UNAUTHORIZED_PERMISSION_TO_ROLE, permissionId.toString());
-    }
-  }
+  private void removeGrantedPermissions(@NonNull List<PermissionId> permissionIds) {
+    AssertionConcern.isNotNull(permissionIds, ExceptionReason.INVALID_ROLE_ARG);
 
-  private void removeGrantedPermissions(@NonNull List<PermissionId> removePermissions) {
-    for (PermissionId permissionId : removePermissions) {
-      this.throwErrorIfRemovePermissionNotAssigned(permissionId);
+    for (PermissionId permissionId : permissionIds) {
+      AssertionConcern.isTrue(
+          this.isPermissionIdAssigned(permissionId), ExceptionReason.INVALID_ROLE_ARG);
       this.assignedPermissionIds.remove(permissionId);
     }
   }
 
-  private void throwErrorIfRemovePermissionNotAssigned(@NonNull PermissionId permissionId) {
-    if (!this.assignedPermissionIds().contains(permissionId)) {
-      throw new InvalidValueException(
-          ExceptionReason.REMOVING_UNASSIGNED_PERMISSION_FROM_ROLE, permissionId.toString());
-    }
+  private boolean isPermissionIdAssigned(@NonNull PermissionId permissionId) {
+    return this.assignedPermissionIds().contains(permissionId);
   }
 
   public RoleId id() {
@@ -81,7 +84,7 @@ public class DefaultRole implements Role {
   }
 
   public ApiId assignedApiId() {
-    return this.assignedApiIds;
+    return this.assignedApiId;
   }
 
   public boolean accessibleBy(OrgId orgId) {

@@ -1,45 +1,24 @@
 package com.vayl.identityAccess.core.domain.organization.ou.authenticationPolicy;
 
-
+import com.vayl.identityAccess.core.domain.common.AssertionConcern;
+import com.vayl.identityAccess.core.domain.common.DomainException.ExceptionReason;
+import org.jetbrains.annotations.Contract;
 import org.jspecify.annotations.NonNull;
 
-public class AuthenticationPolicy {
-  private RecoveryPolicy recoveryPolicy;
-  private MfaPolicy mfaPolicy;
-  private boolean isInherited;
-
+public record AuthenticationPolicy(
+    RecoveryPolicy recoveryPolicy, MfaPolicy mfaPolicy, boolean isInherited) {
   public AuthenticationPolicy(
-          @NonNull RecoveryPolicy recoveryPolicy, @NonNull MfaPolicy mfaPolicy, boolean isInherited) {
-    this.setRecoveryPolicy(recoveryPolicy);
-    this.setMfaPolicy(mfaPolicy);
-    this.setIsInherited(isInherited);
-  }
+      @NonNull RecoveryPolicy recoveryPolicy, @NonNull MfaPolicy mfaPolicy, boolean isInherited) {
+    AssertionConcern.isNotNull(mfaPolicy, ExceptionReason.INVALID_OU_ARG);
+    AssertionConcern.isNotNull(recoveryPolicy, ExceptionReason.INVALID_OU_ARG);
 
-  private void setRecoveryPolicy(RecoveryPolicy recoveryPolicy) {
     this.recoveryPolicy = recoveryPolicy;
-  }
-
-  private void setMfaPolicy(MfaPolicy mfaPolicy) {
     this.mfaPolicy = mfaPolicy;
-  }
-
-  private void setIsInherited(boolean isInherited) {
     this.isInherited = isInherited;
   }
 
-  public RecoveryPolicy recoveryPolicy() {
-    return this.recoveryPolicy;
-  }
-
-  public MfaPolicy mfaPolicy() {
-    return this.mfaPolicy;
-  }
-
-  public boolean isInherited() {
-    return isInherited;
-  }
-
-  public AuthenticationPolicy copyWith(
+  @Contract("_, _, _ -> new")
+  public @NonNull AuthenticationPolicy copyWith(
       MfaPolicy mfaPolicy, RecoveryPolicy recoveryPolicy, boolean isInherited) {
     MfaPolicy newMfaPolicy = mfaPolicy != null ? mfaPolicy : this.mfaPolicy();
     RecoveryPolicy newRecoveryPolicy =
@@ -48,7 +27,7 @@ public class AuthenticationPolicy {
   }
 
   @Override
-  public String toString() {
+  public @NonNull String toString() {
     return "AuthenticationPolicy{"
         + "recoveryPolicy="
         + this.recoveryPolicy.toString()
@@ -57,23 +36,5 @@ public class AuthenticationPolicy {
         + ", isInherited="
         + this.isInherited
         + '}';
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj) return true;
-    if (obj == null || this.getClass() != obj.getClass()) return false;
-    AuthenticationPolicy that = (AuthenticationPolicy) obj;
-    return this.isInherited == that.isInherited
-        && this.recoveryPolicy.equals(that.recoveryPolicy)
-        && this.mfaPolicy.equals(that.mfaPolicy);
-  }
-
-  @Override
-  public int hashCode() {
-    int result = this.recoveryPolicy != null ? this.recoveryPolicy.hashCode() : 0;
-    result = 31 * result + (this.mfaPolicy != null ? this.mfaPolicy.hashCode() : 0);
-    result = 31 * result + (this.isInherited ? 1 : 0);
-    return result;
   }
 }

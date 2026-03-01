@@ -1,96 +1,51 @@
 package com.vayl.identityAccess.core.domain.organization.ou.authorizationPolicy;
 
-import com.vayl.identityAccess.core.domain.organization.licenseContract.LicenseContractId;
 import com.vayl.identityAccess.core.domain.api.role.RoleId;
-import java.util.ArrayList;
+import com.vayl.identityAccess.core.domain.common.AssertionConcern;
+import com.vayl.identityAccess.core.domain.common.DomainException.ExceptionReason;
+import com.vayl.identityAccess.core.domain.organization.licenseContract.LicenseContractId;
 import java.util.List;
+
+import org.jetbrains.annotations.Contract;
 import org.jspecify.annotations.NonNull;
 
-public class AuthorizationPolicy {
-  private List<LicenseContractId> assignedLicenseContracts = new ArrayList<>();
-  private List<RoleId> assignedRoles = new ArrayList<>();
-  private boolean isInherited;
-
+public record AuthorizationPolicy(
+    List<LicenseContractId> licenseContractIds, List<RoleId> roleIds, boolean isInherited) {
   public AuthorizationPolicy(
-      @NonNull List<LicenseContractId> assignLicenseContracts,
-      @NonNull List<RoleId> assignRoles,
-      boolean isInherited) {
-    this.setAssignedLicenseContracts(assignLicenseContracts);
-    this.setAssignedRoles(assignRoles);
-    this.setIsInherited(isInherited);
-  }
-
-  private void setAssignedLicenseContracts(List<LicenseContractId> licenseContractIds) {
-    this.assignedLicenseContracts = licenseContractIds;
-  }
-
-  private void setAssignedRoles(List<RoleId> roleIds) {
-    this.assignedRoles = roleIds;
-  }
-
-  private void setIsInherited(boolean isInherited) {
-    this.isInherited = isInherited;
-  }
-
-  public List<LicenseContractId> assignedLicenseContractIds() {
-    return this.assignedLicenseContracts;
-  }
-
-  public List<RoleId> assignedRoleIds() {
-    return this.assignedRoles;
-  }
-
-  public boolean isInherited() {
-    return this.isInherited;
-  }
-
-  public AuthorizationPolicy copyWith(
       @NonNull List<LicenseContractId> licenseContractIds,
       @NonNull List<RoleId> roleIds,
       boolean isInherited) {
+    AssertionConcern.isNotNull(licenseContractIds, ExceptionReason.INVALID_OU_ARG);
+    AssertionConcern.isNotNull(roleIds, ExceptionReason.INVALID_OU_ARG);
+
+    this.licenseContractIds = licenseContractIds;
+    this.roleIds = roleIds;
+    this.isInherited = isInherited;
+  }
+
+  @Contract("_, _, _ -> new")
+  public @NonNull AuthorizationPolicy copyWith(
+      @NonNull List<LicenseContractId> licenseContractIds,
+      @NonNull List<RoleId> roleIds,
+      boolean isInherited) {
+    AssertionConcern.isNotNull(licenseContractIds, ExceptionReason.INVALID_OU_ARG);
+    AssertionConcern.isNotNull(roleIds, ExceptionReason.INVALID_OU_ARG);
+
     List<LicenseContractId> newLicenseContractIds =
-        licenseContractIds.isEmpty() ? this.assignedLicenseContractIds() : licenseContractIds;
-    List<RoleId> newAssignedRoleIds = roleIds.isEmpty() ? this.assignedRoleIds() : roleIds;
+        licenseContractIds.isEmpty() ? this.licenseContractIds() : licenseContractIds;
+    List<RoleId> newAssignedRoleIds = roleIds.isEmpty() ? this.roleIds() : roleIds;
     return new AuthorizationPolicy(newLicenseContractIds, newAssignedRoleIds, isInherited);
   }
 
-  public boolean assignedLicenseContractIdsEquals(List<LicenseContractId> licenseContractIds) {
-    return this.assignedLicenseContractIds().equals(licenseContractIds);
-  }
-
-  public boolean isRoleIdsEquals(List<RoleId> roleIds) {
-    return this.assignedRoleIds().equals(roleIds);
-  }
-
   @Override
-  public String toString() {
+  public @NonNull String toString() {
     return "AuthorizationPolicy{"
-        + "assignedLicenseContractIds="
-        + this.assignedLicenseContracts
-        + ", assignedRoleIds="
-        + this.assignedRoles
+        + "licenseContractIds="
+        + this.licenseContractIds
+        + ", roleIds="
+        + this.roleIds
         + ", isInherited="
         + this.isInherited
         + '}';
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-
-    AuthorizationPolicy that = (AuthorizationPolicy) o;
-
-    if (this.isInherited != that.isInherited) return false;
-    if (!this.assignedLicenseContracts.equals(that.assignedLicenseContracts)) return false;
-    return this.assignedRoles.equals(that.assignedRoles);
-  }
-
-  @Override
-  public int hashCode() {
-    int result = this.assignedLicenseContracts.hashCode();
-    result = 31 * result + this.assignedRoles.hashCode();
-    result = 31 * result + (this.isInherited ? 1 : 0);
-    return result;
   }
 }

@@ -1,7 +1,9 @@
 package com.vayl.identityAccess.coreTest.domainTest.organizationTest.ouTest.authenticationPolicyTest;
 
-import com.vayl.identityAccess.core.domain.common.Date;
+import com.vayl.identityAccess.core.domain.common.DomainException.ExceptionReason;
+import com.vayl.identityAccess.core.domain.common.DomainException.InvalidValueException;
 import com.vayl.identityAccess.core.domain.common.MfaType;
+import com.vayl.identityAccess.core.domain.common.inputtableValue.DateInput;
 import com.vayl.identityAccess.core.domain.organization.ou.authenticationPolicy.AuthenticationPolicy;
 import com.vayl.identityAccess.core.domain.organization.ou.authenticationPolicy.MfaPolicy;
 import com.vayl.identityAccess.core.domain.organization.ou.authenticationPolicy.RecoveryPolicy;
@@ -9,107 +11,103 @@ import org.junit.jupiter.api.Test;
 
 public class AuthenticationPolicyTest {
   @Test
-  public void equals_sameAttributes_returnTrue() {
+  void constructor_withNullParameters_throwException() {
     RecoveryPolicy recoveryPolicy = new RecoveryPolicy(MfaType.EMAIL);
     MfaPolicy mfaPolicy =
-        new MfaPolicy(MfaType.AUTHENTICATOR_APP, new Date("2023-12-01T00:00:00Z"));
-    AuthenticationPolicy policy1 = new AuthenticationPolicy(recoveryPolicy, mfaPolicy, false);
-    AuthenticationPolicy policy2 = new AuthenticationPolicy(recoveryPolicy, mfaPolicy, false);
+        new MfaPolicy(MfaType.AUTHENTICATOR_APP, new DateInput("2023-12-01T00:00:00Z"));
 
-    assert policy1.equals(policy2);
+    for (int i = 0; i < 2; i++) {
+      try {
+        if (i == 0) new AuthenticationPolicy(null, mfaPolicy, true);
+        if (i == 1) new AuthenticationPolicy(recoveryPolicy, null, true);
+
+        assert false : "Exception expected when passing null parameters";
+      } catch (InvalidValueException e) {
+        assert e.reason() == ExceptionReason.INVALID_OU_ARG
+            : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_OU_ARG;
+      }
+    }
   }
 
   @Test
-  public void equals_differentAttributes_returnFalse() {
-    RecoveryPolicy recoveryPolicy1 = new RecoveryPolicy(MfaType.EMAIL);
-    MfaPolicy mfaPolicy1 =
-        new MfaPolicy(MfaType.AUTHENTICATOR_APP, new Date("2023-12-01T00:00:00Z"));
-    AuthenticationPolicy policy1 = new AuthenticationPolicy(recoveryPolicy1, mfaPolicy1, false);
+  void constructor_withValidParameters_createAuthenticationPolicy() {
+    RecoveryPolicy recoveryPolicy = new RecoveryPolicy(MfaType.EMAIL);
+    MfaPolicy mfaPolicy =
+        new MfaPolicy(MfaType.AUTHENTICATOR_APP, new DateInput("2023-12-01T00:00:00Z"));
+    boolean isInherited = false;
 
-    RecoveryPolicy recoveryPolicy2 = new RecoveryPolicy(MfaType.SMS);
-    MfaPolicy mfaPolicy2 = new MfaPolicy(MfaType.EMAIL, new Date("2023-12-15T00:00:00Z"));
-    AuthenticationPolicy policy2 = new AuthenticationPolicy(recoveryPolicy2, mfaPolicy2, true);
+    AuthenticationPolicy authenticationPolicy =
+        new AuthenticationPolicy(recoveryPolicy, mfaPolicy, isInherited);
 
-    assert !policy1.equals(policy2);
+    assert authenticationPolicy.recoveryPolicy().equals(recoveryPolicy)
+        : "got: " + authenticationPolicy.recoveryPolicy() + " expected: " + recoveryPolicy;
+    assert authenticationPolicy.mfaPolicy().equals(mfaPolicy)
+        : "got: " + authenticationPolicy.mfaPolicy() + " expected: " + mfaPolicy;
+    assert authenticationPolicy.isInherited() == isInherited
+        : "got: " + true + " expected: " + isInherited;
   }
 
   @Test
   public void toString_validAttributes_returnCorrectString() {
     RecoveryPolicy recoveryPolicy = new RecoveryPolicy(MfaType.EMAIL);
     MfaPolicy mfaPolicy =
-        new MfaPolicy(MfaType.AUTHENTICATOR_APP, new Date("2023-12-01T00:00:00Z"));
+        new MfaPolicy(MfaType.AUTHENTICATOR_APP, new DateInput("2023-12-01T00:00:00Z"));
     AuthenticationPolicy policy = new AuthenticationPolicy(recoveryPolicy, mfaPolicy, false);
 
     String expectedString =
         "AuthenticationPolicy{"
             + "recoveryPolicy="
-            + recoveryPolicy.toString()
+            + recoveryPolicy
             + ", mfaPolicy="
-            + mfaPolicy.toString()
+            + mfaPolicy
             + ", isInherited="
             + false
             + '}';
 
-    assert policy.toString().equals(expectedString);
-  }
-
-  @Test
-  public void hashCode_sameAttributes_returnSameHashCode() {
-    RecoveryPolicy recoveryPolicy = new RecoveryPolicy(MfaType.EMAIL);
-    MfaPolicy mfaPolicy =
-        new MfaPolicy(MfaType.AUTHENTICATOR_APP, new Date("2023-12-01T00:00:00Z"));
-    AuthenticationPolicy policy1 = new AuthenticationPolicy(recoveryPolicy, mfaPolicy, false);
-    AuthenticationPolicy policy2 = new AuthenticationPolicy(recoveryPolicy, mfaPolicy, false);
-
-    assert policy1.hashCode() == policy2.hashCode();
-  }
-
-  @Test
-  public void hashCode_differentAttributes_returnDifferentHashCode() {
-    RecoveryPolicy recoveryPolicy1 = new RecoveryPolicy(MfaType.EMAIL);
-    MfaPolicy mfaPolicy1 =
-        new MfaPolicy(MfaType.AUTHENTICATOR_APP, new Date("2023-12-01T00:00:00Z"));
-    AuthenticationPolicy policy1 = new AuthenticationPolicy(recoveryPolicy1, mfaPolicy1, false);
-
-    RecoveryPolicy recoveryPolicy2 = new RecoveryPolicy(MfaType.SMS);
-    MfaPolicy mfaPolicy2 = new MfaPolicy(MfaType.EMAIL, new Date("2023-12-15T00:00:00Z"));
-    AuthenticationPolicy policy2 = new AuthenticationPolicy(recoveryPolicy2, mfaPolicy2, true);
-
-    assert policy1.hashCode() != policy2.hashCode();
+    assert policy.toString().equals(expectedString)
+        : "got: " + policy + " expected: " + expectedString;
   }
 
   @Test
   public void copyWith_passingNull_doesNotChangeField() {
     RecoveryPolicy recoveryPolicy = new RecoveryPolicy(MfaType.EMAIL);
     MfaPolicy mfaPolicy =
-        new MfaPolicy(MfaType.AUTHENTICATOR_APP, new Date("2023-12-01T00:00:00Z"));
+        new MfaPolicy(MfaType.AUTHENTICATOR_APP, new DateInput("2023-12-01T00:00:00Z"));
     AuthenticationPolicy originalPolicy =
         new AuthenticationPolicy(recoveryPolicy, mfaPolicy, false);
 
     AuthenticationPolicy copiedPolicy = originalPolicy.copyWith(null, null, true);
 
     assert !originalPolicy.equals(copiedPolicy);
-    assert copiedPolicy.recoveryPolicy().equals(originalPolicy.recoveryPolicy());
-    assert copiedPolicy.mfaPolicy().equals(originalPolicy.mfaPolicy());
-    assert copiedPolicy.isInherited() != originalPolicy.isInherited();
+    assert copiedPolicy.recoveryPolicy().equals(originalPolicy.recoveryPolicy())
+        : "got: " + copiedPolicy.recoveryPolicy() + " expected: " + originalPolicy.recoveryPolicy();
+    assert copiedPolicy.mfaPolicy().equals(originalPolicy.mfaPolicy())
+        : "got: " + copiedPolicy.mfaPolicy() + " expected: " + originalPolicy.mfaPolicy();
+    assert copiedPolicy.isInherited() != originalPolicy.isInherited()
+        : "got: " + copiedPolicy.isInherited() + " expected: " + !originalPolicy.isInherited();
   }
 
   @Test
-    public void copyWith_passingNewValues_changesFields() {
-        RecoveryPolicy recoveryPolicy = new RecoveryPolicy(MfaType.EMAIL);
-        MfaPolicy mfaPolicy =
-            new MfaPolicy(MfaType.AUTHENTICATOR_APP, new Date("2023-12-01T00:00:00Z"));
-        AuthenticationPolicy originalPolicy =
-            new AuthenticationPolicy(recoveryPolicy, mfaPolicy, false);
+  public void copyWith_passingNewValues_changesFields() {
+    RecoveryPolicy recoveryPolicy = new RecoveryPolicy(MfaType.EMAIL);
+    MfaPolicy mfaPolicy =
+        new MfaPolicy(MfaType.AUTHENTICATOR_APP, new DateInput("2023-12-01T00:00:00Z"));
+    AuthenticationPolicy originalPolicy =
+        new AuthenticationPolicy(recoveryPolicy, mfaPolicy, false);
 
-        RecoveryPolicy newRecoveryPolicy = new RecoveryPolicy(MfaType.SMS);
-        MfaPolicy newMfaPolicy = new MfaPolicy(MfaType.EMAIL, new Date("2023-12-15T00:00:00Z"));
-        AuthenticationPolicy copiedPolicy =
-            originalPolicy.copyWith(newMfaPolicy, newRecoveryPolicy, true);
+    RecoveryPolicy newRecoveryPolicy = new RecoveryPolicy(MfaType.SMS);
+    MfaPolicy newMfaPolicy = new MfaPolicy(MfaType.EMAIL, new DateInput("2023-12-15T00:00:00Z"));
+    AuthenticationPolicy copiedPolicy =
+        originalPolicy.copyWith(newMfaPolicy, newRecoveryPolicy, true);
 
-        assert !originalPolicy.equals(copiedPolicy);
-        assert !copiedPolicy.recoveryPolicy().equals(originalPolicy.recoveryPolicy());
-        assert !copiedPolicy.mfaPolicy().equals(originalPolicy.mfaPolicy());
-        assert copiedPolicy.isInherited() != originalPolicy.isInherited();
-    }
+    assert !originalPolicy.equals(copiedPolicy);
+    assert !copiedPolicy.recoveryPolicy().equals(originalPolicy.recoveryPolicy())
+        : "got: " + copiedPolicy.recoveryPolicy() + " expected: " + newRecoveryPolicy;
+    assert !copiedPolicy.mfaPolicy().equals(originalPolicy.mfaPolicy())
+        : "got: " + copiedPolicy.mfaPolicy() + " expected: " + newMfaPolicy;
+    ;
+    assert copiedPolicy.isInherited() != originalPolicy.isInherited()
+        : "got: " + copiedPolicy.isInherited() + " expected: " + !originalPolicy.isInherited();
+    ;
+  }
 }

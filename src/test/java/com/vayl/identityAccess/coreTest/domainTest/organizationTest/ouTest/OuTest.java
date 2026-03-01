@@ -4,10 +4,10 @@ import com.vayl.identityAccess.core.domain.api.Api;
 import com.vayl.identityAccess.core.domain.api.ApiId;
 import com.vayl.identityAccess.core.domain.api.role.Role;
 import com.vayl.identityAccess.core.domain.api.role.RoleId;
-import com.vayl.identityAccess.core.domain.common.Date;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.inputViolation.InvalidValueException;
+import com.vayl.identityAccess.core.domain.common.DomainException.ExceptionReason;
+import com.vayl.identityAccess.core.domain.common.DomainException.InvalidValueException;
 import com.vayl.identityAccess.core.domain.common.MfaType;
+import com.vayl.identityAccess.core.domain.common.inputtableValue.DateInput;
 import com.vayl.identityAccess.core.domain.license.LicenseId;
 import com.vayl.identityAccess.core.domain.organization.OrgId;
 import com.vayl.identityAccess.core.domain.organization.licenseContract.LicenseContractId;
@@ -26,9 +26,8 @@ import org.junit.jupiter.api.TestInstance;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class OuTest {
 
-  private static final Date DEFAULT_MFA_EXPIRY = new Date("2023-12-01T00:00:00Z");
+  private static final DateInput DEFAULT_MFA_EXPIRY = new DateInput("2023-12-01T00:00:00Z");
 
-  private Api api;
   private List<LicenseId> licenseIds;
   private OrgId orgId;
   private List<Role> roles;
@@ -42,8 +41,8 @@ public class OuTest {
     // domain ids and APIs
     this.orgId = new OrgId(UUID.randomUUID().toString());
 
-    this.api = this.createApi();
-    this.roles = List.of(this.api.createDefaultRole("admin", List.of()));
+    Api api = this.createApi();
+    this.roles = List.of(api.createDefaultRole("admin", List.of()));
 
     // licenses and org license contracts
     this.licenseIds = createLicenseIds();
@@ -62,7 +61,79 @@ public class OuTest {
   }
 
   @Test
-  public void createOu_withParentOu_shouldCreateOuWithCorrectFields() {
+  void constructor_withBlankName_throwException() {
+    try {
+      new Ou(
+          this.orgId,
+          new OuId(UUID.randomUUID().toString()),
+          "",
+          true,
+          this.topLevelOu.parent(),
+          new AuthorizationPolicy(List.of(), List.of(), true),
+          new AuthenticationPolicy(
+              new RecoveryPolicy(MfaType.EMAIL),
+              new MfaPolicy(MfaType.SMS, DEFAULT_MFA_EXPIRY),
+              true));
+
+      assert false : "Exception expected";
+    } catch (InvalidValueException e) {
+      assert e.reason().equals(ExceptionReason.INVALID_OU_ARG)
+          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_OU_ARG;
+    }
+  }
+
+  @Test
+  void constructor_withNullParameters_throwException() {
+    for (int i = 0; i < 6; i++) {
+      try {
+        new Ou(
+            i == 0 ? null : this.orgId,
+            i == 1 ? null : new OuId(UUID.randomUUID().toString()),
+            i == 2 ? null : "admin",
+            true,
+            i == 3 ? null : this.topLevelOu.parent(),
+            i == 4 ? null : new AuthorizationPolicy(List.of(), List.of(), true),
+            i == 5
+                ? null
+                : new AuthenticationPolicy(
+                    new RecoveryPolicy(MfaType.EMAIL),
+                    new MfaPolicy(MfaType.SMS, DEFAULT_MFA_EXPIRY),
+                    true));
+
+        assert false : "Exception expected ";
+      } catch (InvalidValueException e) {
+        assert e.reason().equals(ExceptionReason.INVALID_OU_ARG)
+            : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_OU_ARG;
+      }
+    }
+  }
+
+  @Test
+  void createOu_withBlankName_throwException() {
+    try {
+      this.topLevelOu.createOu("");
+
+      assert false : "Exception expected";
+    } catch (InvalidValueException e) {
+      assert e.reason().equals(ExceptionReason.INVALID_OU_ARG)
+          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_OU_ARG;
+    }
+  }
+
+  @Test
+  void createOu_WithNullName_throwException() {
+    try {
+      this.topLevelOu.createOu(null);
+
+      assert false : "Exception expected";
+    } catch (InvalidValueException e) {
+      assert e.reason().equals(ExceptionReason.INVALID_OU_ARG)
+          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_OU_ARG;
+    }
+  }
+
+  @Test
+  public void createOu_withValidParameter_shouldCreateOuWithCorrectFields() {
 
     Ou childOu = this.topLevelOu.createOu("developers");
 
@@ -72,50 +143,81 @@ public class OuTest {
     AuthenticationPolicy parentAuthenticationPolicy = this.topLevelOu.authenticationPolicy();
     AuthenticationPolicy childAuthenticationPolicy = childOu.authenticationPolicy();
 
-    assert childOu.name().equals("developers") : "Child OU name should be 'developers'";
+    assert childOu.name().equals("developers") : "got: " + childOu.name() + " expected: developers";
     assert childOu.parent().equals(this.topLevelOu.id())
         : "Child OU parentId should match parent OU id";
-    assert !childOu.isTopLevel() : "Child OU should not be top-level";
-    assert childAuthorizationPolicy.isInherited()
-        : "Child OU authorization policy should be inherited";
+    assert !childOu.isTopLevel() : "got: " + childOu.isTopLevel() + " expected: " + false;
+    assert childAuthorizationPolicy.isInherited() : "got: " + false + " expected: " + true;
     assert childAuthorizationPolicy
-            .assignedLicenseContractIds()
-            .equals(parentauthorizationPolicy.assignedLicenseContractIds())
-        : "Child OU should inherit license contracts from parent OU";
-    assert childAuthorizationPolicy
-            .assignedRoleIds()
-            .equals(parentauthorizationPolicy.assignedRoleIds())
-        : "Child OU should inherit roles from parent OU";
-    assert childAuthenticationPolicy.isInherited()
-        : "Child OU authentication policy should be inherited";
+            .licenseContractIds()
+            .equals(parentauthorizationPolicy.licenseContractIds())
+        : "got: "
+            + childAuthorizationPolicy.licenseContractIds()
+            + " expected: "
+            + parentauthorizationPolicy.licenseContractIds();
+    assert childAuthorizationPolicy.roleIds().equals(parentauthorizationPolicy.roleIds())
+        : "got: "
+            + childAuthorizationPolicy.roleIds()
+            + " expected: "
+            + parentauthorizationPolicy.roleIds();
+    assert childAuthenticationPolicy.isInherited() : "got: " + false + " expected: true";
     assert childAuthenticationPolicy.mfaPolicy().equals(parentAuthenticationPolicy.mfaPolicy())
-        : "Child OU should inherit MFA type from parent OU";
+        : "got: "
+            + childAuthenticationPolicy.mfaPolicy()
+            + " expected: "
+            + parentAuthenticationPolicy.mfaPolicy();
     assert childAuthenticationPolicy
             .recoveryPolicy()
             .equals(parentAuthenticationPolicy.recoveryPolicy())
-        : "Child OU should inherit recovery policy from parent OU";
+        : "got: "
+            + childAuthenticationPolicy.recoveryPolicy()
+            + " expected: "
+            + parentAuthenticationPolicy.recoveryPolicy();
+    ;
+  }
+
+  @Test
+  void updateAuthorizationPolicy_withNullParameters_throwException() {
+    for (int i = 0; i < 2; i++) {
+      try {
+        this.topLevelOu.updateAuthorizationPolicy(
+            i == 0 ? null : this.licenseContractIds, i == 1 ? null : this.roles);
+
+        assert false : "Exception expected";
+      } catch (InvalidValueException e) {
+        assert e.reason().equals(ExceptionReason.INVALID_OU_ARG)
+            : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_OU_ARG;
+      }
+    }
   }
 
   @Test
   public void
-      updateAuthorizationPolicy_ifContractsAndRolesBelongToOrg_shouldUpdateAuthorizationPolicy() {
-    topLevelOu.updateAuthorizationPolicy(this.licenseContractIds, this.roles);
+      updateAuthorizationPolicy_newContractsAndRolesBelongToOrg_shouldUpdateAuthorizationPolicy() {
+    List<LicenseContractId> newLicenseContractIds =
+        this.createLicenseContractId(this.orgId, this.createLicenseIds());
+    List<Role> newRoles = this.createRoles(this.createApi());
+
+    topLevelOu.updateAuthorizationPolicy(newLicenseContractIds, newRoles);
 
     AuthorizationPolicy updatedAuthorizationPolicy = topLevelOu.authorizationPolicy();
 
-    assert !updatedAuthorizationPolicy.isInherited()
-        : "Updated authorization policy should not be inherited";
-    assert updatedAuthorizationPolicy.assignedLicenseContractIds().equals(this.licenseContractIds)
-        : "Updated authorization policy should have the new license contracts assigned";
-    assert updatedAuthorizationPolicy
-            .assignedRoleIds()
-            .equals(this.roles.stream().map(Role::id).toList())
-        : "Updated authorization policy should have the new roles assigned";
+    assert !updatedAuthorizationPolicy.isInherited() : "got: " + true + " expected: " + false;
+    assert updatedAuthorizationPolicy.licenseContractIds().equals(newLicenseContractIds)
+        : "got: "
+            + updatedAuthorizationPolicy.licenseContractIds()
+            + " expected: "
+            + newLicenseContractIds;
+    assert updatedAuthorizationPolicy.roleIds().equals(newRoles.stream().map(Role::id).toList())
+        : "got: "
+            + updatedAuthorizationPolicy.roleIds()
+            + " expected: "
+            + newRoles.stream().map(Role::id).toList();
   }
 
   @Test
   public void
-      updateAuthorizationPolicy_OuHasLicenseContractThatBelongsToDifferentOrg_shouldThrowException() {
+      updateAuthorizationPolicy_newLicenseContractBelongsToDifferentOrg_shouldThrowException() {
     OrgId differentOrgId = new OrgId(UUID.randomUUID().toString());
     List<LicenseContractId> unauthorizedLicenseContracts =
         this.createLicenseContractId(differentOrgId, this.licenseIds);
@@ -123,35 +225,64 @@ public class OuTest {
     try {
       topLevelOu.updateAuthorizationPolicy(unauthorizedLicenseContracts, this.roles);
 
-      assert false
-          : "Expected an exception to be thrown due to license contracts belonging to different org";
+      assert false : "Exception expected";
     } catch (InvalidValueException e) {
-      assert e.reason().equals(ExceptionReason.LICENSE_BELONGS_TO_DIFFERENT_ORG)
+      assert e.reason().equals(ExceptionReason.INVALID_OU_ARG)
           : "Exception reason mismatch got: "
               + e.reason()
               + " expected: "
-              + ExceptionReason.LICENSE_BELONGS_TO_DIFFERENT_ORG;
-      assert e.invalidValue().equals(unauthorizedLicenseContracts.getFirst().toString())
-          : "Exception invalid value mismatch got: "
-              + e.invalidValue()
-              + " expected: "
-              + unauthorizedLicenseContracts.getFirst().toString();
+              + ExceptionReason.INVALID_OU_ARG;
+    }
+  }
+
+  @Test
+  public void updateAuthorizationPolicy_newRoleThatBelongsToDifferentOrg_shouldThrowException() {
+    OrgId differentOrgId = new OrgId(UUID.randomUUID().toString());
+    Role unauthorizedRole =
+        this.createApi().createCustomRole("unauthorized-role", differentOrgId, List.of());
+
+    try {
+      topLevelOu.updateAuthorizationPolicy(this.licenseContractIds, List.of(unauthorizedRole));
+
+      assert false : "Exception expected";
+    } catch (InvalidValueException e) {
+      assert e.reason().equals(ExceptionReason.INVALID_OU_ARG)
+          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_OU_ARG;
     }
   }
 
   @Test
   public void
-      updateAuthenticationPolicy_withMfaAndRecoveryPolicy_shouldUpdateAuthenticationPolicy() {
+      updateAuthenticationPolicy_withValidMfaAndRecoveryPolicy_shouldUpdateAuthenticationPolicy() {
     MfaPolicy newMfaPolicy = new MfaPolicy(MfaType.SMS, DEFAULT_MFA_EXPIRY);
     RecoveryPolicy newRecoveryPolicy = new RecoveryPolicy(MfaType.EMAIL);
 
     this.topLevelOu.updateAuthenticationPolicy(newMfaPolicy, newRecoveryPolicy);
 
     assert topLevelOu.authenticationPolicy().mfaPolicy().equals(newMfaPolicy)
-        : "updated authenticationPolicy should have new mfaPolicy";
+        : "got: " + topLevelOu.authenticationPolicy().mfaPolicy() + " expected: " + newMfaPolicy;
 
     assert topLevelOu.authenticationPolicy().recoveryPolicy().equals(newRecoveryPolicy)
-        : "updated authenticationPolicy should have new mfaPolicy";
+        : "got: "
+            + topLevelOu.authenticationPolicy().recoveryPolicy()
+            + " expected: "
+            + newRecoveryPolicy;
+  }
+
+  @Test
+  public void updateAuthenticationPolicy_withNullParameters_throwException() {
+    for (int i = 0; i < 2; i++) {
+      try {
+        this.topLevelOu.updateAuthenticationPolicy(
+            i == 0 ? null : new MfaPolicy(MfaType.SMS, DEFAULT_MFA_EXPIRY),
+            i == 1 ? null : new RecoveryPolicy(MfaType.EMAIL));
+
+        assert false : "Exception expected";
+      } catch (InvalidValueException e) {
+        assert e.reason().equals(ExceptionReason.INVALID_OU_ARG)
+            : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_OU_ARG;
+      }
+    }
   }
 
   @Test
@@ -175,28 +306,36 @@ public class OuTest {
     AuthorizationPolicy childAuthorizationPolicy = childOu.authorizationPolicy();
     AuthenticationPolicy childAuthenticationPolicy = childOu.authenticationPolicy();
 
-    assert childOu.name().equals("developers") : "Child OU name should be 'developers'";
+    assert childOu.name().equals("developers") : "got: " + childOu.name() + " expected: developers";
     assert childOu.parent().equals(this.topLevelOu.id())
-        : "Child OU parentId should match parent OU id";
+        : "got: " + childOu.parent() + " expected: " + this.topLevelOu.id();
     assert !childOu.isTopLevel() : "Child OU should not be top-level";
-    assert childAuthorizationPolicy.isInherited()
-        : "Child OU authorization policy should be inherited";
+    assert childAuthorizationPolicy.isInherited() : "got: " + false + " expected: " + true;
     assert childAuthorizationPolicy
-            .assignedLicenseContractIds()
-            .equals(parentAuthorizationPolicy.assignedLicenseContractIds())
-        : "Child OU should inherit license contracts from parent OU";
-    assert childAuthorizationPolicy
-            .assignedRoleIds()
-            .equals(parentAuthorizationPolicy.assignedRoleIds())
-        : "Child OU should inherit roles from parent OU";
-    assert childAuthenticationPolicy.isInherited()
-        : "Child OU authentication policy should be inherited";
+            .licenseContractIds()
+            .equals(parentAuthorizationPolicy.licenseContractIds())
+        : "got: "
+            + childAuthorizationPolicy.licenseContractIds()
+            + " expected: "
+            + parentAuthorizationPolicy.licenseContractIds();
+    assert childAuthorizationPolicy.roleIds().equals(parentAuthorizationPolicy.roleIds())
+        : "got: "
+            + childAuthorizationPolicy.roleIds()
+            + " expected: "
+            + parentAuthorizationPolicy.roleIds();
+    assert childAuthenticationPolicy.isInherited() : "got: " + false + " expected: " + true;
     assert childAuthenticationPolicy.mfaPolicy().equals(parentAuthenticationPolicy.mfaPolicy())
-        : "Child OU should inherit MFA type from parent OU";
+        : "got: "
+            + childAuthenticationPolicy.mfaPolicy()
+            + " expected: "
+            + parentAuthenticationPolicy.mfaPolicy();
     assert childAuthenticationPolicy
             .recoveryPolicy()
             .equals(parentAuthenticationPolicy.recoveryPolicy())
-        : "Child OU should inherit recovery policy from parent OU";
+        : "got: "
+            + childAuthenticationPolicy.recoveryPolicy()
+            + " expected: "
+            + parentAuthenticationPolicy.recoveryPolicy();
   }
 
   @Test
@@ -220,24 +359,34 @@ public class OuTest {
     AuthorizationPolicy newAuthorizationPolicy = childOu.authorizationPolicy();
     AuthenticationPolicy newAuthenticationPolicy = childOu.authenticationPolicy();
 
-    assert childOu.name().equals("accounting") : "Child OU name should be 'developers'";
+    assert childOu.name().equals("accounting") : "got: " + childOu.name() + " expected: accounting";
     assert childOu.parent().equals(this.topLevelOu.id())
-        : "Child OU parentId should match parent OU id";
-    assert !childOu.isTopLevel() : "Child OU should not be top-level";
-    assert !newAuthorizationPolicy.isInherited()
-        : "Child OU authorization policy should be inherited";
+        : "got: " + childOu.parent() + " expected: " + this.topLevelOu.id();
+    assert !childOu.isTopLevel() : "got: " + childOu.isTopLevel() + " expected: " + false;
+    assert !newAuthorizationPolicy.isInherited() : "got: " + true + " expected: " + false;
     assert newAuthorizationPolicy
-            .assignedLicenseContractIds()
-            .equals(oldAuthorizationPolicy.assignedLicenseContractIds())
-        : "Child OU should inherit license contracts from parent OU";
-    assert newAuthorizationPolicy.assignedRoleIds().equals(oldAuthorizationPolicy.assignedRoleIds())
-        : "Child OU should inherit roles from parent OU";
-    assert !newAuthenticationPolicy.isInherited()
-        : "Child OU authentication policy should be inherited";
+            .licenseContractIds()
+            .equals(oldAuthorizationPolicy.licenseContractIds())
+        : "got: "
+            + newAuthorizationPolicy.licenseContractIds()
+            + " expected: "
+            + oldAuthorizationPolicy.licenseContractIds();
+    assert newAuthorizationPolicy.roleIds().equals(oldAuthorizationPolicy.roleIds())
+        : "got: "
+            + newAuthorizationPolicy.roleIds()
+            + " expected: "
+            + oldAuthorizationPolicy.roleIds();
+    assert !newAuthenticationPolicy.isInherited() : "got: " + true + " expected: " + false;
     assert newAuthenticationPolicy.mfaPolicy().equals(oldAuthenticationPolicy.mfaPolicy())
-        : "Child OU should inherit MFA type from parent OU";
+        : "got: "
+            + newAuthenticationPolicy.mfaPolicy()
+            + " expected: "
+            + oldAuthenticationPolicy.mfaPolicy();
     assert newAuthenticationPolicy.recoveryPolicy().equals(oldAuthenticationPolicy.recoveryPolicy())
-        : "Child OU should inherit recovery policy from parent OU";
+        : "got: "
+            + newAuthenticationPolicy.recoveryPolicy()
+            + " expected: "
+            + oldAuthenticationPolicy.recoveryPolicy();
   }
 
   @Test
@@ -251,24 +400,18 @@ public class OuTest {
             List.of(),
             List.of(),
             new RecoveryPolicy(MfaType.AUTHENTICATOR_APP),
-            new MfaPolicy(MfaType.EMAIL, new Date("2023-12-01T00:00:00Z")));
+            new MfaPolicy(MfaType.EMAIL, new DateInput("2023-12-01T00:00:00Z")));
 
     try {
       this.topLevelOu.assignOu(childOu, true, true);
 
-      assert false
-          : "Expected an exception to be thrown due to parent ou and child ou org conflict";
+      assert false : "Expected an exception";
     } catch (InvalidValueException e) {
-      assert e.reason().equals(ExceptionReason.PARENT_AND_CHILD_ORG_CONFLICT)
+      assert e.reason().equals(ExceptionReason.INVALID_OU_ARG)
           : "Exception reason mismatch got: "
               + e.reason()
               + " expected: "
-              + ExceptionReason.PARENT_AND_CHILD_ORG_CONFLICT;
-      assert e.invalidValue().equals(childOu.id().toString())
-          : "Exception invalid value mismatch got: "
-              + e.invalidValue()
-              + " expected: "
-              + childOu.id().toString();
+              + ExceptionReason.INVALID_OU_ARG;
     }
   }
 
@@ -282,23 +425,18 @@ public class OuTest {
             List.of(),
             List.of(),
             new RecoveryPolicy(MfaType.AUTHENTICATOR_APP),
-            new MfaPolicy(MfaType.EMAIL, new Date("2023-12-01T00:00:00Z")));
+            new MfaPolicy(MfaType.EMAIL, new DateInput("2023-12-01T00:00:00Z")));
 
     try {
       ou.assignOu(this.topLevelOu, true, true);
 
-      assert false : "Expected an exception to be thrown when assigning top-level ou to an ou";
+      assert false : "Expected an exception";
     } catch (InvalidValueException e) {
-      assert e.reason().equals(ExceptionReason.ASSIGNING_TOP_LEVEL_OU_TO_PARENT)
+      assert e.reason().equals(ExceptionReason.INVALID_OU_ARG)
           : "Exception reason mismatch got: "
               + e.reason()
               + " expected: "
-              + ExceptionReason.ASSIGNING_TOP_LEVEL_OU_TO_PARENT;
-      assert e.invalidValue().equals(this.topLevelOu.id().toString())
-          : "Exception invalid value mismatch got: "
-              + e.invalidValue()
-              + " expected: "
-              + this.topLevelOu.id().toString();
+              + ExceptionReason.INVALID_OU_ARG;
     }
   }
 
@@ -310,18 +448,13 @@ public class OuTest {
     try {
       childOu.assignOu(parentOu, true, true);
 
-      assert false : "Expected an exception to be thrown when assigning parent ou to child ou";
+      assert false : "Expected an exception";
     } catch (InvalidValueException e) {
-      assert e.reason().equals(ExceptionReason.ASSIGNING_PARENT_TO_CHILD)
+      assert e.reason().equals(ExceptionReason.INVALID_OU_ARG)
           : "Exception reason mismatch got: "
               + e.reason()
               + " expected: "
-              + ExceptionReason.ASSIGNING_PARENT_TO_CHILD;
-      assert e.invalidValue().equals(parentOu.id().toString())
-          : "Exception invalid value mismatch got: "
-              + e.invalidValue()
-              + " expected: "
-              + parentOu.id().toString();
+              + ExceptionReason.INVALID_OU_ARG;
     }
   }
 
@@ -332,18 +465,28 @@ public class OuTest {
     try {
       ou.assignOu(ou, true, true);
 
-      assert false : "Expected an exception to be thrown when assigning parent ou to child ou";
+      assert false : "Expected an exception";
     } catch (InvalidValueException e) {
-      assert e.reason().equals(ExceptionReason.ASSIGNING_SELF)
+      assert e.reason().equals(ExceptionReason.INVALID_OU_ARG)
           : "Exception reason mismatch got: "
               + e.reason()
               + " expected: "
-              + ExceptionReason.ASSIGNING_SELF;
-      assert e.invalidValue().equals(ou.id().toString())
-          : "Exception invalid value mismatch got: "
-              + e.invalidValue()
+              + ExceptionReason.INVALID_OU_ARG;
+    }
+  }
+
+  @Test
+  public void assignOu_withNullParameter_throwException() {
+    try {
+      this.topLevelOu.assignOu(null, true, true);
+
+      assert false : "Expected an exception";
+    } catch (InvalidValueException e) {
+      assert e.reason().equals(ExceptionReason.INVALID_OU_ARG)
+          : "Exception reason mismatch got: "
+              + e.reason()
               + " expected: "
-              + ou.id().toString();
+              + ExceptionReason.INVALID_OU_ARG;
     }
   }
 
@@ -368,20 +511,23 @@ public class OuTest {
 
     AuthorizationPolicy childAuthorizationPolicy = childOu.authorizationPolicy();
 
-    assert childOu.name().equals("developers") : "Child OU name should be 'developers'";
+    assert childOu.name().equals("developers") : "got: " + childOu.name() + " expected: developers";
     assert childOu.parent().equals(this.topLevelOu.id())
-        : "Child OU parentId should match parent OU id";
-    assert !childOu.isTopLevel() : "Child OU should not be top-level";
-    assert childAuthorizationPolicy.isInherited()
-        : "Child OU authorization policy should be inherited";
+        : "got: " + childOu.parent() + " expected: " + this.topLevelOu.id();
+    assert !childOu.isTopLevel() : "got: " + childOu.isTopLevel() + " expected: " + false;
+    assert childAuthorizationPolicy.isInherited() : "got: " + false + " expected: " + true;
     assert childAuthorizationPolicy
-            .assignedLicenseContractIds()
-            .equals(parentAuthorizationPolicy.assignedLicenseContractIds())
-        : "Child OU should inherit license contracts from parent OU";
-    assert childAuthorizationPolicy
-            .assignedRoleIds()
-            .equals(parentAuthorizationPolicy.assignedRoleIds())
-        : "Child OU should inherit roles from parent OU";
+            .licenseContractIds()
+            .equals(parentAuthorizationPolicy.licenseContractIds())
+        : "got: "
+            + childAuthorizationPolicy.licenseContractIds()
+            + " expected: "
+            + parentAuthorizationPolicy.licenseContractIds();
+    assert childAuthorizationPolicy.roleIds().equals(parentAuthorizationPolicy.roleIds())
+        : "got: "
+            + childAuthorizationPolicy.roleIds()
+            + " expected: "
+            + parentAuthorizationPolicy.roleIds();
   }
 
   @Test
@@ -399,19 +545,28 @@ public class OuTest {
     try {
       childOu.synchronizeAuthorizationPolicyWith(this.topLevelOu);
 
-      assert false
-          : "Expected an exception to be thrown when synchronizing ou with ou that is not parent";
+      assert false : "Exception expected";
     } catch (InvalidValueException e) {
-      assert e.reason().equals(ExceptionReason.OU_NOT_ASSIGNED_TO_PARENT)
+      assert e.reason().equals(ExceptionReason.INVALID_OU_ARG)
           : "Exception reason mismatch got: "
               + e.reason()
               + " expected: "
-              + ExceptionReason.OU_NOT_ASSIGNED_TO_PARENT;
-      assert e.invalidValue().equals(this.topLevelOu.id().toString())
-          : "Exception invalid value mismatch got: "
-              + e.invalidValue()
+              + ExceptionReason.INVALID_OU_ARG;
+    }
+  }
+
+  @Test
+  public void synchronizeAuthorizationPolicyWith_withNullParameter_throwException() {
+    try {
+      this.topLevelOu.synchronizeAuthorizationPolicyWith(null);
+
+      assert false : "Expected an exception";
+    } catch (InvalidValueException e) {
+      assert e.reason().equals(ExceptionReason.INVALID_OU_ARG)
+          : "Exception reason mismatch got: "
+              + e.reason()
               + " expected: "
-              + this.topLevelOu.id().toString();
+              + ExceptionReason.INVALID_OU_ARG;
     }
   }
 
@@ -436,18 +591,28 @@ public class OuTest {
     AuthenticationPolicy parentAuthenticationPolicy = this.topLevelOu.authenticationPolicy();
     AuthenticationPolicy childAuthenticationPolicy = childOu.authenticationPolicy();
 
-    assert childOu.name().equals("developers") : "Child OU name should be 'developers'";
+    assert childOu.name().equals("developers") : "got: " + childOu.name() + " expected: developers";
     assert childOu.parent().equals(this.topLevelOu.id())
-        : "Child OU parentId should match parent OU id";
+        : "got: " + childOu.parent() + " expected: " + this.topLevelOu.id();
     assert !childOu.isTopLevel() : "Child OU should not be top-level";
     assert childAuthenticationPolicy.isInherited()
-        : "Child OU authentication policy should be inherited";
+        : "got: "
+            + false
+            + " expected: "
+            + true
+            + " Child OU authentication policy should be inherited";
     assert childAuthenticationPolicy.mfaPolicy().equals(parentAuthenticationPolicy.mfaPolicy())
-        : "Child OU should inherit MFA type from parent OU";
+        : "got: "
+            + childAuthenticationPolicy.mfaPolicy()
+            + " expected: "
+            + parentAuthenticationPolicy.mfaPolicy();
     assert childAuthenticationPolicy
             .recoveryPolicy()
             .equals(parentAuthenticationPolicy.recoveryPolicy())
-        : "Child OU should inherit recovery policy from parent OU";
+        : "got: "
+            + childAuthenticationPolicy.recoveryPolicy()
+            + " expected: "
+            + parentAuthenticationPolicy.recoveryPolicy();
   }
 
   @Test
@@ -465,19 +630,22 @@ public class OuTest {
     try {
       childOu.synchronizeAuthenticationPolicyWith(this.topLevelOu);
 
-      assert false
-          : "Expected an exception to be thrown when synchronizing ou with ou that is not parent";
+      assert false : "Expected an exception";
     } catch (InvalidValueException e) {
-      assert e.reason().equals(ExceptionReason.OU_NOT_ASSIGNED_TO_PARENT)
-          : "Exception reason mismatch got: "
-              + e.reason()
-              + " expected: "
-              + ExceptionReason.OU_NOT_ASSIGNED_TO_PARENT;
-      assert e.invalidValue().equals(this.topLevelOu.id().toString())
-          : "Exception invalid value mismatch got: "
-              + e.invalidValue()
-              + " expected: "
-              + this.topLevelOu.id().toString();
+      assert e.reason().equals(ExceptionReason.INVALID_OU_ARG)
+          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_OU_ARG;
+    }
+  }
+
+  @Test
+  public void synchronizeAuthenticationPolicyWith_withNullParameter_throwException() {
+    try {
+      this.topLevelOu.synchronizeAuthenticationPolicyWith(null);
+
+      assert false : "Expected an exception";
+    } catch (InvalidValueException e) {
+      assert e.reason().equals(ExceptionReason.INVALID_OU_ARG)
+          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_OU_ARG;
     }
   }
 
@@ -505,8 +673,16 @@ public class OuTest {
     return licenseContractIds;
   }
 
+  private @NonNull List<Role> createRoles(Api api) {
+    List<Role> roles = new ArrayList<>();
+    for (int i = 0; i < 5; i++) {
+      roles.add(api.createDefaultRole("role" + i, List.of()));
+    }
+    return roles;
+  }
+
   private @NonNull Ou createOu(
-      java.lang.String name,
+      String name,
       boolean isTopLevel,
       OrgId orgId,
       List<LicenseContractId> licenseContractIds,

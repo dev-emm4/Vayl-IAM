@@ -1,60 +1,59 @@
 package com.vayl.identityAccess.core.domain.fieldConfiguration;
 
-import com.vayl.identityAccess.core.domain.common.Date;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.inputViolation.InvalidValueException;
+import com.vayl.identityAccess.core.domain.common.AssertionConcern;
+import com.vayl.identityAccess.core.domain.common.DomainException.ExceptionReason;
+import com.vayl.identityAccess.core.domain.common.inputtableValue.DateInput;
+import com.vayl.identityAccess.core.domain.common.validator.VerifiableFieldTypeValidator;
 
 public class VerifiableFieldConfig implements FieldConfiguration {
   private FieldConfigId id;
   private FieldType fieldType;
   private boolean verificationRequirement;
-  private Date enforcementDate;
+  private DateInput enforcementDateInput;
 
   public VerifiableFieldConfig(
       FieldConfigId id,
       FieldType fieldType,
       boolean verificationRequirement,
-      Date enforcementDate) {
+      DateInput enforcementDateInput) {
     this.setId(id);
     this.setFieldType(fieldType);
     this.setVerificationRequirement(verificationRequirement);
-    this.setEnforcementDate(enforcementDate);
+    this.setEnforcementDate(enforcementDateInput);
   }
 
   private void setId(FieldConfigId id) {
+    AssertionConcern.isNotNull(id, ExceptionReason.INVALID_FIELD_CONFIG_ARG);
     this.id = id;
   }
 
   private void setFieldType(FieldType fieldType) {
-    if (!isFieldTypeAllowed(fieldType)) {
-      throw new InvalidValueException(ExceptionReason.INVALID_FIELD_TYPE, fieldType.toString());
-    }
+    AssertionConcern.isNotNull(fieldType, ExceptionReason.INVALID_FIELD_CONFIG_ARG);
+    AssertionConcern.isValid(
+        new VerifiableFieldTypeValidator(),
+        fieldType.toString(),
+        ExceptionReason.INVALID_FIELD_CONFIG_ARG);
+
     this.fieldType = fieldType;
   }
 
-  private boolean isFieldTypeAllowed(FieldType fieldType) {
-    return fieldType == FieldType.EMAIL
-        || fieldType == FieldType.PHONE
-        || fieldType == FieldType.PASSCODE;
-  }
+  public void modify(DateInput enforcementDateInput, boolean verificationRequirement) {
+    AssertionConcern.isFalse(
+        this.isPrimaryEmailEnforcementDateBeingUpdated(enforcementDateInput),
+        ExceptionReason.INVALID_FIELD_CONFIG_ARG);
 
-  public void modify(Date enforcementDate, boolean verificationRequirement) {
-    this.throwErrorOnPrimaryEmailViolation(enforcementDate);
-    setEnforcementDate(enforcementDate);
+    setEnforcementDate(enforcementDateInput);
     setVerificationRequirement(verificationRequirement);
   }
 
-  private void throwErrorOnPrimaryEmailViolation(Date enforcementDate) {
-    if (this.fieldName().equalsIgnoreCase("PRIMARY_EMAIL")
-        && !this.enforcementDate.equals(enforcementDate)) {
-      throw new InvalidValueException(
-          ExceptionReason.UPDATING_ENFORCEMENT_DATE_IN_PRIMARY_EMAIL_FIELD_CONFIG,
-          enforcementDate.toString());
-    }
+  private boolean isPrimaryEmailEnforcementDateBeingUpdated(DateInput enforcementDateInput) {
+    return this.fieldName().equalsIgnoreCase("PRIMARY_EMAIL")
+        && !this.enforcementDateInput.equals(enforcementDateInput);
   }
 
-  private void setEnforcementDate(Date enforcementDate) {
-    this.enforcementDate = enforcementDate;
+  private void setEnforcementDate(DateInput enforcementDateInput) {
+    AssertionConcern.isNotNull(enforcementDateInput, ExceptionReason.INVALID_FIELD_CONFIG_ARG);
+    this.enforcementDateInput = enforcementDateInput;
   }
 
   private void setVerificationRequirement(boolean verificationRequirement) {
@@ -65,12 +64,12 @@ public class VerifiableFieldConfig implements FieldConfiguration {
     return this.id;
   }
 
-  public java.lang.String fieldName() {
+  public String fieldName() {
     return this.id.toString();
   }
 
-  public Date enforcementDate() {
-    return this.enforcementDate;
+  public DateInput enforcementDate() {
+    return this.enforcementDateInput;
   }
 
   public boolean isVerifiable() {

@@ -1,56 +1,58 @@
 package com.vayl.identityAccess.core.domain.fieldConfiguration;
 
-import com.vayl.identityAccess.core.domain.common.Date;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.inputViolation.InvalidValueException;
+import com.vayl.identityAccess.core.domain.common.AssertionConcern;
+import com.vayl.identityAccess.core.domain.common.DomainException.ExceptionReason;
+import com.vayl.identityAccess.core.domain.common.inputtableValue.DateInput;
+import com.vayl.identityAccess.core.domain.common.validator.UnverifiableFieldTypeValidator;
+import org.jspecify.annotations.NonNull;
 
 public class UnverifiableFieldConfig implements FieldConfiguration {
   private FieldConfigId id;
   private FieldType fieldType;
-  private Date enforcementDate;
+  private DateInput enforcementDateInput;
 
-  public UnverifiableFieldConfig(FieldConfigId id, FieldType fieldType, Date enforcementDate) {
+  public UnverifiableFieldConfig(
+      @NonNull FieldConfigId id,
+      @NonNull FieldType fieldType,
+      @NonNull DateInput enforcementDateInput) {
     this.setId(id);
     this.setFieldType(fieldType);
-    this.setEnforcementDate(enforcementDate);
+    this.setEnforcementDate(enforcementDateInput);
   }
 
   private void setId(FieldConfigId id) {
+    AssertionConcern.isNotNull(id, ExceptionReason.INVALID_FIELD_CONFIG_ARG);
     this.id = id;
   }
 
   private void setFieldType(FieldType fieldType) {
-    if (!isFieldTypeAllowed(fieldType)) {
-      throw new InvalidValueException(ExceptionReason.INVALID_FIELD_TYPE, fieldType.toString());
-    }
+    AssertionConcern.isNotNull(fieldType, ExceptionReason.INVALID_FIELD_CONFIG_ARG);
+    AssertionConcern.isValid(
+        new UnverifiableFieldTypeValidator(),
+        fieldType.toString(),
+        ExceptionReason.INVALID_FIELD_CONFIG_ARG);
 
     this.fieldType = fieldType;
   }
 
-  private boolean isFieldTypeAllowed(FieldType fieldType) {
-    return fieldType == FieldType.STRING
-        || fieldType == FieldType.ADDRESS
-        || fieldType == FieldType.DATE
-        || fieldType == FieldType.USERNAME;
+  public void modify(@NonNull DateInput enforcementDateInput) {
+    this.setEnforcementDate(enforcementDateInput);
   }
 
-  public void modify(Date enforcementDate) {
-    this.setEnforcementDate(enforcementDate);
+  private void setEnforcementDate(DateInput enforcementDateInput) {
+    AssertionConcern.isNotNull(enforcementDateInput, ExceptionReason.INVALID_FIELD_CONFIG_ARG);
+    this.enforcementDateInput = enforcementDateInput;
   }
 
-  private void setEnforcementDate(Date enforcementDate) {
-    this.enforcementDate = enforcementDate;
-  }
-
-  public Date enforcementDate() {
-    return this.enforcementDate;
+  public DateInput enforcementDate() {
+    return this.enforcementDateInput;
   }
 
   public FieldType fieldType() {
     return this.fieldType;
   }
 
-  public java.lang.String fieldName() {
+  public String fieldName() {
     return this.id().toString();
   }
 

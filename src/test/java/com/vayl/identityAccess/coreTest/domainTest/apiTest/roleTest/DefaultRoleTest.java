@@ -4,10 +4,13 @@ import com.vayl.identityAccess.core.domain.api.Api;
 import com.vayl.identityAccess.core.domain.api.ApiId;
 import com.vayl.identityAccess.core.domain.api.permission.PermissionId;
 import com.vayl.identityAccess.core.domain.api.role.DefaultRole;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.inputViolation.InvalidValueException;
+import com.vayl.identityAccess.core.domain.api.role.RoleId;
+import com.vayl.identityAccess.core.domain.common.DomainException.ExceptionReason;
+import com.vayl.identityAccess.core.domain.common.DomainException.InvalidValueException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.UUID;
 import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -25,47 +28,57 @@ public class DefaultRoleTest {
   }
 
   @Test
-  public void createDefaultRole_withRequiredParameter_createDefaultRole() {
-    String roleName = "accountant";
-    DefaultRole role = this.api.createDefaultRole(roleName, this.permissionIds);
+  public void constructor_withNullParameters_throwException() {
+    RoleId roleId = new RoleId(UUID.randomUUID().toString());
+    String name = "admin-role";
+    ApiId apiId = this.api.id();
+    List<PermissionId> permissionIds = List.of();
 
-    assert role.assignedApiId().equals(this.api.id())
-        : "assigned API ID mismatch got "
-            + role.assignedApiId().toString()
-            + " expected "
-            + this.api.id().toString();
-    assert role.name().equals("accountant")
-        : "role name mismatch got " + role.name() + " expected " + roleName;
-    assert new ArrayList<>(role.assignedPermissionIds()).equals(this.permissionIds)
-        : "role assignedPermissionIds mismatch got "
-            + role.assignedPermissionIds()
-            + " expected "
-            + this.permissionIds;
+    for (int i = 0; i < 4; i++) {
+      try {
+        if (i == 0) new DefaultRole(null, name, apiId, permissionIds);
+        if (i == 1) new DefaultRole(roleId, null, apiId, permissionIds);
+        if (i == 2) new DefaultRole(roleId, name, null, permissionIds);
+        if (i == 3) new DefaultRole(roleId, name, apiId, null);
+
+        assert false : "Exception expected";
+      } catch (InvalidValueException e) {
+        assert e.reason().equals(ExceptionReason.INVALID_ROLE_ARG)
+            : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_ROLE_ARG;
+      }
+    }
   }
 
   @Test
-  public void createDefaultRole_withPermissionInDifferentApi_throwException() {
-    Api differenApi = new Api(new ApiId("different.com"), "admin");
-    List<PermissionId> differentApiPermissionIds =
-        this.createPermissionIdsFor(differenApi, 9, "delete-users");
+  public void constructor_withBlankName_throwException() {
+    RoleId roleId = new RoleId(UUID.randomUUID().toString());
+    String name = "   ";
+    ApiId apiId = this.api.id();
+    List<PermissionId> permissionIds = List.of();
 
     try {
-      this.api.createDefaultRole("dev-team", differentApiPermissionIds);
-
-      assert false
-          : "Expected exception was not thrown when creating role with unauthorize permission";
+      new DefaultRole(roleId, name, apiId, permissionIds);
+      assert false : "Exception expected";
     } catch (InvalidValueException e) {
-      assert e.reason().equals(ExceptionReason.ASSIGNING_UNAUTHORIZED_PERMISSION_TO_ROLE)
-          : "reason mismatch got: "
-              + e.reason()
-              + " expected: "
-              + ExceptionReason.ASSIGNING_UNAUTHORIZED_PERMISSION_TO_ROLE;
-      assert e.invalidValue().equals(differentApiPermissionIds.getFirst().toString())
-          : "invalidValue mismatch got: "
-              + e.invalidValue()
-              + " expected: "
-              + differentApiPermissionIds.getFirst().toString();
+      assert e.reason().equals(ExceptionReason.INVALID_ROLE_ARG)
+          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_ROLE_ARG;
     }
+  }
+
+  @Test
+  public void constructor_withValidParameters_createDefaultRole() {
+    RoleId roleId = new RoleId(UUID.randomUUID().toString());
+    String name = "admin-role";
+    ApiId apiId = this.api.id();
+
+    DefaultRole role = new DefaultRole(roleId, name, apiId, this.permissionIds);
+
+    assert role.id().equals(roleId) : "got: " + role.id() + " expected: " + roleId;
+    assert role.name().equals(name) : "got: " + role.name() + " expected: " + name;
+    assert role.assignedApiId().equals(apiId)
+        : "got: " + role.assignedApiId() + " expected: " + apiId;
+    assert role.assignedPermissionIds().equals(new HashSet<>(this.permissionIds))
+        : "got: " + role.assignedPermissionIds() + " expected: " + this.permissionIds;
   }
 
   @Test
@@ -77,11 +90,26 @@ public class DefaultRoleTest {
 
     role.modifyGrantedPermissions(addPermissionIds, this.permissionIds);
 
-    assert new ArrayList<>(role.assignedPermissionIds()).equals(addPermissionIds)
-        : "role assignedPermissionIds mismatch got "
-            + role.assignedPermissionIds()
-            + " expected "
-            + addPermissionIds;
+    assert role.assignedPermissionIds().equals(new HashSet<>(addPermissionIds))
+        : "got " + role.assignedPermissionIds() + " expected " + addPermissionIds;
+  }
+
+  @Test
+  public void modifyGrantedPermission_withNullParameters_throwException() {
+    String roleName = "accountant";
+    DefaultRole role = this.api.createDefaultRole(roleName, this.permissionIds);
+
+    for (int i = 0; i < 2; i++) {
+      try {
+        if (i == 0) role.modifyGrantedPermissions(null, this.permissionIds);
+        if (i == 1) role.modifyGrantedPermissions(List.of(), null);
+
+        assert false : "Exception expected";
+      } catch (InvalidValueException e) {
+        assert e.reason().equals(ExceptionReason.INVALID_ROLE_ARG)
+            : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_ROLE_ARG;
+      }
+    }
   }
 
   @Test
@@ -94,25 +122,16 @@ public class DefaultRoleTest {
     try {
       role.modifyGrantedPermissions(this.permissionIds, removePermissionIds);
 
-      assert false
-          : "Expected exception was not thrown when modifying defaultRole with unassigned Permission";
+      assert false : "Exception expected";
     } catch (InvalidValueException e) {
-      assert e.reason().equals(ExceptionReason.REMOVING_UNASSIGNED_PERMISSION_FROM_ROLE)
-          : "reason mismatch got: "
-              + e.reason()
-              + " expected: "
-              + ExceptionReason.ASSIGNING_UNAUTHORIZED_PERMISSION_TO_ROLE;
-      assert e.invalidValue().equals(removePermissionIds.getFirst().toString())
-          : "invalid value mismatch got: "
-              + e.invalidValue()
-              + " expected: "
-              + removePermissionIds.getFirst().toString();
+      assert e.reason().equals(ExceptionReason.INVALID_ROLE_ARG)
+          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_ROLE_ARG;
     }
   }
 
   @Test
   public void modifyGrantedPermission_withAddPermissionIdsInDifferentApi_throwException() {
-    Api differnetApi = new Api(new ApiId("example.com"), "billing-API");
+    Api differnetApi = new Api(new ApiId("different.com"), "billing-API");
     List<PermissionId> differentApiPermissionIds =
         this.createPermissionIdsFor(differnetApi, 8, "create-users");
 
@@ -121,25 +140,15 @@ public class DefaultRoleTest {
     try {
       role.modifyGrantedPermissions(differentApiPermissionIds, this.permissionIds);
 
-      assert false
-          : "Expected exception was not thrown when modifying defaultRole with invalid Permission";
+      assert false : "Exception expected";
     } catch (InvalidValueException e) {
 
-      assert e.reason().equals(ExceptionReason.ASSIGNING_UNAUTHORIZED_PERMISSION_TO_ROLE)
-          : "reason mismatch got: "
-              + e.reason()
-              + " expected: "
-              + ExceptionReason.ASSIGNING_UNAUTHORIZED_PERMISSION_TO_ROLE;
-      assert e.invalidValue().equals(differentApiPermissionIds.getFirst().toString())
-          : "invalid mismatch got: "
-              + e.invalidValue()
-              + " expected: "
-              + differentApiPermissionIds.getFirst().toString();
+      assert e.reason().equals(ExceptionReason.INVALID_ROLE_ARG)
+          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_ROLE_ARG;
     }
   }
 
-  private @NonNull List<PermissionId> createPermissionIdsFor(
-      Api api, int amount, java.lang.String name) {
+  private @NonNull List<PermissionId> createPermissionIdsFor(Api api, int amount, String name) {
     List<PermissionId> permissionIds = new ArrayList<>();
 
     for (int i = 0; i < amount; i++) {

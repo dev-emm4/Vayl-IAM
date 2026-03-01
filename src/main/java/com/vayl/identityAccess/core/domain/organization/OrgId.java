@@ -1,42 +1,19 @@
 package com.vayl.identityAccess.core.domain.organization;
 
-import com.vayl.identityAccess.core.domain.common.DomainErrors.ExceptionReason;
-import com.vayl.identityAccess.core.domain.common.DomainErrors.inputViolation.InvalidValueException;
-import com.vayl.identityAccess.core.domain.common.IdValidator;
+import com.vayl.identityAccess.core.domain.common.AssertionConcern;
+import com.vayl.identityAccess.core.domain.common.DomainException.ExceptionReason;
+import com.vayl.identityAccess.core.domain.common.validator.UuidValidator;
+import org.jspecify.annotations.NonNull;
 
-public class OrgId {
-  private String id;
-
-  public OrgId(String id) {
-    this.setId(id);
-  }
-
-  private void setId(String id) {
-    this.throwErrorOnInvalidId(id);
+public record OrgId(String id) {
+  public OrgId(@NonNull String id) {
+    AssertionConcern.isNotNull(id, ExceptionReason.INVALID_ORG_ARG);
+    AssertionConcern.isValid(new UuidValidator(), id, ExceptionReason.INVALID_ORG_ARG);
     this.id = id;
   }
 
-  private void throwErrorOnInvalidId(String id) {
-    if (!IdValidator.isValid(id)) {
-      throw new InvalidValueException(ExceptionReason.INVALID_ORG_ID, id);
-    }
-  }
-
   @Override
-  public String toString() {
+  public @NonNull String toString() {
     return this.id;
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj) return true;
-    if (obj == null || getClass() != obj.getClass()) return false;
-    OrgId orgId = (OrgId) obj;
-    return id.equals(orgId.id);
-  }
-
-  @Override
-  public int hashCode() {
-    return id.hashCode();
   }
 }

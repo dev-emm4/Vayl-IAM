@@ -1,24 +1,30 @@
 package com.vayl.identityAccess.coreTest.domainTest.organizationTest.ouTest.authenticationPolicyTest;
 
+import com.vayl.identityAccess.core.domain.common.DomainException.ExceptionReason;
+import com.vayl.identityAccess.core.domain.common.DomainException.InvalidValueException;
 import com.vayl.identityAccess.core.domain.common.MfaType;
 import com.vayl.identityAccess.core.domain.organization.ou.authenticationPolicy.RecoveryPolicy;
 import org.junit.jupiter.api.Test;
 
 public class RecoveryPolicyTest {
   @Test
-  public void equals_sameAttributes_returnTrue() {
-    RecoveryPolicy policy1 = new RecoveryPolicy(MfaType.EMAIL);
-    RecoveryPolicy policy2 = new RecoveryPolicy(MfaType.EMAIL);
+  void constructor_withNullMfaType_throwException() {
+    try {
+      RecoveryPolicy policy = new RecoveryPolicy(null);
 
-    assert policy1.equals(policy2);
+      assert false : "Exception expected when passing null parameter";
+    } catch (InvalidValueException e) {
+      assert e.reason().equals(ExceptionReason.INVALID_OU_ARG)
+          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_OU_ARG;
+    }
   }
 
   @Test
-  public void equals_differentAttributes_returnFalse() {
-    RecoveryPolicy policy1 = new RecoveryPolicy(MfaType.EMAIL);
-    RecoveryPolicy policy2 = new RecoveryPolicy(MfaType.SMS);
+  void constructor_withValidMfaType_createRecoveryPolicy() {
+    MfaType mfaType = MfaType.EMAIL;
+    RecoveryPolicy policy = new RecoveryPolicy(mfaType);
 
-    assert !policy1.equals(policy2);
+    assert policy.mfaType().equals(mfaType) : "got: " + policy.mfaType() + " expected: " + mfaType;
   }
 
   @Test
@@ -27,21 +33,5 @@ public class RecoveryPolicyTest {
     String expectedString = "RecoveryPolicy{" + "mfaType=" + MfaType.EMAIL + '}';
 
     assert policy.toString().equals(expectedString);
-  }
-
-  @Test
-  public void hashCode_sameAttributes_returnSameHashCode() {
-    RecoveryPolicy policy1 = new RecoveryPolicy(MfaType.EMAIL);
-    RecoveryPolicy policy2 = new RecoveryPolicy(MfaType.EMAIL);
-
-    assert policy1.hashCode() == policy2.hashCode();
-  }
-
-  @Test
-  public void hashCode_differentAttributes_returnDifferentHashCode() {
-    RecoveryPolicy policy1 = new RecoveryPolicy(MfaType.EMAIL);
-    RecoveryPolicy policy2 = new RecoveryPolicy(MfaType.SMS);
-
-    assert policy1.hashCode() != policy2.hashCode();
   }
 }
