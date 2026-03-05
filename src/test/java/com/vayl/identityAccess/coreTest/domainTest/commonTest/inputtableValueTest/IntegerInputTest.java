@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 public class IntegerInputTest {
 
   @Test
-  void constructor_withNull_throwsInvalidValueException() {
+  void constructor_withNull_throwException() {
     try {
       new IntegerInput(null);
 

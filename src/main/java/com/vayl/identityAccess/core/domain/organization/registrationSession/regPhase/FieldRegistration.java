@@ -2,19 +2,20 @@ package com.vayl.identityAccess.core.domain.organization.registrationSession.reg
 
 import com.vayl.identityAccess.core.domain.common.AssertionConcern;
 import com.vayl.identityAccess.core.domain.common.DomainException.ExceptionReason;
+import com.vayl.identityAccess.core.domain.common.inputtableValue.InputtableValue;
 import com.vayl.identityAccess.core.domain.fieldConfiguration.FieldType;
 import org.jspecify.annotations.NonNull;
 
 public record FieldRegistration(
     String fieldName,
-    String fieldValue,
+    InputtableValue fieldValue,
     FieldType type,
     boolean isValueRequired,
     boolean isVerificationRequired,
     boolean isVerified) {
   public FieldRegistration(
       @NonNull String fieldName,
-      String fieldValue,
+      InputtableValue fieldValue,
       @NonNull FieldType type,
       boolean isValueRequired,
       boolean isVerificationRequired,

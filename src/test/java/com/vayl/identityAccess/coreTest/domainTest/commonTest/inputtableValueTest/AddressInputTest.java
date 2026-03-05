@@ -8,40 +8,26 @@ import org.junit.jupiter.api.Test;
 public class AddressInputTest {
 
   @Test
-  void constructor_withMissingCountry_throwException() {
-    try {
-      new AddressInput("123 Main St", "CA", null);
-      assert false : "Exception expected";
-    } catch (InvalidValueException e) {
-      assert e.reason() == ExceptionReason.INVALID_ADDRESS_INPUT
-          : "got " + e.reason() + " expected " + ExceptionReason.INVALID_ADDRESS_INPUT;
+  void constructor_withNullFields_throwException() {
+    String street = "123 Main St";
+    String state = "CA";
+    String country = "USA";
+
+    for (int i = 0; i < 3; i++) {
+      try {
+        if (i == 0) new AddressInput(null, state, country);
+        if (i == 1) new AddressInput(street, null, country);
+        if (i == 2) new AddressInput(street, state, null);
+        assert false : "Exception expected ";
+      } catch (InvalidValueException e) {
+        assert e.reason() == ExceptionReason.INVALID_ADDRESS_INPUT
+            : "got " + e.reason() + " expected " + ExceptionReason.INVALID_ADDRESS_INPUT;
+      }
     }
   }
 
   @Test
-  void constructor_withMissingState_throwsInvalidValueException() {
-    try {
-      new AddressInput("123 Main St", null, "USA");
-      assert false : "Exception expected";
-    } catch (InvalidValueException e) {
-      assert e.reason() == ExceptionReason.INVALID_ADDRESS_INPUT
-          : "got " + e.reason() + " expected " + ExceptionReason.INVALID_ADDRESS_INPUT;
-    }
-  }
-
-  @Test
-  void constructor_withMissingStreet_throwsInvalidValueException() {
-    try {
-      new AddressInput(null, "CA", "USA");
-      assert false : "Exception expected";
-    } catch (InvalidValueException e) {
-      assert e.reason() == ExceptionReason.INVALID_ADDRESS_INPUT
-          : "got " + e.reason() + " expected " + ExceptionReason.INVALID_ADDRESS_INPUT;
-    }
-  }
-
-  @Test
-  void constructor_withBlankState_throwsInvalidValueException() {
+  void constructor_withBlankState_throwException() {
     try {
       new AddressInput("123 Main St", " ", "USA");
       assert false : "Exception expected";
@@ -52,7 +38,7 @@ public class AddressInputTest {
   }
 
   @Test
-  void constructor_withBlankCountry_throwsInvalidValueException() {
+  void constructor_withBlankCountry_throwException() {
     try {
       new AddressInput("123 Main St", "CA", "   ");
       assert false : "Exception expected";
@@ -64,10 +50,13 @@ public class AddressInputTest {
 
   @Test
   void constructor_withValidAddress_createsAddress() {
-    AddressInput a = new AddressInput("123 Main St", "CA", "USA");
+    String street = "123 Main St";
+    String state = "CA";
+    String country = "USA";
+    AddressInput address = new AddressInput(street, state, country);
 
-    assert a.street().equals("123 Main St") : "got " + a.street() + " expected 123 Main St";
-    assert a.state().equals("CA") : "got " + a.state() + " expected CA";
-    assert a.country().equals("USA") : "got " + a.country() + " expected USA";
+    assert address.street().equals(street) : "got " + address.street() + " expected " + street;
+    assert address.state().equals(state) : "got " + address.state() + " expected " + state;
+    assert address.country().equals(country) : "got " + address.country() + " expected " + country;
   }
 }

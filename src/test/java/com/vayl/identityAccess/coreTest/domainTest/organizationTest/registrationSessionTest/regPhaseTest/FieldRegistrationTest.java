@@ -53,22 +53,20 @@ public class FieldRegistrationTest {
         : "got: " + fieldRegistration.fieldValue() + " expected: " + null;
     assert fieldRegistration.type() == FieldType.EMAIL
         : "got: " + fieldRegistration.type() + " expected: " + FieldType.EMAIL;
-    assert fieldRegistration.isValueRequired()
-        : "got: " + false + " expected: " + true;
-    assert fieldRegistration.isVerificationRequired()
-        : "got: " + false + " expected: " + true;
-    assert !fieldRegistration.isVerified()
-        : "got: " + true + " expected: " + false;
+    assert fieldRegistration.isValueRequired() : "got: " + false + " expected: " + true;
+    assert fieldRegistration.isVerificationRequired() : "got: " + false + " expected: " + true;
+    assert !fieldRegistration.isVerified() : "got: " + true + " expected: " + false;
   }
 
   @Test
   public void isVerified_ifVerificationIsNotRequired_returnTrue() {
     FieldRegistration fieldRegistration1 =
         new FieldRegistration("PRIMARY_EMAIL", null, FieldType.EMAIL, true, false, false);
-    FieldRegistration fieldRegistration2 =
-        new FieldRegistration("PRIMARY_EMAIL", null, FieldType.EMAIL, true, false, true);
 
     assert fieldRegistration1.isVerified() : "got: " + false + " expected: " + true;
+
+    FieldRegistration fieldRegistration2 =
+        new FieldRegistration("PRIMARY_EMAIL", null, FieldType.EMAIL, true, false, true);
 
     assert fieldRegistration2.isVerified() : "got: " + false + " expected: " + true;
   }
@@ -78,11 +76,12 @@ public class FieldRegistrationTest {
     boolean isVerified = false;
     FieldRegistration fieldRegistration1 =
         new FieldRegistration("PRIMARY_EMAIL", null, FieldType.EMAIL, true, true, isVerified);
+
+    assert !fieldRegistration1.isVerified() : "got: " + true + " expected: " + false;
+
     isVerified = true;
     FieldRegistration fieldRegistration2 =
         new FieldRegistration("PRIMARY_EMAIL", null, FieldType.EMAIL, true, true, isVerified);
-
-    assert !fieldRegistration1.isVerified() : "got: " + true + " expected: " + false;
 
     assert fieldRegistration2.isVerified() : "got: " + false + " expected: " + true;
   }

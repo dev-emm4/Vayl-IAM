@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 public class UsernameInputTest {
 
   @Test
-  void of_withBlank_throwsInvalidValueException() {
+  void of_withBlank_throwException() {
     try {
       new UsernameInput("");
       assert false : "Exception expected";
@@ -19,7 +19,7 @@ public class UsernameInputTest {
   }
 
   @Test
-  void constructor_withNull_throwsInvalidValueException() {
+  void constructor_withNull_throwException() {
     try {
       new UsernameInput(null);
       assert false : "Exception expected";

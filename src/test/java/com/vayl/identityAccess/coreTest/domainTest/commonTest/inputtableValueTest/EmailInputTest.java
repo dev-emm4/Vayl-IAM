@@ -1,8 +1,8 @@
 package com.vayl.identityAccess.coreTest.domainTest.commonTest.inputtableValueTest;
 
-import com.vayl.identityAccess.core.domain.common.inputtableValue.EmailInput;
 import com.vayl.identityAccess.core.domain.common.DomainException.ExceptionReason;
 import com.vayl.identityAccess.core.domain.common.DomainException.InvalidValueException;
+import com.vayl.identityAccess.core.domain.common.inputtableValue.EmailInput;
 import org.junit.jupiter.api.Test;
 
 public class EmailInputTest {
@@ -31,8 +31,10 @@ public class EmailInputTest {
 
   @Test
   void constructor_withValidEmail_createsEmail() {
-    EmailInput e = new EmailInput("user@example.com");
+    String emailAddress = "user@example.com";
+    EmailInput emailInput = new EmailInput(emailAddress);
 
-    assert e.email().equals("user@example.com");
+    assert emailInput.email().equals(emailAddress)
+        : "got " + emailInput.email() + " expected " + emailAddress;
   }
 }

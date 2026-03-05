@@ -1,13 +1,13 @@
 package com.vayl.identityAccess.coreTest.domainTest.commonTest.inputtableValueTest;
 
-import com.vayl.identityAccess.core.domain.common.inputtableValue.DateInput;
 import com.vayl.identityAccess.core.domain.common.DomainException.ExceptionReason;
 import com.vayl.identityAccess.core.domain.common.DomainException.InvalidValueException;
+import com.vayl.identityAccess.core.domain.common.inputtableValue.DateInput;
 import org.junit.jupiter.api.Test;
 
 public class DateInputTest {
   @Test
-  void constructor_withInvalidDate_throwsInvalidValueException() {
+  void constructor_withInvalidDate_throwException() {
     String invalidDate = "2023-13-01T00:00:00Z"; // Invalid month
 
     try {

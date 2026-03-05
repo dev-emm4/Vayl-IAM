@@ -13,42 +13,32 @@ public class RegSessionIdTest {
 
     try {
       new RegSessionId(invalidId);
-      assert false
-          : "Exception expected" + invalidId;
+      assert false : "Exception expected" + invalidId;
     } catch (InvalidValueException e) {
       assert e.reason().equals(ExceptionReason.INVALID_REG_SESSION_ARG)
-          : "got: "
-              + e.reason()
-              + " expected: "
-              + ExceptionReason.INVALID_REG_SESSION_ARG;
+          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_REG_SESSION_ARG;
     }
   }
 
   @Test
-    void constructor_withNullId_throwsInvalidValueException() {
-        try {
-        new RegSessionId(null);
+  void constructor_withNullId_throwsException() {
+    try {
+      new RegSessionId(null);
 
-        assert false : "Exception expected";
-        } catch (InvalidValueException e) {
-        assert e.reason().equals(ExceptionReason.INVALID_REG_SESSION_ARG)
-            : "got: "
-                + e.reason()
-                + " expected: "
-                + ExceptionReason.INVALID_REG_SESSION_ARG;
-        }
+      assert false : "Exception expected";
+    } catch (InvalidValueException e) {
+      assert e.reason().equals(ExceptionReason.INVALID_REG_SESSION_ARG)
+          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_REG_SESSION_ARG;
     }
+  }
 
   @Test
   void constructor_withUUIDv4Id_createsId() {
     String validId = UUID.randomUUID().toString();
     RegSessionId regSessionId = new RegSessionId(validId);
 
-    assert true
-        : "regSessionId mismatch after creation got: "
-            + regSessionId.toString()
-            + " expected: "
-            + validId;
+    assert regSessionId.id().equals(validId)
+        : "got: " + regSessionId.id() + " expected: " + validId;
   }
 
   @Test
@@ -57,6 +47,6 @@ public class RegSessionIdTest {
     RegSessionId regSessionId = new RegSessionId(validId);
 
     assert regSessionId.toString().equals(validId)
-        : "regSessionId toString mismatch got: " + regSessionId + " expected: " + validId;
+        : "got: " + regSessionId + " expected: " + validId;
   }
 }
