@@ -182,7 +182,6 @@ public class OuTest {
             + childAuthenticationPolicy.recoveryPolicy()
             + " expected: "
             + parentAuthenticationPolicy.recoveryPolicy();
-    ;
   }
 
   @Test

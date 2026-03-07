@@ -21,9 +21,8 @@ public class ApiIdTest {
 
   @Test
   void constructor_withNullDomain_throwErrorException() {
-    String invalidDomain = null;
     try {
-      new ApiId(invalidDomain);
+      new ApiId(null);
 
       assert false : "Exception expected";
     } catch (InvalidValueException e) {
