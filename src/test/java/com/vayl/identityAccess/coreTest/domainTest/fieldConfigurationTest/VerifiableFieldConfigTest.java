@@ -38,11 +38,12 @@ public class VerifiableFieldConfigTest {
     FieldConfigId id = new FieldConfigId("address");
     DateInput enforcementDateInput = new DateInput(Instant.now().toString());
 
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 4; i++) {
       try {
         if (i == 0) new VerifiableFieldConfig(null, FieldType.EMAIL, true, enforcementDateInput);
         if (i == 1) new VerifiableFieldConfig(id, null, true, enforcementDateInput);
-        if (i == 2) new VerifiableFieldConfig(id, FieldType.EMAIL, true, null);
+        if (i == 2) new VerifiableFieldConfig(id, FieldType.EMAIL, null, enforcementDateInput);
+        if (i == 3) new VerifiableFieldConfig(id, FieldType.EMAIL, true, null);
 
         assert false : "Exception expected";
       } catch (InvalidValueException e) {
@@ -134,7 +135,7 @@ public class VerifiableFieldConfigTest {
   }
 
   @Test
-  void modify_withNullEnforcementDate_throwException() {
+  void modify_withNullParameters_throwException() {
     String fieldName = "address";
 
     FieldConfigId id = new FieldConfigId(fieldName);
@@ -142,13 +143,16 @@ public class VerifiableFieldConfigTest {
     VerifiableFieldConfig fieldConfig =
         new VerifiableFieldConfig(id, FieldType.PHONE, true, initialEnforcementDateInput);
 
-    try {
-      fieldConfig.modify(null, true);
+    for (int i = 0; i < 2; i++) {
+      try {
+        if (i == 0) fieldConfig.modify(null, true);
+        if (i == 1) fieldConfig.modify(initialEnforcementDateInput, null);
 
-      assert false : "ExceptionN Expected";
-    } catch (InvalidValueException e) {
-      assert e.reason().equals(ExceptionReason.INVALID_FIELD_CONFIG_ARG)
-          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_FIELD_CONFIG_ARG;
+        assert false : "Exception Expected";
+      } catch (InvalidValueException e) {
+        assert e.reason().equals(ExceptionReason.INVALID_FIELD_CONFIG_ARG)
+            : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_FIELD_CONFIG_ARG;
+      }
     }
   }
 }

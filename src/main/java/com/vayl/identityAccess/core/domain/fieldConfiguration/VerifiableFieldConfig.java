@@ -4,18 +4,19 @@ import com.vayl.identityAccess.core.domain.common.AssertionConcern;
 import com.vayl.identityAccess.core.domain.common.DomainException.ExceptionReason;
 import com.vayl.identityAccess.core.domain.common.inputtableValue.DateInput;
 import com.vayl.identityAccess.core.domain.common.validator.VerifiableFieldTypeValidator;
+import org.jspecify.annotations.NonNull;
 
 public class VerifiableFieldConfig implements FieldConfiguration {
   private FieldConfigId id;
   private FieldType fieldType;
-  private boolean verificationRequirement;
+  private Boolean verificationRequirement;
   private DateInput enforcementDateInput;
 
   public VerifiableFieldConfig(
-      FieldConfigId id,
-      FieldType fieldType,
-      boolean verificationRequirement,
-      DateInput enforcementDateInput) {
+      @NonNull FieldConfigId id,
+      @NonNull FieldType fieldType,
+      @NonNull Boolean verificationRequirement,
+      @NonNull DateInput enforcementDateInput) {
     this.setId(id);
     this.setFieldType(fieldType);
     this.setVerificationRequirement(verificationRequirement);
@@ -37,7 +38,8 @@ public class VerifiableFieldConfig implements FieldConfiguration {
     this.fieldType = fieldType;
   }
 
-  public void modify(DateInput enforcementDateInput, boolean verificationRequirement) {
+  public void modify(
+      @NonNull DateInput enforcementDateInput, @NonNull Boolean verificationRequirement) {
     AssertionConcern.isFalse(
         this.isPrimaryEmailEnforcementDateBeingUpdated(enforcementDateInput),
         ExceptionReason.INVALID_FIELD_CONFIG_ARG);
@@ -56,7 +58,8 @@ public class VerifiableFieldConfig implements FieldConfiguration {
     this.enforcementDateInput = enforcementDateInput;
   }
 
-  private void setVerificationRequirement(boolean verificationRequirement) {
+  private void setVerificationRequirement(Boolean verificationRequirement) {
+    AssertionConcern.isNotNull(verificationRequirement, ExceptionReason.INVALID_FIELD_CONFIG_ARG);
     this.verificationRequirement = verificationRequirement;
   }
 

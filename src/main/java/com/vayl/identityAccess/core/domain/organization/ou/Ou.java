@@ -245,7 +245,7 @@ public class Ou {
     return this.authorizationPolicy().roleIds().equals(roleIds);
   }
 
-  public void synchronizeAuthenticationPolicyWith(Ou parentOu) {
+  public void synchronizeAuthenticationPolicyWith(@NonNull Ou parentOu) {
     AssertionConcern.isNotNull(parentOu, ExceptionReason.INVALID_OU_ARG);
     AssertionConcern.isTrue(this.isOuParent(parentOu), ExceptionReason.INVALID_OU_ARG);
 

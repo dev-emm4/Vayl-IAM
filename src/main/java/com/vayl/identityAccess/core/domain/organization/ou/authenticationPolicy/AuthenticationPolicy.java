@@ -6,11 +6,14 @@ import org.jetbrains.annotations.Contract;
 import org.jspecify.annotations.NonNull;
 
 public record AuthenticationPolicy(
-    RecoveryPolicy recoveryPolicy, MfaPolicy mfaPolicy, boolean isInherited) {
+    RecoveryPolicy recoveryPolicy, MfaPolicy mfaPolicy, Boolean isInherited) {
   public AuthenticationPolicy(
-      @NonNull RecoveryPolicy recoveryPolicy, @NonNull MfaPolicy mfaPolicy, boolean isInherited) {
+      @NonNull RecoveryPolicy recoveryPolicy,
+      @NonNull MfaPolicy mfaPolicy,
+      @NonNull Boolean isInherited) {
     AssertionConcern.isNotNull(mfaPolicy, ExceptionReason.INVALID_OU_ARG);
     AssertionConcern.isNotNull(recoveryPolicy, ExceptionReason.INVALID_OU_ARG);
+    AssertionConcern.isNotNull(isInherited, ExceptionReason.INVALID_OU_ARG);
 
     this.recoveryPolicy = recoveryPolicy;
     this.mfaPolicy = mfaPolicy;

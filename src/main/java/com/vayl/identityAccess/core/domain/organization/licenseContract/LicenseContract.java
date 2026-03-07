@@ -9,14 +9,14 @@ import org.jspecify.annotations.NonNull;
 
 public class LicenseContract {
   private LicenseContractId id;
-  private int amountAllocated;
-  private int amountRemaining;
+  private Integer amountAllocated;
+  private Integer amountRemaining;
   private DateInput expireAt;
 
   public LicenseContract(
       @NonNull LicenseContractId id,
-      int amountAllocated,
-      int amountRemaining,
+      @NonNull Integer amountAllocated,
+      @NonNull Integer amountRemaining,
       @NonNull DateInput expireAt) {
     this.setId(id);
     this.setAmountAllocated(amountAllocated);
@@ -29,11 +29,13 @@ public class LicenseContract {
     this.id = id;
   }
 
-  private void setAmountAllocated(int amountAllocated) {
+  private void setAmountAllocated(Integer amountAllocated) {
+    AssertionConcern.isNotNull(amountAllocated, ExceptionReason.INVALID_LICENSE_CONTRACT_ARG);
     this.amountAllocated = amountAllocated;
   }
 
-  private void setAmountRemaining(int amountRemaining) {
+  private void setAmountRemaining(Integer amountRemaining) {
+    AssertionConcern.isNotNull(amountRemaining, ExceptionReason.INVALID_LICENSE_CONTRACT_ARG);
     this.amountRemaining = amountRemaining;
   }
 
@@ -76,7 +78,9 @@ public class LicenseContract {
     // TODO: publish increased_license_contract event
   }
 
-  public void increaseAllocatedAmount(int additionalAmount) {
+  public void increaseAllocatedAmount(@NonNull Integer additionalAmount) {
+    AssertionConcern.isNotNull(additionalAmount, ExceptionReason.INVALID_LICENSE_CONTRACT_ARG);
+
     this.amountAllocated += additionalAmount;
     this.amountRemaining += additionalAmount;
 

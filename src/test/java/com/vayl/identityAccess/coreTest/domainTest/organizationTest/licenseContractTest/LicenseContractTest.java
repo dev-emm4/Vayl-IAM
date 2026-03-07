@@ -20,10 +20,12 @@ public class LicenseContractTest {
     int amountRemaining = 10;
     DateInput expireAt = new DateInput("2023-12-01T00:00:00Z");
 
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < 4; i++) {
       try {
         if (i == 0) new LicenseContract(null, amountAllocated, amountRemaining, expireAt);
-        if (i == 1) new LicenseContract(licenseContractId, amountAllocated, amountRemaining, null);
+        if (i == 1) new LicenseContract(licenseContractId, null, amountRemaining, expireAt);
+        if (i == 2) new LicenseContract(licenseContractId, amountAllocated, null, expireAt);
+        if (i == 3) new LicenseContract(licenseContractId, amountAllocated, amountRemaining, null);
 
         assert false : "Exception expected";
       } catch (InvalidValueException e) {
@@ -69,7 +71,7 @@ public class LicenseContractTest {
   }
 
   @Test
-  public void increaseAllocatedAmount_increaseAllocatedAmountSuccessfully() {
+  public void increaseAllocatedAmount_withValidParameters_increaseAllocatedAmountSuccessfully() {
     LicenseContract licenseContract = this.createLicenseContract();
     int increaseBy = 5;
     int expectedAmountAllocated = licenseContract.amountAllocated() + increaseBy;
@@ -81,6 +83,20 @@ public class LicenseContractTest {
         : "AmountAllocated was not increased correctly";
     assert licenseContract.amountRemaining() == expectedAmountRemaining
         : "AmountRemaining was not increased correctly";
+  }
+
+  @Test
+  public void increaseAllocatedAmount_withNullParameters_throwException() {
+    try {
+      LicenseContract licenseContract = this.createLicenseContract();
+
+      licenseContract.increaseAllocatedAmount(null);
+
+      assert false : "Exception expected";
+    } catch (InvalidValueException e) {
+      assert e.reason().equals(ExceptionReason.INVALID_LICENSE_CONTRACT_ARG)
+          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_LICENSE_CONTRACT_ARG;
+    }
   }
 
   private LicenseContract createLicenseContract() {
