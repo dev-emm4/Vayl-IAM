@@ -10,18 +10,21 @@ public record FieldRegistration(
     String fieldName,
     InputtableValue fieldValue,
     FieldType type,
-    boolean isValueRequired,
-    boolean isVerificationRequired,
-    boolean isVerified) {
+    Boolean isValueRequired,
+    Boolean isVerificationRequired,
+    Boolean isVerified) {
   public FieldRegistration(
       @NonNull String fieldName,
       InputtableValue fieldValue,
       @NonNull FieldType type,
-      boolean isValueRequired,
-      boolean isVerificationRequired,
-      boolean isVerified) {
+      @NonNull Boolean isValueRequired,
+      @NonNull Boolean isVerificationRequired,
+      @NonNull Boolean isVerified) {
     AssertionConcern.isNotNull(fieldName, ExceptionReason.INVALID_REG_SESSION_ARG);
     AssertionConcern.isNotNull(type, ExceptionReason.INVALID_REG_SESSION_ARG);
+    AssertionConcern.isNotNull(isValueRequired, ExceptionReason.INVALID_REG_SESSION_ARG);
+    AssertionConcern.isNotNull(isVerificationRequired, ExceptionReason.INVALID_REG_SESSION_ARG);
+    AssertionConcern.isNotNull(isVerified, ExceptionReason.INVALID_REG_SESSION_ARG);
     AssertionConcern.isNotBlank(fieldName, ExceptionReason.INVALID_REG_SESSION_ARG);
 
     this.fieldName = fieldName;
@@ -33,7 +36,7 @@ public record FieldRegistration(
   }
 
   @Override
-  public boolean isVerified() {
+  public @NonNull Boolean isVerified() {
     if (!this.isVerificationRequired) {
       return true;
     }

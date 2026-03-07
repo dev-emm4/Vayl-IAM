@@ -19,23 +19,38 @@ public class Ou {
   private OrgId orgId;
   private OuId id;
   private String name;
-  private boolean isTopLevel;
+  private Boolean isTopLevel;
   private OuId parent;
   private AuthorizationPolicy authorizationPolicy;
   private AuthenticationPolicy authenticationPolicy;
 
+  /** creates top-level OU */
   public Ou(
       @NonNull OrgId orgId,
       @NonNull OuId id,
+      @NonNull AuthorizationPolicy authorizationPolicy,
+      @NonNull AuthenticationPolicy authenticationPolicy) {
+    this.setOrgId(orgId);
+    this.setId(id);
+    this.setName("top-level");
+    this.setIsTopLevel(true);
+    this.setAuthorizationPolicy(authorizationPolicy);
+    this.setAuthenticationPolicy(authenticationPolicy);
+    // TODO: PUBLISH TopLevelOuCreatedEvent
+  }
+
+  /** creates non top-level OU */
+  private Ou(
+      @NonNull OrgId orgId,
+      @NonNull OuId id,
       @NonNull String name,
-      boolean isTopLevel,
       @NonNull OuId parent,
       @NonNull AuthorizationPolicy authorizationPolicy,
       @NonNull AuthenticationPolicy authenticationPolicy) {
     this.setOrgId(orgId);
     this.setId(id);
     this.setName(name);
-    this.setIsTopLevel(isTopLevel);
+    this.setIsTopLevel(false);
     this.setParent(parent);
     this.setAuthorizationPolicy(authorizationPolicy);
     this.setAuthenticationPolicy(authenticationPolicy);
@@ -92,7 +107,7 @@ public class Ou {
     return this.isTopLevel;
   }
 
-  public @NonNull OuId parent() {
+  public OuId parent() {
     return this.parent;
   }
 
@@ -107,19 +122,11 @@ public class Ou {
   @Contract("_ -> new")
   public @NonNull Ou createOu(@NonNull String name) {
     OuId newOuId = new OuId(UUID.randomUUID().toString());
-    AuthorizationPolicy newAuthorizationPolicy =
-        this.authorizationPolicy().copyWith(List.of(), List.of(), true);
-    AuthenticationPolicy newAuthenticationPolicy =
-        this.authenticationPolicy().copyWith(null, null, true);
+    AuthorizationPolicy newAuthorizationPolicy = this.authorizationPolicy().copyWith(true);
+    AuthenticationPolicy newAuthenticationPolicy = this.authenticationPolicy().copyWith(true);
 
     return new Ou(
-        this.orgId(),
-        newOuId,
-        name,
-        false,
-        this.id(),
-        newAuthorizationPolicy,
-        newAuthenticationPolicy);
+        this.orgId(), newOuId, name, this.id(), newAuthorizationPolicy, newAuthenticationPolicy);
   }
 
   public void updateAuthenticationPolicy(
@@ -173,9 +180,11 @@ public class Ou {
 
   public void assignOu(
       @NonNull Ou childOu,
-      boolean shouldInheritAuthorizationPolicy,
-      boolean shouldInheritAuthenticationPolicy) {
+      @NonNull Boolean shouldInheritAuthorizationPolicy,
+      @NonNull Boolean shouldInheritAuthenticationPolicy) {
     AssertionConcern.isNotNull(childOu, ExceptionReason.INVALID_OU_ARG);
+    AssertionConcern.isNotNull(shouldInheritAuthorizationPolicy, ExceptionReason.INVALID_OU_ARG);
+    AssertionConcern.isNotNull(shouldInheritAuthenticationPolicy, ExceptionReason.INVALID_OU_ARG);
     AssertionConcern.isFalse(this.isChildInDifferentOrg(childOu), ExceptionReason.INVALID_OU_ARG);
     AssertionConcern.isFalse(this.isChildSelf(childOu), ExceptionReason.INVALID_OU_ARG);
     AssertionConcern.isFalse(this.isChildParent(childOu), ExceptionReason.INVALID_OU_ARG);
@@ -191,8 +200,7 @@ public class Ou {
       childOu.synchronizeAuthorizationPolicyWith(this);
     } else {
       AuthorizationPolicy childAuthorizationPolicy = childOu.authorizationPolicy();
-      AuthorizationPolicy newChildAuthorizationPolicy =
-          childAuthorizationPolicy.copyWith(List.of(), List.of(), false);
+      AuthorizationPolicy newChildAuthorizationPolicy = childAuthorizationPolicy.copyWith(false);
       childOu.setAuthorizationPolicy(newChildAuthorizationPolicy);
     }
 
@@ -200,8 +208,7 @@ public class Ou {
       childOu.synchronizeAuthenticationPolicyWith(this);
     } else {
       AuthenticationPolicy childAuthenticationPolicy = childOu.authenticationPolicy();
-      AuthenticationPolicy newChildAuthenticationPolicy =
-          childAuthenticationPolicy.copyWith(null, null, false);
+      AuthenticationPolicy newChildAuthenticationPolicy = childAuthenticationPolicy.copyWith(false);
       childOu.setAuthenticationPolicy(newChildAuthenticationPolicy);
     }
   }
@@ -215,6 +222,7 @@ public class Ou {
   }
 
   private boolean isChildParent(@NonNull Ou childOu) {
+    if (this.isTopLevel()) return false;
     return this.parent().equals(childOu.id());
   }
 
@@ -233,7 +241,7 @@ public class Ou {
     boolean isUserAnAudience =
         !(this.isLicenseContractIdsAssigned(parentAuthorizationPolicy.licenseContractIds()));
 
-    this.setAuthorizationPolicy(parentAuthorizationPolicy.copyWith(List.of(), List.of(), true));
+    this.setAuthorizationPolicy(parentAuthorizationPolicy.copyWith(true));
     this.publishUpdateOuAuthorizationPolicyEvent(isOuAnAudience, isUserAnAudience);
   }
 
@@ -254,7 +262,7 @@ public class Ou {
         !(this.isMfaPolicyAssigned(parentAuthenticationPolicy.mfaPolicy()))
             || !(this.isRecoveryPolicyAssigned(parentAuthenticationPolicy.recoveryPolicy()));
 
-    this.setAuthenticationPolicy(parentAuthenticationPolicy.copyWith(null, null, true));
+    this.setAuthenticationPolicy(parentAuthenticationPolicy.copyWith(true));
     this.publishUpdateOuAuthenticationPolicyEvent(shouldPublishEvent);
   }
 

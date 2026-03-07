@@ -16,12 +16,13 @@ public class AuthenticationPolicyTest {
     MfaPolicy mfaPolicy =
         new MfaPolicy(MfaType.AUTHENTICATOR_APP, new DateInput("2023-12-01T00:00:00Z"));
 
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < 3; i++) {
       try {
         if (i == 0) new AuthenticationPolicy(null, mfaPolicy, true);
         if (i == 1) new AuthenticationPolicy(recoveryPolicy, null, true);
+        if (i == 2) new AuthenticationPolicy(recoveryPolicy, mfaPolicy, null);
 
-        assert false : "Exception expected when passing null parameters";
+        assert false : "Exception expected";
       } catch (InvalidValueException e) {
         assert e.reason() == ExceptionReason.INVALID_OU_ARG
             : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_OU_ARG;
@@ -69,45 +70,40 @@ public class AuthenticationPolicyTest {
   }
 
   @Test
-  public void copyWith_passingNull_doesNotChangeField() {
+  public void copyWith_withNullParameter_throwException() {
+    try {
+      RecoveryPolicy recoveryPolicy = new RecoveryPolicy(MfaType.EMAIL);
+      MfaPolicy mfaPolicy =
+          new MfaPolicy(MfaType.AUTHENTICATOR_APP, new DateInput("2023-12-01T00:00:00Z"));
+      AuthenticationPolicy originalPolicy =
+          new AuthenticationPolicy(recoveryPolicy, mfaPolicy, false);
+
+      originalPolicy.copyWith(null);
+
+      assert false : "Exception expected";
+    } catch (InvalidValueException e) {
+      assert e.reason() == ExceptionReason.INVALID_OU_ARG
+          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_OU_ARG;
+    }
+  }
+
+  @Test
+  public void copyWith_withValidParameters_copiesPolicy() {
     RecoveryPolicy recoveryPolicy = new RecoveryPolicy(MfaType.EMAIL);
     MfaPolicy mfaPolicy =
         new MfaPolicy(MfaType.AUTHENTICATOR_APP, new DateInput("2023-12-01T00:00:00Z"));
     AuthenticationPolicy originalPolicy =
         new AuthenticationPolicy(recoveryPolicy, mfaPolicy, false);
 
-    AuthenticationPolicy copiedPolicy = originalPolicy.copyWith(null, null, true);
+    AuthenticationPolicy copiedPolicy = originalPolicy.copyWith(true);
 
     assert !originalPolicy.equals(copiedPolicy);
     assert copiedPolicy.recoveryPolicy().equals(originalPolicy.recoveryPolicy())
         : "got: " + copiedPolicy.recoveryPolicy() + " expected: " + originalPolicy.recoveryPolicy();
     assert copiedPolicy.mfaPolicy().equals(originalPolicy.mfaPolicy())
         : "got: " + copiedPolicy.mfaPolicy() + " expected: " + originalPolicy.mfaPolicy();
-    assert copiedPolicy.isInherited() != originalPolicy.isInherited()
-        : "got: " + copiedPolicy.isInherited() + " expected: " + !originalPolicy.isInherited();
-  }
-
-  @Test
-  public void copyWith_passingNewValues_changesFields() {
-    RecoveryPolicy recoveryPolicy = new RecoveryPolicy(MfaType.EMAIL);
-    MfaPolicy mfaPolicy =
-        new MfaPolicy(MfaType.AUTHENTICATOR_APP, new DateInput("2023-12-01T00:00:00Z"));
-    AuthenticationPolicy originalPolicy =
-        new AuthenticationPolicy(recoveryPolicy, mfaPolicy, false);
-
-    RecoveryPolicy newRecoveryPolicy = new RecoveryPolicy(MfaType.SMS);
-    MfaPolicy newMfaPolicy = new MfaPolicy(MfaType.EMAIL, new DateInput("2023-12-15T00:00:00Z"));
-    AuthenticationPolicy copiedPolicy =
-        originalPolicy.copyWith(newMfaPolicy, newRecoveryPolicy, true);
-
-    assert !originalPolicy.equals(copiedPolicy);
-    assert !copiedPolicy.recoveryPolicy().equals(originalPolicy.recoveryPolicy())
-        : "got: " + copiedPolicy.recoveryPolicy() + " expected: " + newRecoveryPolicy;
-    assert !copiedPolicy.mfaPolicy().equals(originalPolicy.mfaPolicy())
-        : "got: " + copiedPolicy.mfaPolicy() + " expected: " + newMfaPolicy;
     ;
-    assert copiedPolicy.isInherited() != originalPolicy.isInherited()
-        : "got: " + copiedPolicy.isInherited() + " expected: " + !originalPolicy.isInherited();
+    assert copiedPolicy.isInherited() : "got: " + false + " expected: " + true;
     ;
   }
 }

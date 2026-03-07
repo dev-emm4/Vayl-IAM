@@ -20,13 +20,9 @@ public record AuthenticationPolicy(
     this.isInherited = isInherited;
   }
 
-  @Contract("_, _, _ -> new")
-  public @NonNull AuthenticationPolicy copyWith(
-      MfaPolicy mfaPolicy, RecoveryPolicy recoveryPolicy, boolean isInherited) {
-    MfaPolicy newMfaPolicy = mfaPolicy != null ? mfaPolicy : this.mfaPolicy();
-    RecoveryPolicy newRecoveryPolicy =
-        recoveryPolicy != null ? recoveryPolicy : this.recoveryPolicy();
-    return new AuthenticationPolicy(newRecoveryPolicy, newMfaPolicy, isInherited);
+  @Contract(" _ -> new")
+  public @NonNull AuthenticationPolicy copyWith(@NonNull Boolean isInherited) {
+    return new AuthenticationPolicy(this.recoveryPolicy, this.mfaPolicy, isInherited);
   }
 
   @Override

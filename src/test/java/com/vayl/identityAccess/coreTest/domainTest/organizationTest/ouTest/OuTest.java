@@ -50,9 +50,7 @@ public class OuTest {
 
     // initial OU under test
     this.topLevelOu =
-        createOu(
-            "admin",
-            true,
+        createTopLevelOu(
             orgId,
             this.licenseContractIds,
             this.roles.stream().map(Role::id).toList(),
@@ -61,39 +59,14 @@ public class OuTest {
   }
 
   @Test
-  void constructor_withBlankName_throwException() {
-    try {
-      new Ou(
-          this.orgId,
-          new OuId(UUID.randomUUID().toString()),
-          "",
-          true,
-          this.topLevelOu.parent(),
-          new AuthorizationPolicy(List.of(), List.of(), true),
-          new AuthenticationPolicy(
-              new RecoveryPolicy(MfaType.EMAIL),
-              new MfaPolicy(MfaType.SMS, DEFAULT_MFA_EXPIRY),
-              true));
-
-      assert false : "Exception expected";
-    } catch (InvalidValueException e) {
-      assert e.reason().equals(ExceptionReason.INVALID_OU_ARG)
-          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_OU_ARG;
-    }
-  }
-
-  @Test
   void constructor_withNullParameters_throwException() {
-    for (int i = 0; i < 6; i++) {
+    for (int i = 0; i < 4; i++) {
       try {
         new Ou(
             i == 0 ? null : this.orgId,
             i == 1 ? null : new OuId(UUID.randomUUID().toString()),
-            i == 2 ? null : "admin",
-            true,
-            i == 3 ? null : this.topLevelOu.parent(),
-            i == 4 ? null : new AuthorizationPolicy(List.of(), List.of(), true),
-            i == 5
+            i == 2 ? null : new AuthorizationPolicy(List.of(), List.of(), true),
+            i == 3
                 ? null
                 : new AuthenticationPolicy(
                     new RecoveryPolicy(MfaType.EMAIL),
@@ -109,6 +82,42 @@ public class OuTest {
   }
 
   @Test
+  void constructor_withValidParameters_shouldCreateTopLevelOuWithCorrectFields() {
+    Ou ou =
+        createTopLevelOu(
+            this.orgId,
+            this.licenseContractIds,
+            this.roles.stream().map(Role::id).toList(),
+            new RecoveryPolicy(MfaType.EMAIL),
+            new MfaPolicy(MfaType.SMS, DEFAULT_MFA_EXPIRY));
+
+    assert ou.orgId().equals(this.orgId) : "got: " + ou.orgId() + " expected: " + this.orgId;
+    assert ou.parent() == null : "Top-level OU should not have a parent";
+    assert ou.authorizationPolicy().licenseContractIds().equals(this.licenseContractIds)
+        : "got: "
+            + ou.authorizationPolicy().licenseContractIds()
+            + " expected: "
+            + this.licenseContractIds;
+    assert ou.authorizationPolicy().roleIds().equals(this.roles.stream().map(Role::id).toList())
+        : "got: "
+            + ou.authorizationPolicy().roleIds()
+            + " expected: "
+            + this.roles.stream().map(Role::id).toList();
+    assert ou.authenticationPolicy()
+            .mfaPolicy()
+            .equals(new MfaPolicy(MfaType.SMS, DEFAULT_MFA_EXPIRY))
+        : "got: "
+            + ou.authenticationPolicy().mfaPolicy()
+            + " expected: "
+            + new MfaPolicy(MfaType.SMS, DEFAULT_MFA_EXPIRY);
+    assert ou.authenticationPolicy().recoveryPolicy().equals(new RecoveryPolicy(MfaType.EMAIL))
+        : "got: "
+            + ou.authenticationPolicy().recoveryPolicy()
+            + " expected: "
+            + new RecoveryPolicy(MfaType.EMAIL);
+  }
+
+  @Test
   void createOu_withBlankName_throwException() {
     try {
       this.topLevelOu.createOu("");
@@ -121,7 +130,7 @@ public class OuTest {
   }
 
   @Test
-  void createOu_WithNullName_throwException() {
+  void createOu_withNullName_throwException() {
     try {
       this.topLevelOu.createOu(null);
 
@@ -193,12 +202,12 @@ public class OuTest {
 
   @Test
   public void
-      updateAuthorizationPolicy_newContractsAndRolesBelongToOrg_shouldUpdateAuthorizationPolicy() {
+      updateAuthorizationPolicy_newContractsAndRolesBelongToTheSameOrgAsOu_shouldUpdateAuthorizationPolicy() {
     List<LicenseContractId> newLicenseContractIds =
         this.createLicenseContractId(this.orgId, this.createLicenseIds());
-    List<Role> newRoles = this.createRoles(this.createApi());
+    List<Role> newRoles = this.createDefaultRoles(this.createApi());
 
-    topLevelOu.updateAuthorizationPolicy(newLicenseContractIds, newRoles);
+    this.topLevelOu.updateAuthorizationPolicy(newLicenseContractIds, newRoles);
 
     AuthorizationPolicy updatedAuthorizationPolicy = topLevelOu.authorizationPolicy();
 
@@ -288,27 +297,30 @@ public class OuTest {
   @Test
   public void
       assignOu_OusInTheSameOrgAndInheritanceToggleActive_shouldAssignChildToParentAndSynchronizeParentAndChild() {
-    Ou childOu =
-        this.createOu(
-            "developers",
-            false,
-            this.orgId,
-            this.licenseContractIds,
-            this.roles.stream().map(Role::id).toList(),
-            new RecoveryPolicy(MfaType.EMAIL),
-            new MfaPolicy(MfaType.SMS, DEFAULT_MFA_EXPIRY));
+    Ou parent = this.topLevelOu.createOu("managers");
+    Ou childOu = this.topLevelOu.createOu("developers");
 
-    this.topLevelOu.assignOu(childOu, true, true);
+    // update parent OU's policies to non-inherited so that we can verify that child OU's policies
+    // are synchronized with parent's after assignment
+    List<LicenseContractId> newLicenseContractId =
+        this.createLicenseContractId(this.orgId, this.createLicenseIds());
+    List<Role> newRoles = this.createDefaultRoles(this.createApi());
 
-    AuthorizationPolicy parentAuthorizationPolicy = this.topLevelOu.authorizationPolicy();
-    AuthenticationPolicy parentAuthenticationPolicy = this.topLevelOu.authenticationPolicy();
+    parent.updateAuthorizationPolicy(newLicenseContractId, newRoles);
+    parent.updateAuthenticationPolicy(
+        new MfaPolicy(MfaType.SMS, DEFAULT_MFA_EXPIRY), new RecoveryPolicy(MfaType.EMAIL));
+
+    parent.assignOu(childOu, true, true);
+
+    AuthorizationPolicy parentAuthorizationPolicy = parent.authorizationPolicy();
+    AuthenticationPolicy parentAuthenticationPolicy = parent.authenticationPolicy();
 
     AuthorizationPolicy childAuthorizationPolicy = childOu.authorizationPolicy();
     AuthenticationPolicy childAuthenticationPolicy = childOu.authenticationPolicy();
 
     assert childOu.name().equals("developers") : "got: " + childOu.name() + " expected: developers";
-    assert childOu.parent().equals(this.topLevelOu.id())
-        : "got: " + childOu.parent() + " expected: " + this.topLevelOu.id();
+    assert childOu.parent().equals(parent.id())
+        : "got: " + childOu.parent() + " expected: " + parent.id();
     assert !childOu.isTopLevel() : "Child OU should not be top-level";
     assert childAuthorizationPolicy.isInherited() : "got: " + false + " expected: " + true;
     assert childAuthorizationPolicy
@@ -341,27 +353,30 @@ public class OuTest {
   @Test
   public void
       assignOu_OusInTheSameOrgAndInheritanceToggleInactive_shouldAssignChildToParentButNotSynchronizeParentAndChild() {
-    Ou childOu =
-        this.createOu(
-            "accounting",
-            false,
-            this.orgId,
-            this.licenseContractIds,
-            this.roles.stream().map(Role::id).toList(),
-            new RecoveryPolicy(MfaType.EMAIL),
-            new MfaPolicy(MfaType.SMS, DEFAULT_MFA_EXPIRY));
+    Ou parent = this.topLevelOu.createOu("managers");
+    Ou childOu = this.topLevelOu.createOu("accounting");
+
+    // update parent OU's policies to non-inherited so that we can verify that child OU's policies
+    // are not synchronized with parent's after assignment
+    List<LicenseContractId> newLicenseContractId =
+        this.createLicenseContractId(this.orgId, this.createLicenseIds());
+    List<Role> newRoles = this.createDefaultRoles(this.createApi());
+    parent.updateAuthorizationPolicy(newLicenseContractId, newRoles);
+    parent.updateAuthenticationPolicy(
+        new MfaPolicy(MfaType.SMS, DEFAULT_MFA_EXPIRY),
+        new RecoveryPolicy(MfaType.AUTHENTICATOR_APP));
 
     AuthorizationPolicy oldAuthorizationPolicy = childOu.authorizationPolicy();
     AuthenticationPolicy oldAuthenticationPolicy = childOu.authenticationPolicy();
 
-    this.topLevelOu.assignOu(childOu, false, false);
+    parent.assignOu(childOu, false, false);
 
     AuthorizationPolicy newAuthorizationPolicy = childOu.authorizationPolicy();
     AuthenticationPolicy newAuthenticationPolicy = childOu.authenticationPolicy();
 
     assert childOu.name().equals("accounting") : "got: " + childOu.name() + " expected: accounting";
-    assert childOu.parent().equals(this.topLevelOu.id())
-        : "got: " + childOu.parent() + " expected: " + this.topLevelOu.id();
+    assert childOu.parent().equals(parent.id())
+        : "got: " + childOu.parent() + " expected: " + parent.id();
     assert !childOu.isTopLevel() : "got: " + childOu.isTopLevel() + " expected: " + false;
     assert !newAuthorizationPolicy.isInherited() : "got: " + true + " expected: " + false;
     assert newAuthorizationPolicy
@@ -390,20 +405,22 @@ public class OuTest {
   }
 
   @Test
-  public void assignOu_IfChildOuIsInADifferentOrg_throwException() {
+  public void assignOu_ifChildOuIsInADifferentOrg_throwException() {
     OrgId differentOrgId = new OrgId(UUID.randomUUID().toString());
-    Ou childOu =
-        this.createOu(
-            "billing",
-            false,
+    Ou topLevelOuInDifferentLevel =
+        this.createTopLevelOu(
             differentOrgId,
             List.of(),
             List.of(),
             new RecoveryPolicy(MfaType.AUTHENTICATOR_APP),
             new MfaPolicy(MfaType.EMAIL, new DateInput("2023-12-01T00:00:00Z")));
 
+    Ou parent = topLevelOuInDifferentLevel.createOu("retail");
+    Ou childOu = this.topLevelOu.createOu("service");
+
     try {
-      this.topLevelOu.assignOu(childOu, true, true);
+
+      parent.assignOu(childOu, true, true);
 
       assert false : "Expected an exception";
     } catch (InvalidValueException e) {
@@ -417,10 +434,8 @@ public class OuTest {
 
   @Test
   public void assignOu_ifTopLevelOuIsAssignedToOu_throwException() {
-    Ou ou =
-        this.createOu(
-            "warehouse",
-            false,
+    Ou topLevelOu2 =
+        this.createTopLevelOu(
             this.orgId,
             List.of(),
             List.of(),
@@ -428,7 +443,7 @@ public class OuTest {
             new MfaPolicy(MfaType.EMAIL, new DateInput("2023-12-01T00:00:00Z")));
 
     try {
-      ou.assignOu(this.topLevelOu, true, true);
+      this.topLevelOu.assignOu(topLevelOu2, true, true);
 
       assert false : "Expected an exception";
     } catch (InvalidValueException e) {
@@ -477,32 +492,40 @@ public class OuTest {
 
   @Test
   public void assignOu_withNullParameter_throwException() {
-    try {
-      this.topLevelOu.assignOu(null, true, true);
+    Ou childOu = this.topLevelOu.createOu("finance");
 
-      assert false : "Expected an exception";
-    } catch (InvalidValueException e) {
-      assert e.reason().equals(ExceptionReason.INVALID_OU_ARG)
-          : "Exception reason mismatch got: "
-              + e.reason()
-              + " expected: "
-              + ExceptionReason.INVALID_OU_ARG;
+    for (int i = 0; i < 3; i++) {
+      try {
+        if (i == 0) this.topLevelOu.assignOu(null, true, true);
+        if (i == 1) this.topLevelOu.assignOu(childOu, null, true);
+        if (i == 2) this.topLevelOu.assignOu(childOu, true, null);
+
+        assert false : "Exception expected";
+      } catch (InvalidValueException e) {
+        assert e.reason().equals(ExceptionReason.INVALID_OU_ARG)
+            : "Exception reason mismatch got: "
+                + e.reason()
+                + " expected: "
+                + ExceptionReason.INVALID_OU_ARG;
+      }
     }
   }
 
   @Test
   public void synchronizeAuthorizationPolicyWith_ifChildIsAssignedToParent_synchronize() {
-    Ou childOu =
-        this.createOu(
-            "developers",
-            false,
-            this.orgId,
-            this.licenseContractIds,
-            this.roles.stream().map(Role::id).toList(),
-            new RecoveryPolicy(MfaType.EMAIL),
-            new MfaPolicy(MfaType.SMS, DEFAULT_MFA_EXPIRY));
+    Ou parentOu = this.topLevelOu.createOu("admin");
+    // update parent OU's policies to non-inherited so that we can verify that child OU's policies
+    // are
+    // synchronized with parent's after synchronization
+    List<LicenseContractId> newLicenseContractId =
+        this.createLicenseContractId(this.orgId, this.createLicenseIds());
+    List<Role> newRoles = this.createDefaultRoles(this.createApi());
+    parentOu.updateAuthorizationPolicy(newLicenseContractId, newRoles);
 
-    // assign child ou to parent ou but does not synchronize child authorizationPolicy with parent's
+    Ou childOu = parentOu.createOu("developers");
+
+    // assign child ou to topLevel ou but does not synchronize child authorizationPolicy with
+    // parent's
     this.topLevelOu.assignOu(childOu, false, false);
 
     childOu.synchronizeAuthorizationPolicyWith(this.topLevelOu);
@@ -532,15 +555,8 @@ public class OuTest {
 
   @Test
   public void synchronizeAuthorizationPolicyWith_ifChildNotAssignedToParent_throwException() {
-    Ou childOu =
-        this.createOu(
-            "developers",
-            false,
-            this.orgId,
-            this.licenseContractIds,
-            this.roles.stream().map(Role::id).toList(),
-            new RecoveryPolicy(MfaType.EMAIL),
-            new MfaPolicy(MfaType.SMS, DEFAULT_MFA_EXPIRY));
+    Ou parentOu = this.topLevelOu.createOu("admin");
+    Ou childOu = parentOu.createOu("developers");
 
     try {
       childOu.synchronizeAuthorizationPolicyWith(this.topLevelOu);
@@ -572,15 +588,15 @@ public class OuTest {
 
   @Test
   public void synchronizeAuthenticationPolicyWith_ifChildIsAssignedToParent_synchronize() {
-    Ou childOu =
-        this.createOu(
-            "developers",
-            false,
-            this.orgId,
-            this.licenseContractIds,
-            this.roles.stream().map(Role::id).toList(),
-            new RecoveryPolicy(MfaType.EMAIL),
-            new MfaPolicy(MfaType.SMS, DEFAULT_MFA_EXPIRY));
+    Ou parentOu = this.topLevelOu.createOu("admin");
+
+    // update parent OU's policies to non-inherited so that we can verify that child OU's policies
+    // are synchronized with parent's after synchronization
+    parentOu.updateAuthenticationPolicy(
+        new MfaPolicy(MfaType.AUTHENTICATOR_APP, DEFAULT_MFA_EXPIRY),
+        new RecoveryPolicy(MfaType.EMAIL));
+
+    Ou childOu = parentOu.createOu("developers");
 
     // assign child ou to parent ou but does not synchronize child authenticationPolicy with
     // parent's
@@ -617,15 +633,8 @@ public class OuTest {
 
   @Test
   public void synchronizeAuthenticationPolicyWith_ifChildNotAssignedToParent_throwException() {
-    Ou childOu =
-        this.createOu(
-            "developers",
-            false,
-            this.orgId,
-            this.licenseContractIds,
-            this.roles.stream().map(Role::id).toList(),
-            new RecoveryPolicy(MfaType.EMAIL),
-            new MfaPolicy(MfaType.SMS, DEFAULT_MFA_EXPIRY));
+    Ou parentOu = this.topLevelOu.createOu("admin");
+    Ou childOu = parentOu.createOu("developers");
 
     try {
       childOu.synchronizeAuthenticationPolicyWith(this.topLevelOu);
@@ -673,7 +682,7 @@ public class OuTest {
     return licenseContractIds;
   }
 
-  private @NonNull List<Role> createRoles(Api api) {
+  private @NonNull List<Role> createDefaultRoles(Api api) {
     List<Role> roles = new ArrayList<>();
     for (int i = 0; i < 5; i++) {
       roles.add(api.createDefaultRole("role" + i, List.of()));
@@ -681,21 +690,18 @@ public class OuTest {
     return roles;
   }
 
-  private @NonNull Ou createOu(
-      String name,
-      boolean isTopLevel,
+  private @NonNull Ou createTopLevelOu(
       OrgId orgId,
       List<LicenseContractId> licenseContractIds,
       List<RoleId> roleIds,
       RecoveryPolicy recoveryPolicy,
       MfaPolicy mfaPolicy) {
     OuId ouId = new OuId(UUID.randomUUID().toString());
-    OuId parentId = new OuId(UUID.randomUUID().toString());
     AuthorizationPolicy authorizationPolicy =
         new AuthorizationPolicy(licenseContractIds, roleIds, false);
     AuthenticationPolicy authenticationPolicy =
         new AuthenticationPolicy(recoveryPolicy, mfaPolicy, false);
-    return new Ou(
-        orgId, ouId, name, isTopLevel, parentId, authorizationPolicy, authenticationPolicy);
+
+    return new Ou(orgId, ouId, authorizationPolicy, authenticationPolicy);
   }
 }

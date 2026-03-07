@@ -39,10 +39,11 @@ public class AuthorizationPolicyTest {
     List<LicenseContractId> licenseContractIds = List.of(this.createLicenseContract().id());
     List<RoleId> roleIds = List.of(new RoleId(UUID.randomUUID().toString()));
 
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < 3; i++) {
       try {
         if (i == 0) new AuthorizationPolicy(null, roleIds, true);
         if (i == 1) new AuthorizationPolicy(licenseContractIds, null, true);
+        if (i == 2) new AuthorizationPolicy(licenseContractIds, roleIds, null);
 
         assert false : "Exception expected";
       } catch (InvalidValueException e) {
@@ -69,12 +70,12 @@ public class AuthorizationPolicyTest {
   }
 
   @Test
-  public void copyWith_passingEmptyList_doesNotChangeField() {
+  public void copyWith_withValidParameter_createCopy() {
     List<LicenseContractId> licenseContractIds = List.of(this.createLicenseContract().id());
     List<RoleId> roleIds = List.of(new RoleId(UUID.randomUUID().toString()));
     AuthorizationPolicy originalPolicy = new AuthorizationPolicy(licenseContractIds, roleIds, true);
 
-    AuthorizationPolicy newPolicy = originalPolicy.copyWith(List.of(), List.of(), false);
+    AuthorizationPolicy newPolicy = originalPolicy.copyWith(false);
 
     assert !(newPolicy.isInherited()) : "got: " + true + " expected: " + false;
     assert newPolicy.licenseContractIds().equals(licenseContractIds)
@@ -84,40 +85,19 @@ public class AuthorizationPolicyTest {
   }
 
   @Test
-  public void copyWith_passingNewValues_changesFields() {
-    List<LicenseContractId> licenseContractIds = List.of(this.createLicenseContract().id());
-    List<RoleId> roleIds = List.of(new RoleId(UUID.randomUUID().toString()));
-    AuthorizationPolicy originalPolicy = new AuthorizationPolicy(licenseContractIds, roleIds, true);
-
-    List<LicenseContractId> newLicenseContractIds = List.of(this.createLicenseContract().id());
-    List<RoleId> newRoleIds = List.of(new RoleId(UUID.randomUUID().toString()));
-    AuthorizationPolicy newPolicy =
-        originalPolicy.copyWith(newLicenseContractIds, newRoleIds, false);
-
-    assert !(newPolicy.isInherited()) : "got: " + true + " expected: " + false;
-    assert newPolicy.licenseContractIds().equals(newLicenseContractIds)
-        : "got: " + newPolicy.licenseContractIds() + " expected: " + newLicenseContractIds;
-    assert newPolicy.roleIds().equals(newRoleIds)
-        : "got: " + newPolicy.roleIds() + " expected: " + newRoleIds;
-  }
-
-  @Test
-  void copyWith_withNullParameters_throwException() {
+  void copyWith_withNullParameter_throwException() {
     List<LicenseContractId> licenseContractIds = List.of(this.createLicenseContract().id());
     List<RoleId> roleIds = List.of(new RoleId(UUID.randomUUID().toString()));
     AuthorizationPolicy authorizationPolicy =
         new AuthorizationPolicy(licenseContractIds, roleIds, true);
 
-    for (int i = 0; i < 2; i++) {
-      try {
-        if (i == 0) authorizationPolicy.copyWith(null, roleIds, true);
-        if (i == 1) authorizationPolicy.copyWith(licenseContractIds, null, true);
+    try {
+      authorizationPolicy.copyWith(null);
 
-        assert false : "Exception expected";
-      } catch (InvalidValueException e) {
-        assert e.reason() == ExceptionReason.INVALID_OU_ARG
-            : "got: " + e.reason() + "expected: " + ExceptionReason.INVALID_OU_ARG;
-      }
+      assert false : "Exception expected";
+    } catch (InvalidValueException e) {
+      assert e.reason() == ExceptionReason.INVALID_OU_ARG
+          : "got: " + e.reason() + "expected: " + ExceptionReason.INVALID_OU_ARG;
     }
   }
 

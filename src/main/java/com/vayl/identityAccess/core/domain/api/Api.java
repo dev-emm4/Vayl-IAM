@@ -32,27 +32,28 @@ public class Api {
     this.name = name;
   }
 
-  public Permission createPermission(@NonNull String name, String description) {
+  public @NonNull Permission createPermission(@NonNull String name, String description) {
     PermissionId permissionId = new PermissionId(this.apiId, name);
     return new Permission(permissionId, description);
   }
 
-  public DefaultRole createDefaultRole(@NonNull String name, @NonNull List<PermissionId> permissionIds) {
+  public @NonNull DefaultRole createDefaultRole(
+      @NonNull String name, @NonNull List<PermissionId> permissionIds) {
     return new DefaultRole(
         new RoleId(UUID.randomUUID().toString()), name, this.id(), permissionIds);
   }
 
-  public CustomRole createCustomRole(
+  public @NonNull CustomRole createCustomRole(
       @NonNull String name, @NonNull OrgId orgId, @NonNull List<PermissionId> permissionIds) {
     return new CustomRole(
         orgId, new RoleId(UUID.randomUUID().toString()), name, this.id(), permissionIds);
   }
 
-  public ApiId id() {
+  public @NonNull ApiId id() {
     return this.apiId;
   }
 
-  public String name() {
+  public @NonNull String name() {
     return this.name;
   }
 }

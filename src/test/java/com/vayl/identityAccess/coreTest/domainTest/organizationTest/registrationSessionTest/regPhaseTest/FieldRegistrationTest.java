@@ -21,23 +21,20 @@ public class FieldRegistrationTest {
 
   @Test
   public void constructor_withNullParameters_throwException() {
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < 5; i++) {
       try {
-        if (i == 0) {
-          new FieldRegistration(null, null, FieldType.EMAIL, true, true, false);
-        } else {
-          new FieldRegistration("PRIMARY_EMAIL", null, null, true, true, false);
-        }
+        if (i == 0) new FieldRegistration(null, null, FieldType.EMAIL, true, true, false);
+        if (i == 1) new FieldRegistration("PRIMARY_EMAIL", null, null, true, true, false);
+        if (i == 2)
+          new FieldRegistration("PRIMARY_EMAIL", null, FieldType.EMAIL, null, true, false);
+        if (i == 3)
+          new FieldRegistration("PRIMARY_EMAIL", null, FieldType.EMAIL, true, null, false);
+        if (i == 4) new FieldRegistration("PRIMARY_EMAIL", null, FieldType.EMAIL, true, true, null);
 
         assert false : "Exception expected";
       } catch (InvalidValueException e) {
-        if (i == 0) {
-          assert e.reason().equals(ExceptionReason.INVALID_REG_SESSION_ARG)
-              : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_REG_SESSION_ARG;
-        } else {
-          assert e.reason().equals(ExceptionReason.INVALID_REG_SESSION_ARG)
-              : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_REG_SESSION_ARG;
-        }
+        assert e.reason().equals(ExceptionReason.INVALID_REG_SESSION_ARG)
+            : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_REG_SESSION_ARG;
       }
     }
   }
