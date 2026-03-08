@@ -44,30 +44,6 @@ public class LicenseContract {
     this.expireAt = expireAt;
   }
 
-  public LicenseContractId id() {
-    return this.id;
-  }
-
-  public OrgId orgId() {
-    return this.id.orgId();
-  }
-
-  public LicenseId licenseId() {
-    return this.id().licenseId();
-  }
-
-  public int amountAllocated() {
-    return this.amountAllocated;
-  }
-
-  public int amountRemaining() {
-    return this.amountRemaining;
-  }
-
-  public DateInput expireAt() {
-    return this.expireAt;
-  }
-
   public void decreasingAmountRemaining() {
     // TODO: implement decreasingAmountRemaining in licenseContract
   }
@@ -85,5 +61,29 @@ public class LicenseContract {
     this.amountRemaining += additionalAmount;
 
     // TODO: publish increased_license_contract event
+  }
+
+  public @NonNull LicenseContractId id() {
+    return this.id;
+  }
+
+  public @NonNull OrgId orgId() {
+    return this.id.orgId();
+  }
+
+  public @NonNull LicenseId licenseId() {
+    return this.id().licenseId();
+  }
+
+  public int amountAllocated() {
+    return this.amountAllocated;
+  }
+
+  public int amountRemaining() {
+    return this.amountRemaining;
+  }
+
+  public @NonNull DateInput expireAt() {
+    return this.expireAt;
   }
 }

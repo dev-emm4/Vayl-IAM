@@ -91,34 +91,6 @@ public class Ou {
     this.authenticationPolicy = authenticationPolicy;
   }
 
-  public @NonNull OrgId orgId() {
-    return this.orgId;
-  }
-
-  public @NonNull OuId id() {
-    return this.id;
-  }
-
-  public @NonNull String name() {
-    return this.name;
-  }
-
-  public boolean isTopLevel() {
-    return this.isTopLevel;
-  }
-
-  public OuId parent() {
-    return this.parent;
-  }
-
-  public @NonNull AuthorizationPolicy authorizationPolicy() {
-    return this.authorizationPolicy;
-  }
-
-  public @NonNull AuthenticationPolicy authenticationPolicy() {
-    return this.authenticationPolicy;
-  }
-
   @Contract("_ -> new")
   public @NonNull Ou createOu(@NonNull String name) {
     OuId newOuId = new OuId(UUID.randomUUID().toString());
@@ -287,5 +259,33 @@ public class Ou {
   private void publishUpdateOuAuthenticationPolicyEvent(boolean shouldPublishEvent) {
     // TODO: Publish updatedOuAuthenticationPolicy
 
+  }
+
+  public @NonNull OrgId orgId() {
+    return this.orgId;
+  }
+
+  public @NonNull OuId id() {
+    return this.id;
+  }
+
+  public @NonNull String name() {
+    return this.name;
+  }
+
+  public boolean isTopLevel() {
+    return this.isTopLevel;
+  }
+
+  public OuId parent() {
+    return this.parent;
+  }
+
+  public @NonNull AuthorizationPolicy authorizationPolicy() {
+    return this.authorizationPolicy;
+  }
+
+  public @NonNull AuthenticationPolicy authenticationPolicy() {
+    return this.authenticationPolicy;
   }
 }

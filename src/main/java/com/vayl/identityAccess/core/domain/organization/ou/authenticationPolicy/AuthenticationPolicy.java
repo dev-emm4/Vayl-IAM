@@ -11,8 +11,8 @@ public record AuthenticationPolicy(
       @NonNull RecoveryPolicy recoveryPolicy,
       @NonNull MfaPolicy mfaPolicy,
       @NonNull Boolean isInherited) {
-    AssertionConcern.isNotNull(mfaPolicy, ExceptionReason.INVALID_OU_ARG);
     AssertionConcern.isNotNull(recoveryPolicy, ExceptionReason.INVALID_OU_ARG);
+    AssertionConcern.isNotNull(mfaPolicy, ExceptionReason.INVALID_OU_ARG);
     AssertionConcern.isNotNull(isInherited, ExceptionReason.INVALID_OU_ARG);
 
     this.recoveryPolicy = recoveryPolicy;

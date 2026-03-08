@@ -31,16 +31,16 @@ public class License {
     this.name = name;
   }
 
-  public LicenseId id() {
+  public @NonNull LicenseId id() {
     return this.id;
   }
 
-  public String name() {
+  public @NonNull String name() {
     return this.name;
   }
 
-  public LicenseContract createLicenseContract(
-      @NonNull OrgId orgId, int amountAllocated, @NonNull DateInput expireAt) {
+  public @NonNull LicenseContract createLicenseContract(
+      @NonNull OrgId orgId, Integer amountAllocated, @NonNull DateInput expireAt) {
     LicenseContractId licenseContractId = new LicenseContractId(orgId, this.id);
     return new LicenseContract(licenseContractId, amountAllocated, amountAllocated, expireAt);
   }

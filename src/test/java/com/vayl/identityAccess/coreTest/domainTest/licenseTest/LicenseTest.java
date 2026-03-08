@@ -81,10 +81,11 @@ public class LicenseTest {
     int amountAllocated = 20;
     DateInput expireAt = new DateInput("2024-12-01T00:00:00Z");
 
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < 3; i++) {
       try {
         if (i == 0) license.createLicenseContract(null, amountAllocated, expireAt);
-        if (i == 1) license.createLicenseContract(orgId, amountAllocated, null);
+        if (i == 1) license.createLicenseContract(orgId, null, expireAt);
+        if (i == 2) license.createLicenseContract(orgId, amountAllocated, null);
 
         assert false : "Exception expected";
       } catch (InvalidValueException e) {

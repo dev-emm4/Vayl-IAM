@@ -75,15 +75,15 @@ public class DefaultRole implements Role {
     return this.assignedPermissionIds().contains(permissionId);
   }
 
-  public RoleId id() {
+  public @NonNull RoleId id() {
     return this.id;
   }
 
-  public String name() {
+  public @NonNull String name() {
     return this.name;
   }
 
-  public ApiId assignedApiId() {
+  public @NonNull ApiId assignedApiId() {
     return this.assignedApiId;
   }
 
@@ -91,7 +91,7 @@ public class DefaultRole implements Role {
     return true;
   }
 
-  public Set<PermissionId> assignedPermissionIds() {
+  public @NonNull Set<PermissionId> assignedPermissionIds() {
     return this.assignedPermissionIds;
   }
 }

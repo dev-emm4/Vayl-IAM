@@ -63,15 +63,15 @@ public class VerifiableFieldConfig implements FieldConfiguration {
     this.verificationRequirement = verificationRequirement;
   }
 
-  public FieldConfigId id() {
+  public @NonNull FieldConfigId id() {
     return this.id;
   }
 
-  public String fieldName() {
+  public @NonNull String fieldName() {
     return this.id.toString();
   }
 
-  public DateInput enforcementDate() {
+  public @NonNull DateInput enforcementDate() {
     return this.enforcementDateInput;
   }
 
@@ -79,7 +79,7 @@ public class VerifiableFieldConfig implements FieldConfiguration {
     return this.verificationRequirement;
   }
 
-  public FieldType fieldType() {
+  public @NonNull FieldType fieldType() {
     return this.fieldType;
   }
 }

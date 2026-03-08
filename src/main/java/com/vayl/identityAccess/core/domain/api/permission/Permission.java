@@ -23,15 +23,15 @@ public class Permission {
     this.description = description;
   }
 
-  public PermissionId id() {
+  public @NonNull PermissionId id() {
     return this.id;
   }
 
-  public ApiId location() {
+  public @NonNull ApiId location() {
     return this.id().apiId();
   }
 
-  public String name() {
+  public @NonNull String name() {
     return this.id().name();
   }
 

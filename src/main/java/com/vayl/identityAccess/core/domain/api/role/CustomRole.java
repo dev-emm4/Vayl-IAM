@@ -84,25 +84,25 @@ public class CustomRole implements Role {
   }
 
   @Override
-  public ApiId assignedApiId() {
+  public @NonNull ApiId assignedApiId() {
     return this.apiId;
   }
 
   @Override
-  public boolean accessibleBy(OrgId orgId) {
+  public boolean accessibleBy(@NonNull OrgId orgId) {
     return this.orgId.equals(orgId);
   }
 
   @Override
-  public RoleId id() {
+  public @NonNull RoleId id() {
     return this.id;
   }
 
-  public String name() {
+  public @NonNull String name() {
     return this.name;
   }
 
-  public Set<PermissionId> assignedPermissionIds() {
+  public @NonNull Set<PermissionId> assignedPermissionIds() {
     return this.assignedPermissionIds;
   }
 }

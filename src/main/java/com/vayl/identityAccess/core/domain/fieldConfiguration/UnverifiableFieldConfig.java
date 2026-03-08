@@ -44,19 +44,19 @@ public class UnverifiableFieldConfig implements FieldConfiguration {
     this.enforcementDateInput = enforcementDateInput;
   }
 
-  public DateInput enforcementDate() {
+  public @NonNull DateInput enforcementDate() {
     return this.enforcementDateInput;
   }
 
-  public FieldType fieldType() {
+  public @NonNull FieldType fieldType() {
     return this.fieldType;
   }
 
-  public String fieldName() {
+  public @NonNull String fieldName() {
     return this.id().toString();
   }
 
-  public FieldConfigId id() {
+  public @NonNull FieldConfigId id() {
     return this.id;
   }
 
