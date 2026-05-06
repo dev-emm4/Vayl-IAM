@@ -6,6 +6,8 @@ import com.vayl.identityAccess.core.domain.common.DomainException.ExceptionReaso
 import com.vayl.identityAccess.core.domain.common.DomainException.InvalidValueException;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 public class PermissionIdTest {
 
   @Test
@@ -16,8 +18,7 @@ public class PermissionIdTest {
       new PermissionId(apiId, invalidPermissionName);
       assert false : "Exception expected " + invalidPermissionName;
     } catch (InvalidValueException e) {
-      assert e.reason().equals(ExceptionReason.INVALID_PERMISSION_ARG)
-          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_PERMISSION_ARG;
+      assert e.reason().equals(ExceptionReason.INVALID_PERMISSION_NAME);
     }
   }
 
@@ -32,8 +33,8 @@ public class PermissionIdTest {
 
         assert false : "Exception expected";
       } catch (InvalidValueException e) {
-        assert e.reason().equals(ExceptionReason.INVALID_PERMISSION_ARG)
-            : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_PERMISSION_ARG;
+        assert List.of(ExceptionReason.INVALID_PERMISSION_NAME, ExceptionReason.INVALID_API_ID)
+            .contains(e.reason());
       }
     }
   }

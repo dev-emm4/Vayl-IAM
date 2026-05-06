@@ -7,16 +7,16 @@ import com.vayl.identityAccess.core.domain.api.role.RoleId;
 import com.vayl.identityAccess.core.domain.common.DomainException.ExceptionReason;
 import com.vayl.identityAccess.core.domain.common.DomainException.InvalidValueException;
 import com.vayl.identityAccess.core.domain.common.MfaType;
-import com.vayl.identityAccess.core.domain.common.inputtableValue.DateInput;
+import com.vayl.identityAccess.core.domain.common.Schedule;
 import com.vayl.identityAccess.core.domain.license.LicenseId;
 import com.vayl.identityAccess.core.domain.organization.OrgId;
 import com.vayl.identityAccess.core.domain.organization.licenseContract.LicenseContractId;
+import com.vayl.identityAccess.core.domain.organization.ou.AuthenticationPolicy;
+import com.vayl.identityAccess.core.domain.organization.ou.AuthorizationPolicy;
+import com.vayl.identityAccess.core.domain.organization.ou.MfaPolicy;
 import com.vayl.identityAccess.core.domain.organization.ou.Ou;
 import com.vayl.identityAccess.core.domain.organization.ou.OuId;
-import com.vayl.identityAccess.core.domain.organization.ou.authenticationPolicy.AuthenticationPolicy;
-import com.vayl.identityAccess.core.domain.organization.ou.authenticationPolicy.MfaPolicy;
-import com.vayl.identityAccess.core.domain.organization.ou.authenticationPolicy.RecoveryPolicy;
-import com.vayl.identityAccess.core.domain.organization.ou.authorizationPolicy.AuthorizationPolicy;
+import com.vayl.identityAccess.core.domain.organization.ou.RecoveryPolicy;
 import java.util.*;
 import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.BeforeAll;
@@ -26,7 +26,7 @@ import org.junit.jupiter.api.TestInstance;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class OuTest {
 
-  private static final DateInput DEFAULT_MFA_EXPIRY = new DateInput("2023-12-01T00:00:00Z");
+  private static final Schedule DEFAULT_MFA_EXPIRY = new Schedule("2023-12-01T00:00:00Z");
 
   private List<LicenseId> licenseIds;
   private OrgId orgId;
@@ -75,8 +75,7 @@ public class OuTest {
 
         assert false : "Exception expected ";
       } catch (InvalidValueException e) {
-        assert e.reason().equals(ExceptionReason.INVALID_OU_ARG)
-            : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_OU_ARG;
+        assert List.of(ExceptionReason.INVALID_ORG_ID, ExceptionReason.INVALID_OU_ID, ExceptionReason.INVALID_AUTHORIZATION_POLICY, ExceptionReason.INVALID_AUTHENTICATION_POLICY).contains(e.reason());
       }
     }
   }
@@ -124,8 +123,7 @@ public class OuTest {
 
       assert false : "Exception expected";
     } catch (InvalidValueException e) {
-      assert e.reason().equals(ExceptionReason.INVALID_OU_ARG)
-          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_OU_ARG;
+      assert e.reason().equals(ExceptionReason.INVALID_OU_NAME);
     }
   }
 
@@ -136,8 +134,7 @@ public class OuTest {
 
       assert false : "Exception expected";
     } catch (InvalidValueException e) {
-      assert e.reason().equals(ExceptionReason.INVALID_OU_ARG)
-          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_OU_ARG;
+      assert e.reason().equals(ExceptionReason.INVALID_OU_NAME);
     }
   }
 
@@ -193,8 +190,7 @@ public class OuTest {
 
         assert false : "Exception expected";
       } catch (InvalidValueException e) {
-        assert e.reason().equals(ExceptionReason.INVALID_OU_ARG)
-            : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_OU_ARG;
+        assert List.of(ExceptionReason.INVALID_ROLE_ID, ExceptionReason.INVALID_LICENSE_CONTRACT_ID).contains(e.reason());
       }
     }
   }
@@ -235,11 +231,11 @@ public class OuTest {
 
       assert false : "Exception expected";
     } catch (InvalidValueException e) {
-      assert e.reason().equals(ExceptionReason.INVALID_OU_ARG)
+      assert e.reason().equals(ExceptionReason.UNAUTHORIZED_ACCESS_TO_LICENSE_CONTRACT)
           : "Exception reason mismatch got: "
               + e.reason()
               + " expected: "
-              + ExceptionReason.INVALID_OU_ARG;
+              + ExceptionReason.UNAUTHORIZED_ACCESS_TO_LICENSE_CONTRACT;
     }
   }
 
@@ -254,8 +250,8 @@ public class OuTest {
 
       assert false : "Exception expected";
     } catch (InvalidValueException e) {
-      assert e.reason().equals(ExceptionReason.INVALID_OU_ARG)
-          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_OU_ARG;
+      assert e.reason().equals(ExceptionReason.UNAUTHORIZED_ACCESS_TO_ROLE)
+          : "got: " + e.reason() + " expected: " + ExceptionReason.UNAUTHORIZED_ACCESS_TO_ROLE;
     }
   }
 
@@ -287,8 +283,7 @@ public class OuTest {
 
         assert false : "Exception expected";
       } catch (InvalidValueException e) {
-        assert e.reason().equals(ExceptionReason.INVALID_OU_ARG)
-            : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_OU_ARG;
+        assert List.of(ExceptionReason.INVALID_MFA_POLICY, ExceptionReason.INVALID_RECOVERY_POLICY).contains(e.reason());
       }
     }
   }
@@ -412,7 +407,7 @@ public class OuTest {
             List.of(),
             List.of(),
             new RecoveryPolicy(MfaType.AUTHENTICATOR_APP),
-            new MfaPolicy(MfaType.EMAIL, new DateInput("2023-12-01T00:00:00Z")));
+            new MfaPolicy(MfaType.EMAIL, new Schedule("2023-12-01T00:00:00Z")));
 
     Ou parent = topLevelOuInDifferentLevel.createOu("retail");
     Ou childOu = this.topLevelOu.createOu("service");
@@ -423,11 +418,11 @@ public class OuTest {
 
       assert false : "Expected an exception";
     } catch (InvalidValueException e) {
-      assert e.reason().equals(ExceptionReason.INVALID_OU_ARG)
+      assert e.reason().equals(ExceptionReason.UNAUTHORIZED_ACCESS_TO_OU)
           : "Exception reason mismatch got: "
               + e.reason()
               + " expected: "
-              + ExceptionReason.INVALID_OU_ARG;
+              + ExceptionReason.UNAUTHORIZED_ACCESS_TO_OU;
     }
   }
 
@@ -439,18 +434,18 @@ public class OuTest {
             List.of(),
             List.of(),
             new RecoveryPolicy(MfaType.AUTHENTICATOR_APP),
-            new MfaPolicy(MfaType.EMAIL, new DateInput("2023-12-01T00:00:00Z")));
+            new MfaPolicy(MfaType.EMAIL, new Schedule("2023-12-01T00:00:00Z")));
 
     try {
       this.topLevelOu.assignOu(topLevelOu2, true, true);
 
       assert false : "Expected an exception";
     } catch (InvalidValueException e) {
-      assert e.reason().equals(ExceptionReason.INVALID_OU_ARG)
+      assert e.reason().equals(ExceptionReason.UNPROCESSABLE_CANNOT_ASSIGN_TOP_LEVEL_TO_OU)
           : "Exception reason mismatch got: "
               + e.reason()
               + " expected: "
-              + ExceptionReason.INVALID_OU_ARG;
+              + ExceptionReason.UNPROCESSABLE_CANNOT_ASSIGN_TOP_LEVEL_TO_OU;
     }
   }
 
@@ -464,11 +459,11 @@ public class OuTest {
 
       assert false : "Expected an exception";
     } catch (InvalidValueException e) {
-      assert e.reason().equals(ExceptionReason.INVALID_OU_ARG)
+      assert e.reason().equals(ExceptionReason.UNPROCESSABLE_CANNOT_ASSIGN_PARENT_TO_OU)
           : "Exception reason mismatch got: "
               + e.reason()
               + " expected: "
-              + ExceptionReason.INVALID_OU_ARG;
+              + ExceptionReason.UNPROCESSABLE_CANNOT_ASSIGN_PARENT_TO_OU;
     }
   }
 
@@ -481,11 +476,11 @@ public class OuTest {
 
       assert false : "Expected an exception";
     } catch (InvalidValueException e) {
-      assert e.reason().equals(ExceptionReason.INVALID_OU_ARG)
+      assert e.reason().equals(ExceptionReason.UNPROCESSABLE_CHILD_AND_PARENT_ARE_THE_SAME)
           : "Exception reason mismatch got: "
               + e.reason()
               + " expected: "
-              + ExceptionReason.INVALID_OU_ARG;
+              + ExceptionReason.UNPROCESSABLE_CHILD_AND_PARENT_ARE_THE_SAME;
     }
   }
 
@@ -501,11 +496,7 @@ public class OuTest {
 
         assert false : "Exception expected";
       } catch (InvalidValueException e) {
-        assert e.reason().equals(ExceptionReason.INVALID_OU_ARG)
-            : "Exception reason mismatch got: "
-                + e.reason()
-                + " expected: "
-                + ExceptionReason.INVALID_OU_ARG;
+        assert List.of(ExceptionReason.INVALID_OU_ID, ExceptionReason.INVALID_SHOULD_INHERIT_AUTHORIZATION_POLICY, ExceptionReason.INVALID_SHOULD_INHERIT_AUTHENTICATION_POLICY).contains(e.reason());
       }
     }
   }
@@ -562,11 +553,11 @@ public class OuTest {
 
       assert false : "Exception expected";
     } catch (InvalidValueException e) {
-      assert e.reason().equals(ExceptionReason.INVALID_OU_ARG)
+      assert e.reason().equals(ExceptionReason.UNPROCESSABLE_MUST_SYNCHRONIZE_WITH_PARENT)
           : "Exception reason mismatch got: "
               + e.reason()
               + " expected: "
-              + ExceptionReason.INVALID_OU_ARG;
+              + ExceptionReason.UNPROCESSABLE_MUST_SYNCHRONIZE_WITH_PARENT;
     }
   }
 
@@ -577,11 +568,11 @@ public class OuTest {
 
       assert false : "Expected an exception";
     } catch (InvalidValueException e) {
-      assert e.reason().equals(ExceptionReason.INVALID_OU_ARG)
+      assert e.reason().equals(ExceptionReason.INVALID_OU_ID)
           : "Exception reason mismatch got: "
               + e.reason()
               + " expected: "
-              + ExceptionReason.INVALID_OU_ARG;
+              + ExceptionReason.INVALID_OU_ID;
     }
   }
 
@@ -640,8 +631,8 @@ public class OuTest {
 
       assert false : "Expected an exception";
     } catch (InvalidValueException e) {
-      assert e.reason().equals(ExceptionReason.INVALID_OU_ARG)
-          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_OU_ARG;
+      assert e.reason().equals(ExceptionReason.UNPROCESSABLE_MUST_SYNCHRONIZE_WITH_PARENT)
+          : "got: " + e.reason() + " expected: " + ExceptionReason.UNPROCESSABLE_MUST_SYNCHRONIZE_WITH_PARENT;
     }
   }
 
@@ -652,8 +643,8 @@ public class OuTest {
 
       assert false : "Expected an exception";
     } catch (InvalidValueException e) {
-      assert e.reason().equals(ExceptionReason.INVALID_OU_ARG)
-          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_OU_ARG;
+      assert e.reason().equals(ExceptionReason.INVALID_OU_ID)
+          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_OU_ID;
     }
   }
 

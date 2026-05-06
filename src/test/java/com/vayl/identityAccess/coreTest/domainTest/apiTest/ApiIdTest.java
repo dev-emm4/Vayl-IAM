@@ -14,8 +14,8 @@ public class ApiIdTest {
 
       assert false : "Exception expected " + invalidDomain;
     } catch (InvalidValueException e) {
-      assert e.reason() == ExceptionReason.INVALID_API_ARG
-          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_API_ARG;
+      assert e.reason() == ExceptionReason.INVALID_API_ID
+          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_API_ID;
     }
   }
 
@@ -26,8 +26,8 @@ public class ApiIdTest {
 
       assert false : "Exception expected";
     } catch (InvalidValueException e) {
-      assert e.reason() == ExceptionReason.INVALID_API_ARG
-          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_API_ARG;
+      assert e.reason() == ExceptionReason.INVALID_API_ID
+          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_API_ID;
     }
   }
 

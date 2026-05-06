@@ -43,8 +43,12 @@ public class DefaultRoleTest {
 
         assert false : "Exception expected";
       } catch (InvalidValueException e) {
-        assert e.reason().equals(ExceptionReason.INVALID_ROLE_ARG)
-            : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_ROLE_ARG;
+        assert List.of(
+                ExceptionReason.INVALID_ROLE_ID,
+                ExceptionReason.INVALID_ROLE_NAME,
+                ExceptionReason.INVALID_API_ID,
+                ExceptionReason.INVALID_PERMISSION_ID)
+            .contains(e.reason());
       }
     }
   }
@@ -60,8 +64,7 @@ public class DefaultRoleTest {
       new DefaultRole(roleId, name, apiId, permissionIds);
       assert false : "Exception expected";
     } catch (InvalidValueException e) {
-      assert e.reason().equals(ExceptionReason.INVALID_ROLE_ARG)
-          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_ROLE_ARG;
+      assert e.reason().equals(ExceptionReason.INVALID_ROLE_NAME);
     }
   }
 
@@ -106,8 +109,7 @@ public class DefaultRoleTest {
 
         assert false : "Exception expected";
       } catch (InvalidValueException e) {
-        assert e.reason().equals(ExceptionReason.INVALID_ROLE_ARG)
-            : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_ROLE_ARG;
+        assert e.reason().equals(ExceptionReason.INVALID_PERMISSION_ID);
       }
     }
   }
@@ -124,8 +126,7 @@ public class DefaultRoleTest {
 
       assert false : "Exception expected";
     } catch (InvalidValueException e) {
-      assert e.reason().equals(ExceptionReason.INVALID_ROLE_ARG)
-          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_ROLE_ARG;
+      assert e.reason().equals(ExceptionReason.UNPROCESSABLE_CANNOT_REMOVE_UNASSIGNED_PERMISSION);
     }
   }
 
@@ -143,8 +144,7 @@ public class DefaultRoleTest {
       assert false : "Exception expected";
     } catch (InvalidValueException e) {
 
-      assert e.reason().equals(ExceptionReason.INVALID_ROLE_ARG)
-          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_ROLE_ARG;
+      assert e.reason().equals(ExceptionReason.UNPROCESSABLE_PERMISSION_BELONG_TO_DIFFERENT_API);
     }
   }
 

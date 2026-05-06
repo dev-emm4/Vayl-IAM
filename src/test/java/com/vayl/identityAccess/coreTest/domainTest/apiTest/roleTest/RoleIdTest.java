@@ -16,8 +16,7 @@ public class RoleIdTest {
       new RoleId(invalidId);
       assert false : "Exception expected";
     } catch (InvalidValueException e) {
-      assert e.reason().equals(ExceptionReason.INVALID_ROLE_ARG)
-          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_ROLE_ARG;
+      assert e.reason().equals(ExceptionReason.INVALID_ROLE_ID);
     }
   }
 
@@ -30,8 +29,7 @@ public class RoleIdTest {
 
       assert false : "Exception expected";
     } catch (InvalidValueException e) {
-      assert e.reason().equals(ExceptionReason.INVALID_ROLE_ARG)
-          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_ROLE_ARG;
+      assert e.reason().equals(ExceptionReason.INVALID_ROLE_ID);
     }
   }
 

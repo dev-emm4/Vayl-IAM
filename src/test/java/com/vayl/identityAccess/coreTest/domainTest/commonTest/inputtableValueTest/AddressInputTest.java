@@ -20,8 +20,8 @@ public class AddressInputTest {
         if (i == 2) new AddressInput(street, state, null);
         assert false : "Exception expected ";
       } catch (InvalidValueException e) {
-        assert e.reason() == ExceptionReason.INVALID_ADDRESS_INPUT
-            : "got " + e.reason() + " expected " + ExceptionReason.INVALID_ADDRESS_INPUT;
+        assert e.reason() == ExceptionReason.INVALID_ADDRESS
+            : "got " + e.reason() + " expected " + ExceptionReason.INVALID_ADDRESS;
       }
     }
   }
@@ -32,8 +32,8 @@ public class AddressInputTest {
       new AddressInput("123 Main St", " ", "USA");
       assert false : "Exception expected";
     } catch (InvalidValueException e) {
-      assert e.reason() == ExceptionReason.INVALID_ADDRESS_INPUT
-          : "got " + e.reason() + " expected " + ExceptionReason.INVALID_ADDRESS_INPUT;
+      assert e.reason() == ExceptionReason.INVALID_ADDRESS
+          : "got " + e.reason() + " expected " + ExceptionReason.INVALID_ADDRESS;
     }
   }
 
@@ -43,8 +43,8 @@ public class AddressInputTest {
       new AddressInput("123 Main St", "CA", "   ");
       assert false : "Exception expected";
     } catch (InvalidValueException e) {
-      assert e.reason() == ExceptionReason.INVALID_ADDRESS_INPUT
-          : "got " + e.reason() + " expected " + ExceptionReason.INVALID_ADDRESS_INPUT;
+      assert e.reason() == ExceptionReason.INVALID_ADDRESS
+          : "got " + e.reason() + " expected " + ExceptionReason.INVALID_ADDRESS;
     }
   }
 

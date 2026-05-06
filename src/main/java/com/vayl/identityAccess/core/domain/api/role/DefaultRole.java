@@ -28,18 +28,18 @@ public class DefaultRole implements Role {
   }
 
   private void setId(RoleId id) {
-    AssertionConcern.isNotNull(id, ExceptionReason.INVALID_ROLE_ARG);
+    AssertionConcern.isNotNull(id, ExceptionReason.INVALID_ROLE_ID);
     this.id = id;
   }
 
   private void setName(String name) {
-    AssertionConcern.isNotNull(name, ExceptionReason.INVALID_ROLE_ARG);
-    AssertionConcern.isNotBlank(name, ExceptionReason.INVALID_ROLE_ARG);
+    AssertionConcern.isNotNull(name, ExceptionReason.INVALID_ROLE_NAME);
+    AssertionConcern.isNotBlank(name, ExceptionReason.INVALID_ROLE_NAME);
     this.name = name;
   }
 
   private void setApiId(ApiId assignApi) {
-    AssertionConcern.isNotNull(assignApi, ExceptionReason.INVALID_ROLE_ARG);
+    AssertionConcern.isNotNull(assignApi, ExceptionReason.INVALID_API_ID);
     this.assignedApiId = assignApi;
   }
 
@@ -52,21 +52,21 @@ public class DefaultRole implements Role {
   }
 
   private void assignPermissionIds(@NonNull List<PermissionId> permissionIds) {
-    AssertionConcern.isNotNull(permissionIds, ExceptionReason.INVALID_ROLE_ARG);
+    AssertionConcern.isNotNull(permissionIds, ExceptionReason.INVALID_PERMISSION_ID);
 
     for (PermissionId permissionId : permissionIds) {
       AssertionConcern.isEqual(
-          permissionId.apiId(), this.assignedApiId(), ExceptionReason.INVALID_ROLE_ARG);
+          permissionId.apiId(), this.assignedApiId(), ExceptionReason.UNPROCESSABLE_PERMISSION_BELONG_TO_DIFFERENT_API);
       this.assignedPermissionIds.add(permissionId);
     }
   }
 
   private void removeGrantedPermissions(@NonNull List<PermissionId> permissionIds) {
-    AssertionConcern.isNotNull(permissionIds, ExceptionReason.INVALID_ROLE_ARG);
+    AssertionConcern.isNotNull(permissionIds, ExceptionReason.INVALID_PERMISSION_ID);
 
     for (PermissionId permissionId : permissionIds) {
       AssertionConcern.isTrue(
-          this.isPermissionIdAssigned(permissionId), ExceptionReason.INVALID_ROLE_ARG);
+          this.isPermissionIdAssigned(permissionId), ExceptionReason.UNPROCESSABLE_CANNOT_REMOVE_UNASSIGNED_PERMISSION);
       this.assignedPermissionIds.remove(permissionId);
     }
   }

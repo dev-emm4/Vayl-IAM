@@ -11,8 +11,8 @@ public record RoleId(@NonNull String id) {
   }
 
   private void throwErrorOnInvalidId(String id) {
-    AssertionConcern.isNotNull(id, ExceptionReason.INVALID_ROLE_ARG);
-    AssertionConcern.isValid(new UuidValidator(), id, ExceptionReason.INVALID_ROLE_ARG);
+    AssertionConcern.isNotNull(id, ExceptionReason.INVALID_ROLE_ID);
+    AssertionConcern.isValid(new UuidValidator(), id, ExceptionReason.INVALID_ROLE_ID);
   }
 
   @Override

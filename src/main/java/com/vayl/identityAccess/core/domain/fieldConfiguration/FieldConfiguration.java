@@ -1,6 +1,6 @@
 package com.vayl.identityAccess.core.domain.fieldConfiguration;
 
-import com.vayl.identityAccess.core.domain.common.inputtableValue.DateInput;
+import com.vayl.identityAccess.core.domain.common.Schedule;
 
 public interface FieldConfiguration {
   FieldConfigId id();
@@ -9,7 +9,7 @@ public interface FieldConfiguration {
 
   boolean isVerifiable();
 
-  DateInput enforcementDate();
+  Schedule enforcementDate();
 
   FieldType fieldType();
 }

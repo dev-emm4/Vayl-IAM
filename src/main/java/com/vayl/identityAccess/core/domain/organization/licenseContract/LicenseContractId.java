@@ -8,8 +8,8 @@ import org.jspecify.annotations.NonNull;
 
 public record LicenseContractId(OrgId orgId, LicenseId licenseId) {
   public LicenseContractId(@NonNull OrgId orgId, @NonNull LicenseId licenseId) {
-    AssertionConcern.isNotNull(orgId, ExceptionReason.INVALID_LICENSE_CONTRACT_ARG);
-    AssertionConcern.isNotNull(licenseId, ExceptionReason.INVALID_LICENSE_CONTRACT_ARG);
+    AssertionConcern.isNotNull(orgId, ExceptionReason.INVALID_ORG_ID);
+    AssertionConcern.isNotNull(licenseId, ExceptionReason.INVALID_LICENSE_ID);
     this.orgId = orgId;
     this.licenseId = licenseId;
   }

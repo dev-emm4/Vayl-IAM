@@ -14,9 +14,9 @@ public record PermissionId(ApiId apiId, String name) implements LicenseRestricta
   }
 
   private void throwErrorIfIdIsInvalid(ApiId apiId, String name) {
-    AssertionConcern.isNotNull(apiId, ExceptionReason.INVALID_PERMISSION_ARG);
-    AssertionConcern.isNotNull(name, ExceptionReason.INVALID_PERMISSION_ARG);
-    AssertionConcern.isNotBlank(name, ExceptionReason.INVALID_PERMISSION_ARG);
+    AssertionConcern.isNotNull(apiId, ExceptionReason.INVALID_API_ID);
+    AssertionConcern.isNotNull(name, ExceptionReason.INVALID_PERMISSION_NAME);
+    AssertionConcern.isNotBlank(name, ExceptionReason.INVALID_PERMISSION_NAME);
   }
 
   @Override

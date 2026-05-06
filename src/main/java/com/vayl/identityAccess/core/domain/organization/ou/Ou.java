@@ -4,12 +4,13 @@ import com.vayl.identityAccess.core.domain.api.role.Role;
 import com.vayl.identityAccess.core.domain.api.role.RoleId;
 import com.vayl.identityAccess.core.domain.common.AssertionConcern;
 import com.vayl.identityAccess.core.domain.common.DomainException.ExceptionReason;
+import com.vayl.identityAccess.core.domain.common.ReservedNames;
+import com.vayl.identityAccess.core.domain.fieldConfiguration.FieldConfiguration;
+import com.vayl.identityAccess.core.domain.fieldConfiguration.FieldType;
 import com.vayl.identityAccess.core.domain.organization.OrgId;
 import com.vayl.identityAccess.core.domain.organization.licenseContract.LicenseContractId;
-import com.vayl.identityAccess.core.domain.organization.ou.authenticationPolicy.AuthenticationPolicy;
-import com.vayl.identityAccess.core.domain.organization.ou.authenticationPolicy.MfaPolicy;
-import com.vayl.identityAccess.core.domain.organization.ou.authenticationPolicy.RecoveryPolicy;
-import com.vayl.identityAccess.core.domain.organization.ou.authorizationPolicy.AuthorizationPolicy;
+import com.vayl.identityAccess.core.domain.organization.ou.registrationSession.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import org.jetbrains.annotations.Contract;
@@ -39,7 +40,7 @@ public class Ou {
     // TODO: PUBLISH TopLevelOuCreatedEvent
   }
 
-  /** creates non top-level OU */
+  /** creates non-top-level OU */
   private Ou(
       @NonNull OrgId orgId,
       @NonNull OuId id,
@@ -57,18 +58,18 @@ public class Ou {
   }
 
   private void setOrgId(OrgId orgId) {
-    AssertionConcern.isNotNull(orgId, ExceptionReason.INVALID_OU_ARG);
+    AssertionConcern.isNotNull(orgId, ExceptionReason.INVALID_ORG_ID);
     this.orgId = orgId;
   }
 
   private void setId(OuId id) {
-    AssertionConcern.isNotNull(id, ExceptionReason.INVALID_OU_ARG);
+    AssertionConcern.isNotNull(id, ExceptionReason.INVALID_OU_ID);
     this.id = id;
   }
 
   private void setName(String name) {
-    AssertionConcern.isNotNull(name, ExceptionReason.INVALID_OU_ARG);
-    AssertionConcern.isNotBlank(name, ExceptionReason.INVALID_OU_ARG);
+    AssertionConcern.isNotNull(name, ExceptionReason.INVALID_OU_NAME);
+    AssertionConcern.isNotBlank(name, ExceptionReason.INVALID_OU_NAME);
     this.name = name;
   }
 
@@ -77,17 +78,17 @@ public class Ou {
   }
 
   private void setParent(OuId parent) {
-    AssertionConcern.isNotNull(parent, ExceptionReason.INVALID_OU_ARG);
+    AssertionConcern.isNotNull(parent, ExceptionReason.INVALID_OU_ID);
     this.parent = parent;
   }
 
   private void setAuthorizationPolicy(AuthorizationPolicy authorizationPolicy) {
-    AssertionConcern.isNotNull(authorizationPolicy, ExceptionReason.INVALID_OU_ARG);
+    AssertionConcern.isNotNull(authorizationPolicy, ExceptionReason.INVALID_AUTHORIZATION_POLICY);
     this.authorizationPolicy = authorizationPolicy;
   }
 
   private void setAuthenticationPolicy(AuthenticationPolicy authenticationPolicy) {
-    AssertionConcern.isNotNull(authenticationPolicy, ExceptionReason.INVALID_OU_ARG);
+    AssertionConcern.isNotNull(authenticationPolicy, ExceptionReason.INVALID_AUTHENTICATION_POLICY);
     this.authenticationPolicy = authenticationPolicy;
   }
 
@@ -103,8 +104,8 @@ public class Ou {
 
   public void updateAuthenticationPolicy(
       @NonNull MfaPolicy mfaPolicy, @NonNull RecoveryPolicy recoveryPolicy) {
-    AssertionConcern.isNotNull(mfaPolicy, ExceptionReason.INVALID_OU_ARG);
-    AssertionConcern.isNotNull(recoveryPolicy, ExceptionReason.INVALID_OU_ARG);
+    AssertionConcern.isNotNull(mfaPolicy, ExceptionReason.INVALID_MFA_POLICY);
+    AssertionConcern.isNotNull(recoveryPolicy, ExceptionReason.INVALID_RECOVERY_POLICY);
 
     boolean shouldPublishEvent =
         !(this.isMfaPolicyAssigned(mfaPolicy)) || !(this.isRecoveryPolicyAssigned(recoveryPolicy));
@@ -115,11 +116,13 @@ public class Ou {
 
   public void updateAuthorizationPolicy(
       @NonNull List<LicenseContractId> licenseContractIds, @NonNull List<Role> roles) {
-    AssertionConcern.isNotNull(licenseContractIds, ExceptionReason.INVALID_OU_ARG);
-    AssertionConcern.isNotNull(roles, ExceptionReason.INVALID_OU_ARG);
+    AssertionConcern.isNotNull(licenseContractIds, ExceptionReason.INVALID_LICENSE_CONTRACT_ID);
+    AssertionConcern.isNotNull(roles, ExceptionReason.INVALID_ROLE_ID);
     AssertionConcern.isTrue(
-        this.isLicenseContractsInSameOrg(licenseContractIds), ExceptionReason.INVALID_OU_ARG);
-    AssertionConcern.isTrue(this.isRolesInSameOrg(roles), ExceptionReason.INVALID_OU_ARG);
+        this.isLicenseContractsInSameOrg(licenseContractIds),
+        ExceptionReason.UNAUTHORIZED_ACCESS_TO_LICENSE_CONTRACT);
+    AssertionConcern.isTrue(
+        this.isRolesInSameOrg(roles), ExceptionReason.UNAUTHORIZED_ACCESS_TO_ROLE);
 
     boolean isOuAnAudience =
         !(this.isLicenseContractIdsAssigned(licenseContractIds))
@@ -154,13 +157,21 @@ public class Ou {
       @NonNull Ou childOu,
       @NonNull Boolean shouldInheritAuthorizationPolicy,
       @NonNull Boolean shouldInheritAuthenticationPolicy) {
-    AssertionConcern.isNotNull(childOu, ExceptionReason.INVALID_OU_ARG);
-    AssertionConcern.isNotNull(shouldInheritAuthorizationPolicy, ExceptionReason.INVALID_OU_ARG);
-    AssertionConcern.isNotNull(shouldInheritAuthenticationPolicy, ExceptionReason.INVALID_OU_ARG);
-    AssertionConcern.isFalse(this.isChildInDifferentOrg(childOu), ExceptionReason.INVALID_OU_ARG);
-    AssertionConcern.isFalse(this.isChildSelf(childOu), ExceptionReason.INVALID_OU_ARG);
-    AssertionConcern.isFalse(this.isChildParent(childOu), ExceptionReason.INVALID_OU_ARG);
-    AssertionConcern.isFalse(this.isChildTopLevel(childOu), ExceptionReason.INVALID_OU_ARG);
+    AssertionConcern.isNotNull(childOu, ExceptionReason.INVALID_OU_ID);
+    AssertionConcern.isNotNull(
+        shouldInheritAuthorizationPolicy,
+        ExceptionReason.INVALID_SHOULD_INHERIT_AUTHORIZATION_POLICY);
+    AssertionConcern.isNotNull(
+        shouldInheritAuthenticationPolicy,
+        ExceptionReason.INVALID_SHOULD_INHERIT_AUTHENTICATION_POLICY);
+    AssertionConcern.isFalse(
+        this.isChildInDifferentOrg(childOu), ExceptionReason.UNAUTHORIZED_ACCESS_TO_OU);
+    AssertionConcern.isFalse(
+        this.isChildSelf(childOu), ExceptionReason.UNPROCESSABLE_CHILD_AND_PARENT_ARE_THE_SAME);
+    AssertionConcern.isFalse(
+        this.isChildParent(childOu), ExceptionReason.UNPROCESSABLE_CANNOT_ASSIGN_PARENT_TO_OU);
+    AssertionConcern.isFalse(
+        this.isChildTopLevel(childOu), ExceptionReason.UNPROCESSABLE_CANNOT_ASSIGN_TOP_LEVEL_TO_OU);
 
     if (childOu.parent() == this.id()) {
       return;
@@ -203,8 +214,9 @@ public class Ou {
   }
 
   public void synchronizeAuthorizationPolicyWith(@NonNull Ou parentOu) {
-    AssertionConcern.isNotNull(parentOu, ExceptionReason.INVALID_OU_ARG);
-    AssertionConcern.isTrue(isOuParent(parentOu), ExceptionReason.INVALID_OU_ARG);
+    AssertionConcern.isNotNull(parentOu, ExceptionReason.INVALID_OU_ID);
+    AssertionConcern.isTrue(
+        isOuParent(parentOu), ExceptionReason.UNPROCESSABLE_MUST_SYNCHRONIZE_WITH_PARENT);
 
     AuthorizationPolicy parentAuthorizationPolicy = parentOu.authorizationPolicy();
     boolean isOuAnAudience =
@@ -226,8 +238,9 @@ public class Ou {
   }
 
   public void synchronizeAuthenticationPolicyWith(@NonNull Ou parentOu) {
-    AssertionConcern.isNotNull(parentOu, ExceptionReason.INVALID_OU_ARG);
-    AssertionConcern.isTrue(this.isOuParent(parentOu), ExceptionReason.INVALID_OU_ARG);
+    AssertionConcern.isNotNull(parentOu, ExceptionReason.INVALID_OU_ID);
+    AssertionConcern.isTrue(
+        this.isOuParent(parentOu), ExceptionReason.UNPROCESSABLE_MUST_SYNCHRONIZE_WITH_PARENT);
 
     AuthenticationPolicy parentAuthenticationPolicy = parentOu.authenticationPolicy();
     boolean shouldPublishEvent =
@@ -260,6 +273,98 @@ public class Ou {
     // TODO: Publish updatedOuAuthenticationPolicy
 
   }
+
+//  public @NonNull RegistrationSession createRegistrationSession(
+//      List<FieldConfiguration> fieldConfigurations, String endUserId) {
+//    //    AssertionConcern.isNotNull(fieldConfigurations, ExceptionReason.INVALID_REG_SESSION_ARG);
+//
+//    List<FieldRegistration> fieldRegistrations =
+//        this.createFieldRegistrationWith(fieldConfigurations);
+//
+//    fieldRegistrations.add(this.createPasswordFieldRegistration());
+//
+//    ProfileRegPhase profileRegPhase = new ProfileRegPhase(fieldRegistrations, Status.REGISTRATION);
+//
+//    fieldRegistrations = this.createFieldRegistrationForMfaPhase();
+//
+//    MfaRegPhase mfaRegPhase =
+//        new MfaRegPhase(
+//            fieldRegistrations,
+//            Status.REGISTRATION,
+//            this.authenticationPolicy().mfaPolicy().enforcementDate().isDue());
+//
+//    return new RegistrationSession(
+//        this.orgId(),
+//        new RegSessionId(UUID.randomUUID().toString()),
+//        this.id(),
+//        endUserId,
+//        Mode.CREATE,
+//        profileRegPhase,
+//        mfaRegPhase,
+//        true);
+//  }
+
+//  private List<FieldRegistration> createFieldRegistrationWith(
+//      List<FieldConfiguration> fieldConfigurations) {
+//    List<FieldRegistration> fieldRegistrations = new ArrayList<>();
+//
+//    for (FieldConfiguration fieldConfiguration : fieldConfigurations) {
+//      FieldRegistration fieldRegistration =
+//          new FieldRegistration(
+//              fieldConfiguration.fieldName(),
+//              null,
+//              fieldConfiguration.fieldType(),
+//              fieldConfiguration.enforcementDate().isDue(),
+//              fieldConfiguration.isVerifiable(),
+//              false);
+//
+//      fieldRegistrations.add(fieldRegistration);
+//    }
+//
+//    return fieldRegistrations;
+//  }
+
+//  private FieldRegistration createPasswordFieldRegistration() {
+//    return new FieldRegistration(
+//        ReservedNames.PASSWORD.toString(), null, FieldType.STRING, true, false, false);
+//  }
+//
+//  private List<FieldRegistration> createFieldRegistrationForMfaPhase() {
+//    List<FieldRegistration> fieldRegistrations = new ArrayList<>();
+//    switch (this.authenticationPolicy().mfaPolicy().mfaType()) {
+//      case ANY ->
+//          fieldRegistrations =
+//              List.of(
+//                  this.createMfaEmailFieldRegistration(),
+//                  this.createMfaPhoneFieldRegistration(),
+//                  this.createMfaAuthenticatorAppFieldRegistration());
+//
+//      case AUTHENTICATOR_APP ->
+//          fieldRegistrations = List.of(this.createMfaAuthenticatorAppFieldRegistration());
+//    }
+//
+//    return fieldRegistrations;
+//  }
+
+//  private FieldRegistration createMfaPhoneFieldRegistration() {
+//    return new FieldRegistration(
+//        ReservedNames.MFA_PHONE.toString(), null, FieldType.PHONE, true, true, false);
+//  }
+//
+//  private FieldRegistration createMfaEmailFieldRegistration() {
+//    return new FieldRegistration(
+//        ReservedNames.MFA_EMAIL.toString(), null, FieldType.EMAIL, true, true, false);
+//  }
+//
+//  private FieldRegistration createMfaAuthenticatorAppFieldRegistration() {
+//    return new FieldRegistration(
+//        ReservedNames.MFA_AUTHENTICATOR_APP_SECRET.toString(),
+//        null,
+//        FieldType.SECRET,
+//        true,
+//        true,
+//        false);
+//  }
 
   public @NonNull OrgId orgId() {
     return this.orgId;

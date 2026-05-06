@@ -10,7 +10,7 @@ public record UsernameInput(@NonNull String username) implements InputtableValue
   }
 
   public void throwErrorIfUsernameIsInvalid(String username) {
-    AssertionConcern.isNotNull(username, ExceptionReason.INVALID_USERNAME_INPUT);
-    AssertionConcern.isNotBlank(username, ExceptionReason.INVALID_USERNAME_INPUT);
+    AssertionConcern.isNotNull(username, ExceptionReason.INVALID_USERNAME);
+    AssertionConcern.isNotBlank(username, ExceptionReason.INVALID_USERNAME);
   }
 }

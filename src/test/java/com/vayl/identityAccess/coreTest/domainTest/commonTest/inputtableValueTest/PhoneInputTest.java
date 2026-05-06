@@ -18,8 +18,8 @@ public class PhoneInputTest {
         if (i == 1) new PhoneInput(countryCode, null);
         assert false : "Exception expected";
       } catch (InvalidValueException e) {
-        assert e.reason() == ExceptionReason.INVALID_PHONE_NUMBER_INPUT
-            : "got " + e.reason() + " expected " + ExceptionReason.INVALID_PHONE_NUMBER_INPUT;
+        assert e.reason() == ExceptionReason.INVALID_PHONE_NUMBER
+            : "got " + e.reason() + " expected " + ExceptionReason.INVALID_PHONE_NUMBER;
       }
     }
   }
@@ -30,8 +30,8 @@ public class PhoneInputTest {
       new PhoneInput("1", "2025550125");
       assert false : "Exception expected";
     } catch (InvalidValueException e) {
-      assert e.reason() == ExceptionReason.INVALID_PHONE_NUMBER_INPUT
-          : "got " + e.reason() + " expected " + ExceptionReason.INVALID_PHONE_NUMBER_INPUT;
+      assert e.reason() == ExceptionReason.INVALID_PHONE_NUMBER
+          : "got " + e.reason() + " expected " + ExceptionReason.INVALID_PHONE_NUMBER;
     }
   }
 
@@ -41,8 +41,8 @@ public class PhoneInputTest {
       new PhoneInput("+1", "1234567");
       assert false : "Exception expected";
     } catch (InvalidValueException e) {
-      assert e.reason() == ExceptionReason.INVALID_PHONE_NUMBER_INPUT
-          : "got " + e.reason() + " expected " + ExceptionReason.INVALID_PHONE_NUMBER_INPUT;
+      assert e.reason() == ExceptionReason.INVALID_PHONE_NUMBER
+          : "got " + e.reason() + " expected " + ExceptionReason.INVALID_PHONE_NUMBER;
     }
   }
 

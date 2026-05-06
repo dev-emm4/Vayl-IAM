@@ -16,12 +16,12 @@ public record PhoneInput(@NonNull String countryCode, @NonNull String subscriber
   }
 
   private void throwErrorIfPhoneInvalid(String countryCode, String subscriberNumber) {
-    AssertionConcern.isNotNull(countryCode, ExceptionReason.INVALID_PHONE_NUMBER_INPUT);
-    AssertionConcern.isNotNull(subscriberNumber, ExceptionReason.INVALID_PHONE_NUMBER_INPUT);
-    AssertionConcern.isNotBlank(countryCode, ExceptionReason.INVALID_PHONE_NUMBER_INPUT);
-    AssertionConcern.isNotBlank(subscriberNumber, ExceptionReason.INVALID_PHONE_NUMBER_INPUT);
+    AssertionConcern.isNotNull(countryCode, ExceptionReason.INVALID_PHONE_NUMBER);
+    AssertionConcern.isNotNull(subscriberNumber, ExceptionReason.INVALID_PHONE_NUMBER);
+    AssertionConcern.isNotBlank(countryCode, ExceptionReason.INVALID_PHONE_NUMBER);
+    AssertionConcern.isNotBlank(subscriberNumber, ExceptionReason.INVALID_PHONE_NUMBER);
     String normalized = countryCode.trim() + subscriberNumber.trim();
     AssertionConcern.isValid(
-        new PhoneValidator(), normalized, ExceptionReason.INVALID_PHONE_NUMBER_INPUT);
+        new PhoneValidator(), normalized, ExceptionReason.INVALID_PHONE_NUMBER);
   }
 }

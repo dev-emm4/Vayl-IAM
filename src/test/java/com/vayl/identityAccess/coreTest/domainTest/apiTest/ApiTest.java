@@ -37,8 +37,8 @@ public class ApiTest {
 
       assert false : "Exception expected";
     } catch (InvalidValueException e) {
-      assert e.reason() == ExceptionReason.INVALID_API_ARG
-          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_API_ARG;
+      assert e.reason() == ExceptionReason.INVALID_API_NAME
+          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_API_NAME;
     }
   }
 
@@ -57,8 +57,8 @@ public class ApiTest {
 
         assert false : "Exception expected";
       } catch (InvalidValueException e) {
-        assert e.reason() == ExceptionReason.INVALID_API_ARG
-            : " got: " + e.reason() + " expected: " + ExceptionReason.INVALID_API_ARG;
+        assert List.of(ExceptionReason.INVALID_API_ID, ExceptionReason.INVALID_API_NAME)
+            .contains(e.reason());
       }
     }
   }
@@ -73,8 +73,7 @@ public class ApiTest {
 
       assert false : "Exception expected";
     } catch (InvalidValueException e) {
-      assert e.reason().equals(ExceptionReason.INVALID_PERMISSION_ARG)
-          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_PERMISSION_ARG;
+      assert e.reason().equals(ExceptionReason.INVALID_PERMISSION_NAME);
     }
   }
 
@@ -87,8 +86,7 @@ public class ApiTest {
 
       assert false : "Exception expected";
     } catch (InvalidValueException e) {
-      assert e.reason().equals(ExceptionReason.INVALID_PERMISSION_ARG)
-          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_PERMISSION_ARG;
+      assert e.reason().equals(ExceptionReason.INVALID_PERMISSION_NAME);
     }
   }
 
@@ -129,8 +127,7 @@ public class ApiTest {
 
       assert false : "Exception expected";
     } catch (InvalidValueException e) {
-      assert e.reason().equals(ExceptionReason.INVALID_ROLE_ARG)
-          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_ROLE_ARG;
+      assert e.reason().equals(ExceptionReason.UNPROCESSABLE_PERMISSION_BELONG_TO_DIFFERENT_API);
     }
   }
 
@@ -145,8 +142,7 @@ public class ApiTest {
 
       assert false : "Exception expected";
     } catch (InvalidValueException e) {
-      assert e.reason().equals(ExceptionReason.INVALID_ROLE_ARG)
-          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_ROLE_ARG;
+      assert e.reason().equals(ExceptionReason.INVALID_ROLE_NAME);
     }
   }
 
@@ -166,8 +162,8 @@ public class ApiTest {
 
         assert false : "Exception expected";
       } catch (InvalidValueException e) {
-        assert e.reason().equals(ExceptionReason.INVALID_ROLE_ARG)
-            : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_ROLE_ARG;
+        assert List.of(ExceptionReason.INVALID_PERMISSION_ID, ExceptionReason.INVALID_ROLE_NAME)
+            .contains(e.reason());
       }
     }
   }
@@ -214,8 +210,7 @@ public class ApiTest {
 
       assert false : "Exception expected";
     } catch (InvalidValueException e) {
-      assert e.reason().equals(ExceptionReason.INVALID_ROLE_ARG)
-          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_ROLE_ARG;
+      assert e.reason().equals(ExceptionReason.UNPROCESSABLE_PERMISSION_BELONG_TO_DIFFERENT_API);
     }
   }
 
@@ -231,8 +226,7 @@ public class ApiTest {
 
       assert false : "Exception expected";
     } catch (InvalidValueException e) {
-      assert e.reason().equals(ExceptionReason.INVALID_ROLE_ARG)
-          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_ROLE_ARG;
+      assert e.reason().equals(ExceptionReason.INVALID_ROLE_NAME);
     }
   }
 
@@ -255,8 +249,11 @@ public class ApiTest {
 
         assert false : "Exception expected";
       } catch (InvalidValueException e) {
-        assert e.reason().equals(ExceptionReason.INVALID_ROLE_ARG)
-            : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_ROLE_ARG;
+        assert List.of(
+                ExceptionReason.INVALID_PERMISSION_ID,
+                ExceptionReason.INVALID_ROLE_NAME,
+                ExceptionReason.INVALID_ORG_ID)
+            .contains(e.reason());
       }
     }
   }

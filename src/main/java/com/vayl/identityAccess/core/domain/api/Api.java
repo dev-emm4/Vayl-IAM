@@ -22,13 +22,13 @@ public class Api {
   }
 
   private void setId(ApiId apiId) {
-    AssertionConcern.isNotNull(apiId, ExceptionReason.INVALID_API_ARG);
+    AssertionConcern.isNotNull(apiId, ExceptionReason.INVALID_API_ID);
     this.apiId = apiId;
   }
 
   private void setName(String name) {
-    AssertionConcern.isNotNull(name, ExceptionReason.INVALID_API_ARG);
-    AssertionConcern.isNotBlank(name, ExceptionReason.INVALID_API_ARG);
+    AssertionConcern.isNotNull(name, ExceptionReason.INVALID_API_NAME);
+    AssertionConcern.isNotBlank(name, ExceptionReason.INVALID_API_NAME);
     this.name = name;
   }
 

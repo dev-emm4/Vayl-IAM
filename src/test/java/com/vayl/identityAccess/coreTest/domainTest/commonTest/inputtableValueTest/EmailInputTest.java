@@ -13,8 +13,8 @@ public class EmailInputTest {
       new EmailInput("not-an-email");
       assert false : "Exception expected";
     } catch (InvalidValueException e) {
-      assert e.reason() == ExceptionReason.INVALID_EMAIL_INPUT
-          : "got " + e.reason() + " expected " + ExceptionReason.INVALID_EMAIL_INPUT;
+      assert e.reason() == ExceptionReason.INVALID_EMAIL
+          : "got " + e.reason() + " expected " + ExceptionReason.INVALID_EMAIL;
     }
   }
 
@@ -24,8 +24,8 @@ public class EmailInputTest {
       new EmailInput(null);
       assert false : "Exception expected";
     } catch (InvalidValueException e) {
-      assert e.reason() == ExceptionReason.INVALID_EMAIL_INPUT
-          : "got " + e.reason() + " expected " + ExceptionReason.INVALID_EMAIL_INPUT;
+      assert e.reason() == ExceptionReason.INVALID_EMAIL
+          : "got " + e.reason() + " expected " + ExceptionReason.INVALID_EMAIL;
     }
   }
 

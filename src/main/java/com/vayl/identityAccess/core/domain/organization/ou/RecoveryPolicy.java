@@ -1,4 +1,4 @@
-package com.vayl.identityAccess.core.domain.organization.ou.authenticationPolicy;
+package com.vayl.identityAccess.core.domain.organization.ou;
 
 import com.vayl.identityAccess.core.domain.common.AssertionConcern;
 import com.vayl.identityAccess.core.domain.common.DomainException.ExceptionReason;
@@ -7,7 +7,7 @@ import org.jspecify.annotations.NonNull;
 
 public record RecoveryPolicy(MfaType mfaType) {
   public RecoveryPolicy(@NonNull MfaType mfaType) {
-    AssertionConcern.isNotNull(mfaType, ExceptionReason.INVALID_OU_ARG);
+    AssertionConcern.isNotNull(mfaType, ExceptionReason.INVALID_MFA_TYPE);
     this.mfaType = mfaType;
   }
 

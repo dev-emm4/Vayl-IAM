@@ -13,8 +13,8 @@ public class UsernameInputTest {
       new UsernameInput("");
       assert false : "Exception expected";
     } catch (InvalidValueException e) {
-      assert e.reason() == ExceptionReason.INVALID_USERNAME_INPUT
-          : "got " + e.reason() + " expected " + ExceptionReason.INVALID_USERNAME_INPUT;
+      assert e.reason() == ExceptionReason.INVALID_USERNAME
+          : "got " + e.reason() + " expected " + ExceptionReason.INVALID_USERNAME;
     }
   }
 
@@ -24,8 +24,8 @@ public class UsernameInputTest {
       new UsernameInput(null);
       assert false : "Exception expected";
     } catch (InvalidValueException e) {
-      assert e.reason() == ExceptionReason.INVALID_USERNAME_INPUT
-          : "got " + e.reason() + " expected " + ExceptionReason.INVALID_USERNAME_INPUT;
+      assert e.reason() == ExceptionReason.INVALID_USERNAME
+          : "got " + e.reason() + " expected " + ExceptionReason.INVALID_USERNAME;
     }
   }
 

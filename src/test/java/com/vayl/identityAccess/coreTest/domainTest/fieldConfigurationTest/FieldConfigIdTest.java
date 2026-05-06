@@ -15,8 +15,7 @@ public class FieldConfigIdTest {
 
       assert false : "Exception expected";
     } catch (InvalidValueException e) {
-      assert e.reason().equals(ExceptionReason.INVALID_FIELD_CONFIG_ARG)
-          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_FIELD_CONFIG_ARG;
+      assert e.reason().equals(ExceptionReason.INVALID_FIELD_CONFIG_ID);
     }
   }
 
@@ -29,8 +28,7 @@ public class FieldConfigIdTest {
 
       assert false : "Exception expected";
     } catch (InvalidValueException e) {
-      assert e.reason().equals(ExceptionReason.INVALID_FIELD_CONFIG_ARG)
-          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_FIELD_CONFIG_ARG;
+      assert e.reason().equals(ExceptionReason.INVALID_FIELD_CONFIG_ID);
     }
   }
 

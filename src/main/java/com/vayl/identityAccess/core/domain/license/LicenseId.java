@@ -7,8 +7,8 @@ import org.jspecify.annotations.NonNull;
 
 public record LicenseId(@NonNull String id) {
   public LicenseId {
-    AssertionConcern.isNotNull(id, ExceptionReason.INVALID_LICENSE_ARG);
-    AssertionConcern.isValid(new UuidValidator(), id, ExceptionReason.INVALID_LICENSE_ARG);
+    AssertionConcern.isNotNull(id, ExceptionReason.INVALID_LICENSE_ID);
+    AssertionConcern.isValid(new UuidValidator(), id, ExceptionReason.INVALID_LICENSE_ID);
   }
 
   @Override

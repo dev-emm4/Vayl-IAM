@@ -8,5 +8,7 @@ public enum FieldType {
     USERNAME,
     PHONE,
     EMAIL,
-    PASSCODE
+    PASSCODE,
+    SECRET,
+    PASSWORD
 }

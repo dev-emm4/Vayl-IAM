@@ -11,8 +11,8 @@ public record ApiId(@NonNull String id) implements LicenseRestrictable {
   }
 
   private void throwErrorOnInvalidId(String id) {
-    AssertionConcern.isNotNull(id, ExceptionReason.INVALID_API_ARG);
-    AssertionConcern.isValid(new UrlValidator(), id, ExceptionReason.INVALID_API_ARG);
+    AssertionConcern.isNotNull(id, ExceptionReason.INVALID_API_ID);
+    AssertionConcern.isValid(new UrlValidator(), id, ExceptionReason.INVALID_API_ID);
   }
 
   @Override

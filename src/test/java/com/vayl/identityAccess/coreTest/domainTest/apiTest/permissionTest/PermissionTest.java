@@ -13,8 +13,7 @@ public class PermissionTest {
 
       assert false : "Exception expected";
     } catch (InvalidValueException e) {
-      assert e.reason().equals(ExceptionReason.INVALID_PERMISSION_ARG)
-          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_PERMISSION_ARG;
+      assert e.reason().equals(ExceptionReason.INVALID_PERMISSION_ID);
     }
   }
 }

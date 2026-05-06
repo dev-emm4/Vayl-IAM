@@ -11,10 +11,10 @@ public record AddressInput(@NonNull String street, @NonNull String state, @NonNu
   }
 
   private void throwErrorIfAddressIsInvalid(String street, String state, String country) {
-    AssertionConcern.isNotNull(street, ExceptionReason.INVALID_ADDRESS_INPUT);
-    AssertionConcern.isNotNull(state, ExceptionReason.INVALID_ADDRESS_INPUT);
-    AssertionConcern.isNotBlank(state, ExceptionReason.INVALID_ADDRESS_INPUT);
-    AssertionConcern.isNotNull(country, ExceptionReason.INVALID_ADDRESS_INPUT);
-    AssertionConcern.isNotBlank(country, ExceptionReason.INVALID_ADDRESS_INPUT);
+    AssertionConcern.isNotNull(street, ExceptionReason.INVALID_ADDRESS);
+    AssertionConcern.isNotNull(state, ExceptionReason.INVALID_ADDRESS);
+    AssertionConcern.isNotBlank(state, ExceptionReason.INVALID_ADDRESS);
+    AssertionConcern.isNotNull(country, ExceptionReason.INVALID_ADDRESS);
+    AssertionConcern.isNotBlank(country, ExceptionReason.INVALID_ADDRESS);
   }
 }

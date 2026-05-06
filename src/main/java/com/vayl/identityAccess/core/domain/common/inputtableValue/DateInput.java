@@ -2,7 +2,7 @@ package com.vayl.identityAccess.core.domain.common.inputtableValue;
 
 import com.vayl.identityAccess.core.domain.common.AssertionConcern;
 import com.vayl.identityAccess.core.domain.common.DomainException.ExceptionReason;
-import com.vayl.identityAccess.core.domain.common.validator.DateValidator;
+import com.vayl.identityAccess.core.domain.common.validator.SimpleDateValidator;
 import org.jspecify.annotations.NonNull;
 
 public record DateInput(@NonNull String date) implements InputtableValue {
@@ -11,9 +11,8 @@ public record DateInput(@NonNull String date) implements InputtableValue {
   }
 
   private void throwErrorOnInvalidDate(String date) {
-    // This specifically looks for the YYYY-MM-DDTHH:mm:ssZ format
-    AssertionConcern.isNotNull(date, ExceptionReason.INVALID_DATE_INPUT);
-    AssertionConcern.isValid(new DateValidator(), date, ExceptionReason.INVALID_DATE_INPUT);
+    AssertionConcern.isNotNull(date, ExceptionReason.INVALID_DATE);
+    AssertionConcern.isValid(new SimpleDateValidator(), date, ExceptionReason.INVALID_DATE);
   }
 
   @Override

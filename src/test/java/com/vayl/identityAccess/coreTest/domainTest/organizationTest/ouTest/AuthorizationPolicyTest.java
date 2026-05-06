@@ -1,14 +1,14 @@
-package com.vayl.identityAccess.coreTest.domainTest.organizationTest.ouTest.authorizationPolicyTest;
+package com.vayl.identityAccess.coreTest.domainTest.organizationTest.ouTest;
 
 import com.vayl.identityAccess.core.domain.api.role.RoleId;
 import com.vayl.identityAccess.core.domain.common.DomainException.ExceptionReason;
 import com.vayl.identityAccess.core.domain.common.DomainException.InvalidValueException;
-import com.vayl.identityAccess.core.domain.common.inputtableValue.DateInput;
+import com.vayl.identityAccess.core.domain.common.Schedule;
 import com.vayl.identityAccess.core.domain.license.LicenseId;
 import com.vayl.identityAccess.core.domain.organization.OrgId;
 import com.vayl.identityAccess.core.domain.organization.licenseContract.LicenseContract;
 import com.vayl.identityAccess.core.domain.organization.licenseContract.LicenseContractId;
-import com.vayl.identityAccess.core.domain.organization.ou.authorizationPolicy.AuthorizationPolicy;
+import com.vayl.identityAccess.core.domain.organization.ou.AuthorizationPolicy;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -47,8 +47,7 @@ public class AuthorizationPolicyTest {
 
         assert false : "Exception expected";
       } catch (InvalidValueException e) {
-        assert e.reason() == ExceptionReason.INVALID_OU_ARG
-            : "got: " + e.reason() + "expected: " + ExceptionReason.INVALID_OU_ARG;
+        assert List.of(ExceptionReason.INVALID_LICENSE_CONTRACT_ID, ExceptionReason.INVALID_ROLE_ID, ExceptionReason.INVALID_AUTHORIZATION_POLICY_INHERITANCE).contains(e.reason());
       }
     }
   }
@@ -96,8 +95,8 @@ public class AuthorizationPolicyTest {
 
       assert false : "Exception expected";
     } catch (InvalidValueException e) {
-      assert e.reason() == ExceptionReason.INVALID_OU_ARG
-          : "got: " + e.reason() + "expected: " + ExceptionReason.INVALID_OU_ARG;
+      assert e.reason() == ExceptionReason.INVALID_AUTHORIZATION_POLICY_INHERITANCE
+          : "got: " + e.reason() + "expected: " + ExceptionReason.INVALID_AUTHORIZATION_POLICY_INHERITANCE;
     }
   }
 
@@ -107,7 +106,7 @@ public class AuthorizationPolicyTest {
     LicenseContractId licenseContractId = new LicenseContractId(orgId, licenseId);
     int amountAllocated = 10;
     int amountRemaining = 10;
-    DateInput expireAt = new DateInput("2023-12-01T00:00:00Z");
+    Schedule expireAt = new Schedule("2023-12-01T00:00:00Z");
     return new LicenseContract(licenseContractId, amountAllocated, amountRemaining, expireAt);
   }
 }

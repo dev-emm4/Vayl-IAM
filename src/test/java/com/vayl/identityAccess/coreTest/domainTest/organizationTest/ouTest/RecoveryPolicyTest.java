@@ -1,9 +1,9 @@
-package com.vayl.identityAccess.coreTest.domainTest.organizationTest.ouTest.authenticationPolicyTest;
+package com.vayl.identityAccess.coreTest.domainTest.organizationTest.ouTest;
 
 import com.vayl.identityAccess.core.domain.common.DomainException.ExceptionReason;
 import com.vayl.identityAccess.core.domain.common.DomainException.InvalidValueException;
 import com.vayl.identityAccess.core.domain.common.MfaType;
-import com.vayl.identityAccess.core.domain.organization.ou.authenticationPolicy.RecoveryPolicy;
+import com.vayl.identityAccess.core.domain.organization.ou.RecoveryPolicy;
 import org.junit.jupiter.api.Test;
 
 public class RecoveryPolicyTest {
@@ -14,8 +14,8 @@ public class RecoveryPolicyTest {
 
       assert false : "Exception expected when passing null parameter";
     } catch (InvalidValueException e) {
-      assert e.reason().equals(ExceptionReason.INVALID_OU_ARG)
-          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_OU_ARG;
+      assert e.reason().equals(ExceptionReason.INVALID_MFA_TYPE)
+          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_MFA_TYPE;
     }
   }
 

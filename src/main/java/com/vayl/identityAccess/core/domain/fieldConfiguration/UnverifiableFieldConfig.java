@@ -2,50 +2,48 @@ package com.vayl.identityAccess.core.domain.fieldConfiguration;
 
 import com.vayl.identityAccess.core.domain.common.AssertionConcern;
 import com.vayl.identityAccess.core.domain.common.DomainException.ExceptionReason;
-import com.vayl.identityAccess.core.domain.common.inputtableValue.DateInput;
+import com.vayl.identityAccess.core.domain.common.Schedule;
 import com.vayl.identityAccess.core.domain.common.validator.UnverifiableFieldTypeValidator;
 import org.jspecify.annotations.NonNull;
 
 public class UnverifiableFieldConfig implements FieldConfiguration {
   private FieldConfigId id;
   private FieldType fieldType;
-  private DateInput enforcementDateInput;
+  private Schedule enforcementDate;
 
   public UnverifiableFieldConfig(
-      @NonNull FieldConfigId id,
-      @NonNull FieldType fieldType,
-      @NonNull DateInput enforcementDateInput) {
+      @NonNull FieldConfigId id, @NonNull FieldType fieldType, @NonNull Schedule enforcementDate) {
     this.setId(id);
     this.setFieldType(fieldType);
-    this.setEnforcementDate(enforcementDateInput);
+    this.setEnforcementDate(enforcementDate);
   }
 
   private void setId(FieldConfigId id) {
-    AssertionConcern.isNotNull(id, ExceptionReason.INVALID_FIELD_CONFIG_ARG);
+    AssertionConcern.isNotNull(id, ExceptionReason.INVALID_FIELD_CONFIG_ID);
     this.id = id;
   }
 
   private void setFieldType(FieldType fieldType) {
-    AssertionConcern.isNotNull(fieldType, ExceptionReason.INVALID_FIELD_CONFIG_ARG);
+    AssertionConcern.isNotNull(fieldType, ExceptionReason.INVALID_FIELD_CONFIG_TYPE);
     AssertionConcern.isValid(
         new UnverifiableFieldTypeValidator(),
         fieldType.toString(),
-        ExceptionReason.INVALID_FIELD_CONFIG_ARG);
+        ExceptionReason.INVALID_FIELD_CONFIG_TYPE);
 
     this.fieldType = fieldType;
   }
 
-  public void modify(@NonNull DateInput enforcementDateInput) {
-    this.setEnforcementDate(enforcementDateInput);
+  public void modify(@NonNull Schedule enforcementDate) {
+    this.setEnforcementDate(enforcementDate);
   }
 
-  private void setEnforcementDate(DateInput enforcementDateInput) {
-    AssertionConcern.isNotNull(enforcementDateInput, ExceptionReason.INVALID_FIELD_CONFIG_ARG);
-    this.enforcementDateInput = enforcementDateInput;
+  private void setEnforcementDate(Schedule enforcementDate) {
+    AssertionConcern.isNotNull(enforcementDate, ExceptionReason.INVALID_ENFORCEMENT_DATE);
+    this.enforcementDate = enforcementDate;
   }
 
-  public @NonNull DateInput enforcementDate() {
-    return this.enforcementDateInput;
+  public @NonNull Schedule enforcementDate() {
+    return this.enforcementDate;
   }
 
   public @NonNull FieldType fieldType() {

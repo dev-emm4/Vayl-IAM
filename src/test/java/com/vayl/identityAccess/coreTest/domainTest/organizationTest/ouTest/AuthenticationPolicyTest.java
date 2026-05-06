@@ -1,20 +1,22 @@
-package com.vayl.identityAccess.coreTest.domainTest.organizationTest.ouTest.authenticationPolicyTest;
+package com.vayl.identityAccess.coreTest.domainTest.organizationTest.ouTest;
 
 import com.vayl.identityAccess.core.domain.common.DomainException.ExceptionReason;
 import com.vayl.identityAccess.core.domain.common.DomainException.InvalidValueException;
 import com.vayl.identityAccess.core.domain.common.MfaType;
-import com.vayl.identityAccess.core.domain.common.inputtableValue.DateInput;
-import com.vayl.identityAccess.core.domain.organization.ou.authenticationPolicy.AuthenticationPolicy;
-import com.vayl.identityAccess.core.domain.organization.ou.authenticationPolicy.MfaPolicy;
-import com.vayl.identityAccess.core.domain.organization.ou.authenticationPolicy.RecoveryPolicy;
+import com.vayl.identityAccess.core.domain.common.Schedule;
+import com.vayl.identityAccess.core.domain.organization.ou.AuthenticationPolicy;
+import com.vayl.identityAccess.core.domain.organization.ou.MfaPolicy;
+import com.vayl.identityAccess.core.domain.organization.ou.RecoveryPolicy;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
 
 public class AuthenticationPolicyTest {
   @Test
   void constructor_withNullParameters_throwException() {
     RecoveryPolicy recoveryPolicy = new RecoveryPolicy(MfaType.EMAIL);
     MfaPolicy mfaPolicy =
-        new MfaPolicy(MfaType.AUTHENTICATOR_APP, new DateInput("2023-12-01T00:00:00Z"));
+        new MfaPolicy(MfaType.AUTHENTICATOR_APP, new Schedule("2023-12-01T00:00:00Z"));
 
     for (int i = 0; i < 3; i++) {
       try {
@@ -24,8 +26,7 @@ public class AuthenticationPolicyTest {
 
         assert false : "Exception expected";
       } catch (InvalidValueException e) {
-        assert e.reason() == ExceptionReason.INVALID_OU_ARG
-            : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_OU_ARG;
+        assert List.of(ExceptionReason.INVALID_RECOVERY_POLICY, ExceptionReason.INVALID_MFA_POLICY, ExceptionReason.INVALID_AUTHENTICATION_POLICY_INHERITANCE).contains(e.reason());
       }
     }
   }
@@ -34,7 +35,7 @@ public class AuthenticationPolicyTest {
   void constructor_withValidParameters_createAuthenticationPolicy() {
     RecoveryPolicy recoveryPolicy = new RecoveryPolicy(MfaType.EMAIL);
     MfaPolicy mfaPolicy =
-        new MfaPolicy(MfaType.AUTHENTICATOR_APP, new DateInput("2023-12-01T00:00:00Z"));
+        new MfaPolicy(MfaType.AUTHENTICATOR_APP, new Schedule("2023-12-01T00:00:00Z"));
     boolean isInherited = false;
 
     AuthenticationPolicy authenticationPolicy =
@@ -52,7 +53,7 @@ public class AuthenticationPolicyTest {
   public void toString_validAttributes_returnCorrectString() {
     RecoveryPolicy recoveryPolicy = new RecoveryPolicy(MfaType.EMAIL);
     MfaPolicy mfaPolicy =
-        new MfaPolicy(MfaType.AUTHENTICATOR_APP, new DateInput("2023-12-01T00:00:00Z"));
+        new MfaPolicy(MfaType.AUTHENTICATOR_APP, new Schedule("2023-12-01T00:00:00Z"));
     AuthenticationPolicy policy = new AuthenticationPolicy(recoveryPolicy, mfaPolicy, false);
 
     String expectedString =
@@ -74,7 +75,7 @@ public class AuthenticationPolicyTest {
     try {
       RecoveryPolicy recoveryPolicy = new RecoveryPolicy(MfaType.EMAIL);
       MfaPolicy mfaPolicy =
-          new MfaPolicy(MfaType.AUTHENTICATOR_APP, new DateInput("2023-12-01T00:00:00Z"));
+          new MfaPolicy(MfaType.AUTHENTICATOR_APP, new Schedule("2023-12-01T00:00:00Z"));
       AuthenticationPolicy originalPolicy =
           new AuthenticationPolicy(recoveryPolicy, mfaPolicy, false);
 
@@ -82,8 +83,8 @@ public class AuthenticationPolicyTest {
 
       assert false : "Exception expected";
     } catch (InvalidValueException e) {
-      assert e.reason() == ExceptionReason.INVALID_OU_ARG
-          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_OU_ARG;
+      assert e.reason() == ExceptionReason.INVALID_AUTHENTICATION_POLICY_INHERITANCE
+          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_AUTHENTICATION_POLICY_INHERITANCE;
     }
   }
 
@@ -91,7 +92,7 @@ public class AuthenticationPolicyTest {
   public void copyWith_withValidParameters_copiesPolicy() {
     RecoveryPolicy recoveryPolicy = new RecoveryPolicy(MfaType.EMAIL);
     MfaPolicy mfaPolicy =
-        new MfaPolicy(MfaType.AUTHENTICATOR_APP, new DateInput("2023-12-01T00:00:00Z"));
+        new MfaPolicy(MfaType.AUTHENTICATOR_APP, new Schedule("2023-12-01T00:00:00Z"));
     AuthenticationPolicy originalPolicy =
         new AuthenticationPolicy(recoveryPolicy, mfaPolicy, false);
 
@@ -102,8 +103,6 @@ public class AuthenticationPolicyTest {
         : "got: " + copiedPolicy.recoveryPolicy() + " expected: " + originalPolicy.recoveryPolicy();
     assert copiedPolicy.mfaPolicy().equals(originalPolicy.mfaPolicy())
         : "got: " + copiedPolicy.mfaPolicy() + " expected: " + originalPolicy.mfaPolicy();
-    ;
     assert copiedPolicy.isInherited() : "got: " + false + " expected: " + true;
-    ;
   }
 }

@@ -5,6 +5,7 @@ import com.vayl.identityAccess.core.domain.common.DomainException.InvalidValueEx
 import com.vayl.identityAccess.core.domain.license.LicenseId;
 import com.vayl.identityAccess.core.domain.organization.OrgId;
 import com.vayl.identityAccess.core.domain.organization.licenseContract.LicenseContractId;
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
@@ -21,8 +22,7 @@ public class LicenseContractIdTest {
 
         assert false : "Exception expected";
       } catch (InvalidValueException e) {
-        assert e.reason().equals(ExceptionReason.INVALID_LICENSE_CONTRACT_ARG)
-            : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_LICENSE_CONTRACT_ARG;
+        assert List.of(ExceptionReason.INVALID_ORG_ID, ExceptionReason.INVALID_LICENSE_ID).contains(e.reason());
       }
     }
   }

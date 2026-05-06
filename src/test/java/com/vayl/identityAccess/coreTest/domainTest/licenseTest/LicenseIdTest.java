@@ -16,8 +16,7 @@ public class LicenseIdTest {
 
       assert false : "Exception expected";
     } catch (InvalidValueException e) {
-      assert e.reason().equals(ExceptionReason.INVALID_LICENSE_ARG)
-          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_LICENSE_ARG;
+      assert e.reason().equals(ExceptionReason.INVALID_LICENSE_ID);
     }
   }
 
@@ -28,8 +27,7 @@ public class LicenseIdTest {
 
       assert false : "Exception expected";
     } catch (InvalidValueException e) {
-      assert e.reason().equals(ExceptionReason.INVALID_LICENSE_ARG)
-          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_LICENSE_ARG;
+      assert e.reason().equals(ExceptionReason.INVALID_LICENSE_ID);
     }
   }
 
@@ -38,8 +36,7 @@ public class LicenseIdTest {
     String validId = UUID.randomUUID().toString();
     LicenseId licenseId = new LicenseId(validId);
 
-    assert licenseId.id().equals(validId)
-        : "got: " + licenseId.id() + " expected: " + validId;
+    assert licenseId.id().equals(validId) : "got: " + licenseId.id() + " expected: " + validId;
   }
 
   @Test
@@ -47,7 +44,6 @@ public class LicenseIdTest {
     String validId = UUID.randomUUID().toString();
     LicenseId licenseId = new LicenseId(validId);
 
-    assert licenseId.toString().equals(validId)
-        : "got: " + licenseId + " expected: " + validId;
+    assert licenseId.toString().equals(validId) : "got: " + licenseId + " expected: " + validId;
   }
 }

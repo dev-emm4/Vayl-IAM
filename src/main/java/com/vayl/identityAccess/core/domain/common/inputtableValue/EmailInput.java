@@ -11,7 +11,7 @@ public record EmailInput(@NonNull String email) implements InputtableValue {
   }
 
   private void throwErrorIfInputIsInvalid(String email) {
-    AssertionConcern.isNotNull(email, ExceptionReason.INVALID_EMAIL_INPUT);
-    AssertionConcern.isValid(new EmailChecker(), email, ExceptionReason.INVALID_EMAIL_INPUT);
+    AssertionConcern.isNotNull(email, ExceptionReason.INVALID_EMAIL);
+    AssertionConcern.isValid(new EmailChecker(), email, ExceptionReason.INVALID_EMAIL);
   }
 }

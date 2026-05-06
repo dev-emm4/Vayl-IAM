@@ -14,8 +14,8 @@ public class IntegerInputTest {
 
       assert false : "Exception expected";
     } catch (InvalidValueException e) {
-      assert e.reason() == ExceptionReason.INVALID_INTEGER_INPUT
-          : "got " + e.reason() + " expected " + ExceptionReason.INVALID_INTEGER_INPUT;
+      assert e.reason() == ExceptionReason.INVALID_INTEGER
+          : "got " + e.reason() + " expected " + ExceptionReason.INVALID_INTEGER;
     }
   }
 

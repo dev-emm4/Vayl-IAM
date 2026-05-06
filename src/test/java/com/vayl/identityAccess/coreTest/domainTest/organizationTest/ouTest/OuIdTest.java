@@ -16,8 +16,7 @@ public class OuIdTest {
 
       assert false : "Exception expected";
     } catch (InvalidValueException e) {
-      assert e.reason().equals(ExceptionReason.INVALID_OU_ARG)
-          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_OU_ARG;
+      assert e.reason().equals(ExceptionReason.INVALID_OU_ID);
     }
   }
 
@@ -28,8 +27,7 @@ public class OuIdTest {
 
       assert false : "Exception expected";
     } catch (InvalidValueException e) {
-      assert e.reason().equals(ExceptionReason.INVALID_OU_ARG)
-          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_OU_ARG;
+      assert e.reason().equals(ExceptionReason.INVALID_OU_ID);
     }
   }
 

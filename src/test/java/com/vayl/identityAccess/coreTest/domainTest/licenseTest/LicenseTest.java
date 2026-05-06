@@ -2,12 +2,13 @@ package com.vayl.identityAccess.coreTest.domainTest.licenseTest;
 
 import com.vayl.identityAccess.core.domain.common.DomainException.ExceptionReason;
 import com.vayl.identityAccess.core.domain.common.DomainException.InvalidValueException;
-import com.vayl.identityAccess.core.domain.common.inputtableValue.DateInput;
+import com.vayl.identityAccess.core.domain.common.Schedule;
 import com.vayl.identityAccess.core.domain.license.License;
 import com.vayl.identityAccess.core.domain.license.LicenseId;
 import com.vayl.identityAccess.core.domain.organization.OrgId;
 import com.vayl.identityAccess.core.domain.organization.licenseContract.LicenseContract;
 import com.vayl.identityAccess.core.domain.organization.licenseContract.LicenseContractId;
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
@@ -33,8 +34,7 @@ public class LicenseTest {
 
       assert false : "Exception expected";
     } catch (InvalidValueException e) {
-      assert e.reason().equals(ExceptionReason.INVALID_LICENSE_ARG)
-          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_LICENSE_ARG;
+      assert e.reason().equals(ExceptionReason.INVALID_LICENSE_NAME);
     }
   }
 
@@ -50,8 +50,8 @@ public class LicenseTest {
 
         assert false : "Exception expected";
       } catch (InvalidValueException e) {
-        assert e.reason().equals(ExceptionReason.INVALID_LICENSE_ARG)
-            : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_LICENSE_ARG;
+        assert List.of(ExceptionReason.INVALID_LICENSE_NAME, ExceptionReason.INVALID_LICENSE_ID)
+            .contains(e.reason());
       }
     }
   }
@@ -61,7 +61,7 @@ public class LicenseTest {
     License license = this.createLicense();
     OrgId orgId = new OrgId(UUID.randomUUID().toString());
     int amountAllocated = 20;
-    DateInput expireAt = new DateInput("2024-12-01T00:00:00Z");
+    Schedule expireAt = new Schedule("2024-12-01T00:00:00Z");
 
     LicenseContract licenseContract =
         license.createLicenseContract(orgId, amountAllocated, expireAt);
@@ -79,7 +79,7 @@ public class LicenseTest {
     License license = this.createLicense();
     OrgId orgId = new OrgId(UUID.randomUUID().toString());
     int amountAllocated = 20;
-    DateInput expireAt = new DateInput("2024-12-01T00:00:00Z");
+    Schedule expireAt = new Schedule("2024-12-01T00:00:00Z");
 
     for (int i = 0; i < 3; i++) {
       try {
@@ -89,8 +89,12 @@ public class LicenseTest {
 
         assert false : "Exception expected";
       } catch (InvalidValueException e) {
-        assert e.reason().equals(ExceptionReason.INVALID_LICENSE_CONTRACT_ARG)
-            : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_LICENSE_CONTRACT_ARG;
+        assert List.of(
+                ExceptionReason.INVALID_ORG_ID,
+                ExceptionReason.INVALID_AMOUNT_ALLOCATED,
+                ExceptionReason.INVALID_AMOUNT_REMAINING,
+                ExceptionReason.INVALID_EXPIRY_DATE)
+            .contains(e.reason());
       }
     }
   }

@@ -15,8 +15,7 @@ public class OrgIdTest {
       new OrgId(invalidId);
       assert false : "Exception expected";
     } catch (InvalidValueException e) {
-      assert e.reason().equals(ExceptionReason.INVALID_ORG_ARG)
-          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_ORG_ARG;
+      assert e.reason().equals(ExceptionReason.INVALID_ORG_ID);
     }
   }
 
@@ -27,8 +26,7 @@ public class OrgIdTest {
 
       assert false : "Exception expected";
     } catch (InvalidValueException e) {
-      assert e.reason().equals(ExceptionReason.INVALID_ORG_ARG)
-          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_ORG_ARG;
+      assert e.reason().equals(ExceptionReason.INVALID_ORG_ID);
     }
   }
 

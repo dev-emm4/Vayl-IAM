@@ -7,6 +7,6 @@ import org.jspecify.annotations.NonNull;
 public record IntegerInput(@NonNull Integer value) implements InputtableValue {
 
   public IntegerInput {
-    AssertionConcern.isNotNull(value, ExceptionReason.INVALID_INTEGER_INPUT);
+    AssertionConcern.isNotNull(value, ExceptionReason.INVALID_INTEGER);
   }
 }

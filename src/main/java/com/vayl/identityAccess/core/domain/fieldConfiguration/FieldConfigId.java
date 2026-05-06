@@ -10,8 +10,8 @@ public record FieldConfigId(@NonNull String id) {
   }
 
   private void throwErrorIfIdIsInvalid(@NonNull String id) {
-    AssertionConcern.isNotNull(id, ExceptionReason.INVALID_FIELD_CONFIG_ARG);
-    AssertionConcern.isNotBlank(id, ExceptionReason.INVALID_FIELD_CONFIG_ARG);
+    AssertionConcern.isNotNull(id, ExceptionReason.INVALID_FIELD_CONFIG_ID);
+    AssertionConcern.isNotBlank(id, ExceptionReason.INVALID_FIELD_CONFIG_ID);
   }
 
   @Override

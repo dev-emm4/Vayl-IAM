@@ -2,7 +2,7 @@ package com.vayl.identityAccess.core.domain.organization.licenseContract;
 
 import com.vayl.identityAccess.core.domain.common.AssertionConcern;
 import com.vayl.identityAccess.core.domain.common.DomainException.ExceptionReason;
-import com.vayl.identityAccess.core.domain.common.inputtableValue.DateInput;
+import com.vayl.identityAccess.core.domain.common.Schedule;
 import com.vayl.identityAccess.core.domain.license.LicenseId;
 import com.vayl.identityAccess.core.domain.organization.OrgId;
 import org.jspecify.annotations.NonNull;
@@ -11,13 +11,13 @@ public class LicenseContract {
   private LicenseContractId id;
   private Integer amountAllocated;
   private Integer amountRemaining;
-  private DateInput expireAt;
+  private Schedule expireAt;
 
   public LicenseContract(
       @NonNull LicenseContractId id,
       @NonNull Integer amountAllocated,
       @NonNull Integer amountRemaining,
-      @NonNull DateInput expireAt) {
+      @NonNull Schedule expireAt) {
     this.setId(id);
     this.setAmountAllocated(amountAllocated);
     this.setAmountRemaining(amountRemaining);
@@ -25,22 +25,22 @@ public class LicenseContract {
   }
 
   private void setId(LicenseContractId id) {
-    AssertionConcern.isNotNull(id, ExceptionReason.INVALID_LICENSE_CONTRACT_ARG);
+    AssertionConcern.isNotNull(id, ExceptionReason.INVALID_LICENSE_CONTRACT_ID);
     this.id = id;
   }
 
   private void setAmountAllocated(Integer amountAllocated) {
-    AssertionConcern.isNotNull(amountAllocated, ExceptionReason.INVALID_LICENSE_CONTRACT_ARG);
+    AssertionConcern.isNotNull(amountAllocated, ExceptionReason.INVALID_AMOUNT_ALLOCATED);
     this.amountAllocated = amountAllocated;
   }
 
   private void setAmountRemaining(Integer amountRemaining) {
-    AssertionConcern.isNotNull(amountRemaining, ExceptionReason.INVALID_LICENSE_CONTRACT_ARG);
+    AssertionConcern.isNotNull(amountRemaining, ExceptionReason.INVALID_AMOUNT_REMAINING);
     this.amountRemaining = amountRemaining;
   }
 
-  private void setExpireAt(DateInput expireAt) {
-    AssertionConcern.isNotNull(expireAt, ExceptionReason.INVALID_LICENSE_CONTRACT_ARG);
+  private void setExpireAt(Schedule expireAt) {
+    AssertionConcern.isNotNull(expireAt, ExceptionReason.INVALID_EXPIRY_DATE);
     this.expireAt = expireAt;
   }
 
@@ -55,7 +55,7 @@ public class LicenseContract {
   }
 
   public void increaseAllocatedAmount(@NonNull Integer additionalAmount) {
-    AssertionConcern.isNotNull(additionalAmount, ExceptionReason.INVALID_LICENSE_CONTRACT_ARG);
+    AssertionConcern.isNotNull(additionalAmount, ExceptionReason.INVALID_ADDITIONAL_AMOUNT);
 
     this.amountAllocated += additionalAmount;
     this.amountRemaining += additionalAmount;
@@ -83,7 +83,7 @@ public class LicenseContract {
     return this.amountRemaining;
   }
 
-  public @NonNull DateInput expireAt() {
+  public @NonNull Schedule expireAt() {
     return this.expireAt;
   }
 }

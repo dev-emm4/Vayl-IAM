@@ -1,4 +1,4 @@
-package com.vayl.identityAccess.core.domain.organization.ou.authorizationPolicy;
+package com.vayl.identityAccess.core.domain.organization.ou;
 
 import com.vayl.identityAccess.core.domain.api.role.RoleId;
 import com.vayl.identityAccess.core.domain.common.AssertionConcern;
@@ -14,9 +14,9 @@ public record AuthorizationPolicy(
       @NonNull List<LicenseContractId> licenseContractIds,
       @NonNull List<RoleId> roleIds,
       @NonNull Boolean isInherited) {
-    AssertionConcern.isNotNull(licenseContractIds, ExceptionReason.INVALID_OU_ARG);
-    AssertionConcern.isNotNull(roleIds, ExceptionReason.INVALID_OU_ARG);
-    AssertionConcern.isNotNull(isInherited, ExceptionReason.INVALID_OU_ARG);
+    AssertionConcern.isNotNull(licenseContractIds, ExceptionReason.INVALID_LICENSE_CONTRACT_ID);
+    AssertionConcern.isNotNull(roleIds, ExceptionReason.INVALID_ROLE_ID);
+    AssertionConcern.isNotNull(isInherited, ExceptionReason.INVALID_AUTHORIZATION_POLICY_INHERITANCE);
 
     this.licenseContractIds = licenseContractIds;
     this.roleIds = roleIds;
@@ -25,7 +25,7 @@ public record AuthorizationPolicy(
 
   @Contract("_ -> new")
   public @NonNull AuthorizationPolicy copyWith(@NonNull Boolean isInherited) {
-    AssertionConcern.isNotNull(isInherited, ExceptionReason.INVALID_OU_ARG);
+    AssertionConcern.isNotNull(isInherited, ExceptionReason.INVALID_AUTHORIZATION_POLICY_INHERITANCE);
 
     return new AuthorizationPolicy(this.licenseContractIds, this.roleIds, isInherited);
   }

@@ -15,7 +15,7 @@ public class Permission {
   }
 
   private void setId(PermissionId id) {
-    AssertionConcern.isNotNull(id, ExceptionReason.INVALID_PERMISSION_ARG);
+    AssertionConcern.isNotNull(id, ExceptionReason.INVALID_PERMISSION_ID);
     this.id = id;
   }
 

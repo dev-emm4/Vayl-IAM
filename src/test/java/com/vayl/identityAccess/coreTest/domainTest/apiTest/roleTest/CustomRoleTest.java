@@ -34,17 +34,23 @@ public class CustomRoleTest {
     ApiId apiId = this.api.id();
     List<PermissionId> permissionIds = List.of();
 
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < 5; i++) {
       try {
-        if (i == 0) new CustomRole(this.orgId, null, name, apiId, permissionIds);
-        if (i == 1) new CustomRole(this.orgId, roleId, null, apiId, permissionIds);
-        if (i == 2) new CustomRole(this.orgId, roleId, name, null, permissionIds);
-        if (i == 3) new CustomRole(this.orgId, roleId, name, apiId, null);
+        if (i == 0) new CustomRole(null, roleId, name, apiId, permissionIds);
+        if (i == 1) new CustomRole(this.orgId, null, name, apiId, permissionIds);
+        if (i == 2) new CustomRole(this.orgId, roleId, null, apiId, permissionIds);
+        if (i == 3) new CustomRole(this.orgId, roleId, name, null, permissionIds);
+        if (i == 4) new CustomRole(this.orgId, roleId, name, apiId, null);
 
         assert false : "Exception expected";
       } catch (InvalidValueException e) {
-        assert e.reason().equals(ExceptionReason.INVALID_ROLE_ARG)
-            : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_ROLE_ARG;
+        assert List.of(
+                ExceptionReason.INVALID_ORG_ID,
+                ExceptionReason.INVALID_ROLE_ID,
+                ExceptionReason.INVALID_ROLE_NAME,
+                ExceptionReason.INVALID_API_ID,
+                ExceptionReason.INVALID_PERMISSION_ID)
+            .contains(e.reason());
       }
     }
   }
@@ -61,8 +67,7 @@ public class CustomRoleTest {
 
       assert false : "Exception expected";
     } catch (InvalidValueException e) {
-      assert e.reason().equals(ExceptionReason.INVALID_ROLE_ARG)
-          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_ROLE_ARG;
+      assert e.reason().equals(ExceptionReason.INVALID_ROLE_NAME);
     }
   }
 
@@ -107,8 +112,7 @@ public class CustomRoleTest {
 
         assert false : "Exception expected";
       } catch (InvalidValueException e) {
-        assert e.reason().equals(ExceptionReason.INVALID_ROLE_ARG)
-            : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_ROLE_ARG;
+        assert e.reason().equals(ExceptionReason.INVALID_PERMISSION_ID);
       }
     }
   }
@@ -125,8 +129,7 @@ public class CustomRoleTest {
 
       assert false : "Exception expected";
     } catch (InvalidValueException e) {
-      assert e.reason().equals(ExceptionReason.INVALID_ROLE_ARG)
-          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_ROLE_ARG;
+      assert e.reason().equals(ExceptionReason.UNPROCESSABLE_CANNOT_REMOVE_UNASSIGNED_PERMISSION);
     }
   }
 
@@ -143,8 +146,7 @@ public class CustomRoleTest {
 
       assert false : "Exception expected";
     } catch (InvalidValueException e) {
-      assert e.reason().equals(ExceptionReason.INVALID_ROLE_ARG)
-          : "got: " + e.reason() + " expected: " + ExceptionReason.INVALID_ROLE_ARG;
+      assert e.reason().equals(ExceptionReason.UNPROCESSABLE_PERMISSION_BELONG_TO_DIFFERENT_API);
     }
   }
 

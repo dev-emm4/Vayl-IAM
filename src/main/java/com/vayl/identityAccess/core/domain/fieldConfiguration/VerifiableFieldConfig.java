@@ -2,7 +2,7 @@ package com.vayl.identityAccess.core.domain.fieldConfiguration;
 
 import com.vayl.identityAccess.core.domain.common.AssertionConcern;
 import com.vayl.identityAccess.core.domain.common.DomainException.ExceptionReason;
-import com.vayl.identityAccess.core.domain.common.inputtableValue.DateInput;
+import com.vayl.identityAccess.core.domain.common.Schedule;
 import com.vayl.identityAccess.core.domain.common.validator.VerifiableFieldTypeValidator;
 import org.jspecify.annotations.NonNull;
 
@@ -10,56 +10,55 @@ public class VerifiableFieldConfig implements FieldConfiguration {
   private FieldConfigId id;
   private FieldType fieldType;
   private Boolean verificationRequirement;
-  private DateInput enforcementDateInput;
+  private Schedule enforcementDate;
 
   public VerifiableFieldConfig(
       @NonNull FieldConfigId id,
       @NonNull FieldType fieldType,
       @NonNull Boolean verificationRequirement,
-      @NonNull DateInput enforcementDateInput) {
+      @NonNull Schedule enforcementDate) {
     this.setId(id);
     this.setFieldType(fieldType);
     this.setVerificationRequirement(verificationRequirement);
-    this.setEnforcementDate(enforcementDateInput);
+    this.setEnforcementDate(enforcementDate);
   }
 
   private void setId(FieldConfigId id) {
-    AssertionConcern.isNotNull(id, ExceptionReason.INVALID_FIELD_CONFIG_ARG);
+    AssertionConcern.isNotNull(id, ExceptionReason.INVALID_FIELD_CONFIG_ID);
     this.id = id;
   }
 
   private void setFieldType(FieldType fieldType) {
-    AssertionConcern.isNotNull(fieldType, ExceptionReason.INVALID_FIELD_CONFIG_ARG);
+    AssertionConcern.isNotNull(fieldType, ExceptionReason.INVALID_FIELD_CONFIG_TYPE);
     AssertionConcern.isValid(
         new VerifiableFieldTypeValidator(),
         fieldType.toString(),
-        ExceptionReason.INVALID_FIELD_CONFIG_ARG);
+        ExceptionReason.INVALID_FIELD_CONFIG_TYPE);
 
     this.fieldType = fieldType;
   }
 
-  public void modify(
-      @NonNull DateInput enforcementDateInput, @NonNull Boolean verificationRequirement) {
+  public void modify(@NonNull Schedule enforcementDate, @NonNull Boolean verificationRequirement) {
     AssertionConcern.isFalse(
-        this.isPrimaryEmailEnforcementDateBeingUpdated(enforcementDateInput),
-        ExceptionReason.INVALID_FIELD_CONFIG_ARG);
+        this.isPrimaryEmailEnforcementDateBeingUpdated(enforcementDate),
+        ExceptionReason.INVALID_ENFORCEMENT_DATE);
 
-    setEnforcementDate(enforcementDateInput);
+    setEnforcementDate(enforcementDate);
     setVerificationRequirement(verificationRequirement);
   }
 
-  private boolean isPrimaryEmailEnforcementDateBeingUpdated(DateInput enforcementDateInput) {
+  private boolean isPrimaryEmailEnforcementDateBeingUpdated(Schedule enforcementDate) {
     return this.fieldName().equalsIgnoreCase("PRIMARY_EMAIL")
-        && !this.enforcementDateInput.equals(enforcementDateInput);
+        && !this.enforcementDate.equals(enforcementDate);
   }
 
-  private void setEnforcementDate(DateInput enforcementDateInput) {
-    AssertionConcern.isNotNull(enforcementDateInput, ExceptionReason.INVALID_FIELD_CONFIG_ARG);
-    this.enforcementDateInput = enforcementDateInput;
+  private void setEnforcementDate(Schedule enforcementDate) {
+    AssertionConcern.isNotNull(enforcementDate, ExceptionReason.INVALID_ENFORCEMENT_DATE);
+    this.enforcementDate = enforcementDate;
   }
 
   private void setVerificationRequirement(Boolean verificationRequirement) {
-    AssertionConcern.isNotNull(verificationRequirement, ExceptionReason.INVALID_FIELD_CONFIG_ARG);
+    AssertionConcern.isNotNull(verificationRequirement, ExceptionReason.INVALID_VERIFICATION_REQUIREMENT);
     this.verificationRequirement = verificationRequirement;
   }
 
@@ -71,8 +70,8 @@ public class VerifiableFieldConfig implements FieldConfiguration {
     return this.id.toString();
   }
 
-  public @NonNull DateInput enforcementDate() {
-    return this.enforcementDateInput;
+  public @NonNull Schedule enforcementDate() {
+    return this.enforcementDate;
   }
 
   public boolean isVerifiable() {

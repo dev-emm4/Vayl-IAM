@@ -7,8 +7,8 @@ import org.jspecify.annotations.NonNull;
 
 public record OrgId(String id) {
   public OrgId(@NonNull String id) {
-    AssertionConcern.isNotNull(id, ExceptionReason.INVALID_ORG_ARG);
-    AssertionConcern.isValid(new UuidValidator(), id, ExceptionReason.INVALID_ORG_ARG);
+    AssertionConcern.isNotNull(id, ExceptionReason.INVALID_ORG_ID);
+    AssertionConcern.isValid(new UuidValidator(), id, ExceptionReason.INVALID_ORG_ID);
     this.id = id;
   }
 
